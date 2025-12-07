@@ -1,36 +1,60 @@
 DEFINE SCHEMA
 
+// Feed - RSS feed metadata shared across all users
 RECORD TYPE Feed (
     "___recordID"            REFERENCE QUERYABLE,
     "feedURL"                STRING QUERYABLE SORTABLE,
     "title"                  STRING SEARCHABLE,
     "description"            STRING,
+    "category"               STRING QUERYABLE,
+    "imageURL"               STRING,
+    "siteURL"                STRING,
+    "language"               STRING QUERYABLE,
+    "isFeatured"             INT64 QUERYABLE,
+    "isVerified"             INT64 QUERYABLE,
+    "qualityScore"           INT64 QUERYABLE SORTABLE,
+    "subscriberCount"        INT64 QUERYABLE SORTABLE,
+    "addedAt"                TIMESTAMP QUERYABLE SORTABLE,
+    "lastVerified"           TIMESTAMP QUERYABLE SORTABLE,
+    "updateFrequency"        DOUBLE,
+    "tags"                   LIST<STRING>,
+
+    // Server-side metrics
     "totalAttempts"          INT64,
     "successfulAttempts"     INT64,
-    "usageCount"             INT64 QUERYABLE SORTABLE,
     "lastAttempted"          TIMESTAMP QUERYABLE SORTABLE,
     "isActive"               INT64 QUERYABLE,
+    "etag"                   STRING,
+    "lastModified"           STRING,
+    "failureCount"           INT64,
+    "lastFailureReason"      STRING,
+    "minUpdateInterval"      DOUBLE,
 
-    GRANT READ, CREATE, WRITE TO "_creator",
-    GRANT READ, CREATE, WRITE TO "_icloud",
-    GRANT READ TO "_world"
+    GRANT READ TO "_world",
+    GRANT CREATE, WRITE TO "_icloud"
 );
 
+// Article - RSS article content shared across all users
 RECORD TYPE Article (
     "___recordID"            REFERENCE QUERYABLE,
-    "feed"                   REFERENCE QUERYABLE,
-    "title"                  STRING SEARCHABLE,
-    "link"                   STRING,
-    "description"            STRING,
-    "content"                STRING SEARCHABLE,
-    "author"                 STRING QUERYABLE,
-    "pubDate"                TIMESTAMP QUERYABLE SORTABLE,
+    "feedRecordName"         STRING QUERYABLE SORTABLE,
     "guid"                   STRING QUERYABLE SORTABLE,
-    "contentHash"            STRING QUERYABLE,
+    "title"                  STRING SEARCHABLE,
+    "excerpt"                STRING,
+    "content"                STRING SEARCHABLE,
+    "contentText"            STRING SEARCHABLE,
+    "author"                 STRING QUERYABLE,
+    "url"                    STRING,
+    "imageURL"               STRING,
+    "publishedDate"          TIMESTAMP QUERYABLE SORTABLE,
     "fetchedAt"              TIMESTAMP QUERYABLE SORTABLE,
     "expiresAt"              TIMESTAMP QUERYABLE SORTABLE,
+    "contentHash"            STRING QUERYABLE,
+    "wordCount"              INT64,
+    "estimatedReadingTime"   INT64,
+    "language"               STRING QUERYABLE,
+    "tags"                   LIST<STRING>,
 
-    GRANT READ, CREATE, WRITE TO "_creator",
-    GRANT READ, CREATE, WRITE TO "_icloud",
-    GRANT READ TO "_world"
+    GRANT READ TO "_world",
+    GRANT CREATE, WRITE TO "_icloud"
 );
