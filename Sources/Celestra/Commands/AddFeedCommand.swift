@@ -1,6 +1,7 @@
 import ArgumentParser
 import Foundation
 import MistKit
+import CelestraKit
 
 struct AddFeedCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -43,8 +44,8 @@ struct AddFeedCommand: AsyncParsableCommand {
             feedURL: feedURL,
             title: feedData.title,
             description: feedData.description,
-            lastModified: response.lastModified,
             etag: response.etag,
+            lastModified: response.lastModified,
             minUpdateInterval: feedData.minUpdateInterval
         )
         let record = try await service.createFeed(feed)
