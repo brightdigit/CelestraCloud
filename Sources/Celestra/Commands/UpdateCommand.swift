@@ -2,6 +2,7 @@ import ArgumentParser
 import Foundation
 import Logging
 import MistKit
+import CelestraKit
 
 struct UpdateCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -175,14 +176,14 @@ struct UpdateCommand: AsyncParsableCommand {
 
                     let articles = feedData.items.map { item in
                         Article(
-                            feed: recordName,
+                            feedRecordName: recordName,
+                            guid: item.guid,
                             title: item.title,
-                            link: item.link,
-                            description: item.description,
+                            excerpt: item.description,
                             content: item.content,
                             author: item.author,
-                            pubDate: item.pubDate,
-                            guid: item.guid,
+                            url: item.link,
+                            publishedDate: item.pubDate,
                             ttlDays: 30
                         )
                     }
@@ -209,7 +210,23 @@ struct UpdateCommand: AsyncParsableCommand {
                                 // Check if content changed
                                 if existing.contentHash != article.contentHash {
                                     // Content changed - need to update
-                                    modifiedArticles.append(article.withRecordName(existing.recordName!))
+                                    // Create new article with existing recordName
+                                    let updated = Article(
+                                        recordName: existing.recordName,
+                                        recordChangeTag: existing.recordChangeTag,
+                                        feedRecordName: article.feedRecordName,
+                                        guid: article.guid,
+                                        title: article.title,
+                                        excerpt: article.excerpt,
+                                        content: article.content,
+                                        contentText: article.contentText,
+                                        author: article.author,
+                                        url: article.url,
+                                        imageURL: article.imageURL,
+                                        publishedDate: article.publishedDate,
+                                        ttlDays: 30
+                                    )
+                                    modifiedArticles.append(updated)
                                 }
                                 // else: content unchanged - skip
                             } else {
@@ -276,13 +293,13 @@ struct UpdateCommand: AsyncParsableCommand {
                 feedURL: feed.feedURL,
                 title: feed.title,
                 description: feed.description,
+                subscriberCount: feed.subscriberCount,
                 totalAttempts: totalAttempts,
                 successfulAttempts: successfulAttempts,
-                usageCount: feed.usageCount,
                 lastAttempted: Date(),
                 isActive: feed.isActive,
-                lastModified: lastModified,
                 etag: etag,
+                lastModified: lastModified,
                 failureCount: failureCount,
                 lastFailureReason: lastFailureReason,
                 minUpdateInterval: minUpdateInterval

@@ -1,6 +1,7 @@
 import Foundation
 import Logging
 import MistKit
+import CelestraKit
 
 /// CloudKit service extensions for Celestra operations
 @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
@@ -55,7 +56,7 @@ extension CloudKitService {
 
         // Filter by minimum popularity if provided
         if let minPop = minPopularity {
-            filters.append(.greaterThanOrEquals("usageCount", .int64(Int(minPop))))
+            filters.append(.greaterThanOrEquals("subscriberCount", .int64(Int(minPop))))
         }
 
         // Query with filters and sort by feedURL (always queryable+sortable)
@@ -88,7 +89,7 @@ extension CloudKitService {
 
         // Add feed filter if provided
         if let feedName = feedRecordName {
-            filters.append(.equals("feed", .reference(FieldValue.Reference(recordName: feedName))))
+            filters.append(.equals("feedRecordName", .string(feedName)))
         }
 
         // For small number of GUIDs, we can query directly
@@ -132,7 +133,7 @@ extension CloudKitService {
         } else {
             // For large GUID sets, fetch all articles for the feed and filter in memory
             if let feedName = feedRecordName {
-                filters = [.equals("feed", .reference(FieldValue.Reference(recordName: feedName)))]
+                filters = [.equals("feedRecordName", .string(feedName))]
             }
 
             let records = try await queryRecords(

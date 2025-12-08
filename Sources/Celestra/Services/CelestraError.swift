@@ -27,6 +27,12 @@ enum CelestraError: LocalizedError {
   /// Record not found
   case recordNotFound(String)
 
+  /// CloudKit operation failed with message
+  case cloudKitOperationFailed(String)
+
+  /// Invalid record name
+  case invalidRecordName(String)
+
   // MARK: - Retriability
 
   /// Determines if this error can be retried
@@ -37,7 +43,7 @@ enum CelestraError: LocalizedError {
     case .rssFetchFailed, .networkUnavailable:
       return true
     case .quotaExceeded, .invalidFeedData, .batchOperationFailed,
-         .permissionDenied, .recordNotFound:
+         .permissionDenied, .recordNotFound, .cloudKitOperationFailed, .invalidRecordName:
       return false
     }
   }
@@ -62,6 +68,10 @@ enum CelestraError: LocalizedError {
       return "Permission denied for CloudKit operation."
     case .recordNotFound(let recordName):
       return "Record not found: \(recordName)"
+    case .cloudKitOperationFailed(let message):
+      return "CloudKit operation failed: \(message)"
+    case .invalidRecordName(let message):
+      return "Invalid record name: \(message)"
     }
   }
 
@@ -77,7 +87,8 @@ enum CelestraError: LocalizedError {
       return "Check your CloudKit permissions and API token configuration."
     case .invalidFeedData:
       return "Verify the feed URL returns valid RSS/Atom data."
-    case .cloudKitError, .batchOperationFailed, .recordNotFound:
+    case .cloudKitError, .batchOperationFailed, .recordNotFound,
+         .cloudKitOperationFailed, .invalidRecordName:
       return nil
     }
   }

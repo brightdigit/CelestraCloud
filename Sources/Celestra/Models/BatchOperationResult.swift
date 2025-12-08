@@ -1,5 +1,6 @@
 import Foundation
 import MistKit
+import CelestraKit
 
 /// Result of a batch CloudKit operation
 struct BatchOperationResult {

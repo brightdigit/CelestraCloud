@@ -1,5 +1,15 @@
 {
+  "originHash" : "484af3b90a062a743ab9bbd0393e2367cfa97cd08263dd783ab3d376016123e0",
   "pins" : [
+    {
+      "identity" : "mistkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/brightdigit/MistKit.git",
+      "state" : {
+        "revision" : "cb27cef097314c78cf4e126aebb0efb8def56537",
+        "version" : "1.0.0-alpha.3"
+      }
+    },
     {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
@@ -14,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-asn1.git",
       "state" : {
-        "revision" : "40d25bbb2fc5b557a9aa8512210bded327c0f60d",
-        "version" : "1.5.0"
+        "revision" : "810496cf121e525d660cd0ea89a758740476b85f",
+        "version" : "1.5.1"
       }
     },
     {
@@ -50,8 +60,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log.git",
       "state" : {
-        "revision" : "ce592ae52f982c847a4efc0dd881cc9eb32d29f2",
-        "version" : "1.6.4"
+        "revision" : "b1fa4ef41fe21b13120c034854042d12c43f66b2",
+        "version" : "1.7.1"
       }
     },
     {
@@ -73,15 +83,6 @@
       }
     },
     {
-      "identity" : "syndikit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/brightdigit/SyndiKit.git",
-      "state" : {
-        "revision" : "1b7991213a1562bb6d93ffedf58533c06fe626f5",
-        "version" : "0.6.1"
-      }
-    },
-    {
       "identity" : "xmlcoder",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/brightdigit/XMLCoder",
@@ -91,5 +92,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }
