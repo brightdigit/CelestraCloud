@@ -1,6 +1,7 @@
 import ArgumentParser
 import Foundation
 import MistKit
+import CelestraKit
 
 struct ClearCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(

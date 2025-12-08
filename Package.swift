@@ -78,14 +78,14 @@ let swiftSettings: [SwiftSetting] = [
 
 let package = Package(
     name: "Celestra",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v26)],
     products: [
         .executable(name: "celestra", targets: ["Celestra"])
     ],
     dependencies: [
-        .package(path: "../.."),  // MistKit
+        .package(url: "https://github.com/brightdigit/MistKit.git", from: "1.0.0-alpha.3"),
         .package(path: "../CelestraKit"),  // Shared models
-        .package(url: "https://github.com/brightdigit/SyndiKit.git", from: "0.6.0"),
+        .package(path: "../Syndikit"),  // Use local Syndikit
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0")
     ],
