@@ -73,7 +73,7 @@ RECORD TYPE Feed (
 
 - `lastModified`: HTTP Last-Modified header for conditional requests
 - `etag`: HTTP ETag header for conditional requests
-- `failureCount`: Consecutive failure counter for circuit breaker pattern
+- `failureCount`: Consecutive failure counter for retry tracking
 - `lastFailureReason`: Last error message for debugging
 - `minUpdateInterval`: Minimum seconds between updates (from RSS `<ttl>` or syndication metadata)
 
@@ -613,7 +613,7 @@ HTTP/1.1 304 Not Modified
 
 ### Failure Tracking
 
-**Implementation**: Tracks consecutive failures per feed for circuit breaker pattern.
+**Implementation**: Tracks consecutive failures per feed for retry management.
 
 **Feed Model Fields**:
 - `failureCount: Int64` - Consecutive failure counter
@@ -776,23 +776,6 @@ fields["feed"] = .reference(FieldValue.Reference(recordName: feedRecordName))
 
 **Decision**: Kept string-based for educational simplicity and explicit code patterns. For production apps handling complex relationship graphs, CKReference is recommended.
 
-**3. Circuit Breaker Pattern**:
-For feeds with persistent failures:
-```swift
-actor CircuitBreaker {
-    private var failureCount = 0
-    private let threshold = 5
-
-    var isOpen: Bool {
-        failureCount >= threshold
-    }
-
-    func recordFailure() {
-        failureCount += 1
-    }
-}
-```
-
 ## Implementation Timeline
 
 **Phase 1** (Completed):
@@ -818,7 +801,7 @@ actor CircuitBreaker {
 - ✅ Web etiquette: Rate limiting with configurable delays
 - ✅ Web etiquette: Robots.txt checking and parsing
 - ✅ Web etiquette: Conditional HTTP requests (If-Modified-Since/ETag)
-- ✅ Web etiquette: Failure tracking for circuit breaker pattern
+- ✅ Web etiquette: Failure tracking for retry management
 - ✅ Web etiquette: Custom User-Agent header
 - ✅ Feed update interval infrastructure (`minUpdateInterval`)
 
