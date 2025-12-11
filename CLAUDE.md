@@ -201,10 +201,10 @@ Code must be concurrency-safe with proper actor isolation.
 - Clear data with `celestra clear --confirm` between tests
 
 **Key Documentation:**
-- `IMPLEMENTATION_NOTES.md` - Design decisions, patterns, and comparisons with Bushel example
-- `BUSHEL_PATTERNS.md` - Protocol-oriented CloudKit patterns (alternative to direct mapping)
-- `AI_SCHEMA_WORKFLOW.md` - CloudKit schema design guide for AI agents
-- `CLOUDKIT_SCHEMA_SETUP.md` - Schema deployment instructions
+- `.claude/IMPLEMENTATION_NOTES.md` - Design decisions, patterns, and technical context
+- `.claude/AI_SCHEMA_WORKFLOW.md` - CloudKit schema design guide for AI agents
+- `.claude/CLOUDKIT_SCHEMA_SETUP.md` - Schema deployment instructions
+- `.claude/PRD.md` - v1.0.0 release Product Requirements Document
 
 ## Important Patterns
 

@@ -39,11 +39,10 @@ export CLOUDKIT_TEAM_ID="YOUR_TEAM_ID"
 export CLOUDKIT_ENVIRONMENT="development"
 
 # Run the setup script
-cd Examples/Celestra
 ./Scripts/setup-cloudkit-schema.sh
 ```
 
-For detailed instructions, see [CLOUDKIT_SCHEMA_SETUP.md](./CLOUDKIT_SCHEMA_SETUP.md).
+For detailed instructions, see [.claude/CLOUDKIT_SCHEMA_SETUP.md](./.claude/CLOUDKIT_SCHEMA_SETUP.md).
 
 ### Option 2: Manual Setup
 
@@ -96,8 +95,8 @@ In CloudKit Dashboard, create these record types in the **Public Database**:
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/brightdigit/MistKit.git
-cd MistKit/Examples/Celestra
+git clone https://github.com/brightdigit/CelestraCloud.git
+cd CelestraCloud
 ```
 
 ### 2. Configure Environment
@@ -123,6 +122,8 @@ CLOUDKIT_ENVIRONMENT=development
 
 ```bash
 swift build
+# Or use the Makefile
+make build
 ```
 
 ## Usage
@@ -138,7 +139,7 @@ source .env
 Add a new RSS feed to CloudKit:
 
 ```bash
-swift run celestra add-feed https://example.com/feed.xml
+swift run celestra-cloud add-feed https://example.com/feed.xml
 ```
 
 Example output:
@@ -156,20 +157,20 @@ Example output:
 Fetch and update all feeds:
 
 ```bash
-swift run celestra update
+swift run celestra-cloud update
 ```
 
 Update with filters (demonstrates QueryFilter API):
 
 ```bash
 # Update feeds last attempted before a specific date
-swift run celestra update --last-attempted-before 2025-01-01T00:00:00Z
+swift run celestra-cloud update --last-attempted-before 2025-01-01T00:00:00Z
 
 # Update only popular feeds (minimum 10 usage count)
-swift run celestra update --min-popularity 10
+swift run celestra-cloud update --min-popularity 10
 
 # Combine filters
-swift run celestra update \
+swift run celestra-cloud update \
   --last-attempted-before 2025-01-01T00:00:00Z \
   --min-popularity 5
 ```
@@ -206,7 +207,7 @@ Example output:
 Delete all feeds and articles from CloudKit:
 
 ```bash
-swift run celestra clear --confirm
+swift run celestra-cloud clear --confirm
 ```
 
 ## How It Demonstrates MistKit Features
@@ -321,22 +322,79 @@ Celestra/
 └── Celestra.swift                # Main CLI entry point
 ```
 
+## Development
+
+### Using the Makefile
+
+CelestraCloud includes a comprehensive Makefile for common development tasks:
+
+```bash
+# Install development dependencies (SwiftLint, SwiftFormat, etc.)
+make install
+
+# Build the project
+make build
+
+# Run unit tests
+make test
+
+# Run linters
+make lint
+
+# Auto-format code
+make format
+
+# Run the CLI (requires .env sourced)
+make run
+
+# Deploy CloudKit schema
+make setup-cloudkit
+
+# Clean build artifacts
+make clean
+```
+
+Run `make help` to see all available targets.
+
+### Running Tests
+
+```bash
+# Run all tests
+make test
+
+# Or use Swift directly
+swift test
+```
+
+The test suite includes 41 tests across 5 test suites with 65%+ code coverage:
+- RobotsTxtServiceTests (10 tests)
+- RateLimiterTests (9 tests)
+- Feed+MistKitTests (7 tests)
+- Article+MistKitTests (6 tests)
+- BatchOperationResultTests (9 tests)
+
+### Code Quality
+
+```bash
+# Run SwiftLint
+make lint
+
+# Auto-format code with SwiftFormat
+make format
+```
+
+The project enforces strict code quality standards with 90+ SwiftLint rules and comprehensive SwiftFormat configuration.
+
 ## Documentation
 
-### CloudKit Schema Guides
+### Project Guides
 
-Celestra uses CloudKit's text-based schema language for database management. See these guides for working with schemas:
-
-- **[AI Schema Workflow Guide](./AI_SCHEMA_WORKFLOW.md)** - Comprehensive guide for AI agents and developers to understand, design, modify, and validate CloudKit schemas
-- **[CloudKit Schema Setup](./CLOUDKIT_SCHEMA_SETUP.md)** - Detailed setup instructions for both automated (cktool) and manual schema configuration
-- **[Schema Quick Reference](../SCHEMA_QUICK_REFERENCE.md)** - One-page cheat sheet with syntax, patterns, and common operations
-- **[Task Master Schema Integration](../../.taskmaster/docs/schema-design-workflow.md)** - Integrate schema design into Task Master workflows
-
-### Additional Resources
-
-- **[Claude Code Schema Reference](../../.claude/docs/cloudkit-schema-reference.md)** - Quick reference auto-loaded in Claude Code sessions
-- **[Apple's Schema Language Documentation](../../.claude/docs/sosumi-cloudkit-schema-source.md)** - Official CloudKit Schema Language reference from Apple
-- **[Implementation Notes](./IMPLEMENTATION_NOTES.md)** - Design decisions and patterns used in Celestra
+- **[CLAUDE.md](./CLAUDE.md)** - Guidance for AI agents working with this codebase
+- **[CHANGELOG.md](./CHANGELOG.md)** - Release notes and version history
+- **[.claude/IMPLEMENTATION_NOTES.md](./.claude/IMPLEMENTATION_NOTES.md)** - Design decisions and architectural patterns
+- **[.claude/AI_SCHEMA_WORKFLOW.md](./.claude/AI_SCHEMA_WORKFLOW.md)** - CloudKit schema design workflow for AI agents
+- **[.claude/CLOUDKIT_SCHEMA_SETUP.md](./.claude/CLOUDKIT_SCHEMA_SETUP.md)** - CloudKit schema deployment instructions
+- **[.claude/PRD.md](./.claude/PRD.md)** - Product Requirements Document for v1.0.0 release
 
 ## Troubleshooting
 
@@ -360,4 +418,8 @@ Celestra uses CloudKit's text-based schema language for database management. See
 
 ## License
 
-MIT License - See main MistKit repository for details.
+MIT License - See [LICENSE](./LICENSE) for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
