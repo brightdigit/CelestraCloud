@@ -1,6 +1,15 @@
 {
-  "originHash" : "4d84ebb9cb1271292c62b783605ccce19cd08ab56b4583167c676a743b194efc",
+  "originHash" : "c38649afa03a54dddc79a23ad5b60f90b0f8ea6da842e649566eddd74fd995c8",
   "pins" : [
+    {
+      "identity" : "celestrakit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/brightdigit/CelestraKit.git",
+      "state" : {
+        "branch" : "v0.0.1",
+        "revision" : "8cbea12d45dc44b4c494dd150a943c9324c1e741"
+      }
+    },
     {
       "identity" : "mistkit",
       "kind" : "remoteSourceControl",
