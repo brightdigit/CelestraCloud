@@ -1,13 +1,9 @@
-name: MistKit
+name: CelestraCloud
 settings:
   LINT_MODE: ${LINT_MODE}
 packages:
-  MistKit:
+  CelestraCloud:
     path: .
-  Bushel:
-    path: Examples/Bushel
-  Celestra:
-    path: Examples/Celestra
 aggregateTargets:
   Lint:
     buildScripts:

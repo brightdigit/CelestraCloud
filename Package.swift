@@ -78,7 +78,13 @@ let swiftSettings: [SwiftSetting] = [
 
 let package = Package(
     name: "CelestraCloud",
-    platforms: [.macOS(.v26)],
+    platforms: [
+        .macOS(.v26),
+        .iOS(.v13),
+        .tvOS(.v13),
+        .watchOS(.v6),
+        .visionOS(.v1)
+    ],
     products: [
         .executable(name: "celestra-cloud", targets: ["Celestra"])
     ],

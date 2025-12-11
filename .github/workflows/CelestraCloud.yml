@@ -23,6 +23,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: brightdigit/swift-build@v1.3.3
+      - uses: sersoft-gmbh/swift-coverage-action@v4
+        id: coverage-files
+        with:          
+          fail-on-empty-output: true
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4       
+        with:
+          fail_ci_if_error: true
+          flags: swift-${{ matrix.swift.version }}-${{ matrix.os }}${{ matrix.swift.nightly && 'nightly' || '' }}
+          verbose: true        
+          token: ${{ secrets.CODECOV_TOKEN }}  
+          files: ${{ join(fromJSON(steps.coverage-files.outputs.files), ',') }}    
+  build-windows:
+    name: Build on Windows
+    runs-on: ${{ matrix.runs-on }}
+    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [windows-2022, windows-2025]
+        swift:
+          - version: swift-6.1-release
+            build: 6.1-RELEASE
+          - version: swift-6.2-release
+            build: 6.2-RELEASE
+    steps:
+      - uses: actions/checkout@v4
+      - uses: brightdigit/swift-build@v1.3.3
+        with:
+          windows-swift-version: ${{ matrix.swift.version }}
+          windows-swift-build: ${{ matrix.swift.build }}
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5    
+        with:
+          fail_ci_if_error: true
+          flags: swift-${{ matrix.swift.version }},windows
+          verbose: true        
+          token: ${{ secrets.CODECOV_TOKEN }}
+          os: windows
 
   build-macos:
     name: Build on macOS
@@ -47,6 +86,56 @@ jobs:
             runs-on: macos-15
             xcode: "/Applications/Xcode_16.4.app"
 
+          # iOS Build
+          - type: ios
+            runs-on: macos-15
+            xcode: "/Applications/Xcode_26.0.app"
+            deviceName: "iPhone 17 Pro"
+            osVersion: "26.0.1"
+            download-platform: true
+            
+          - type: ios
+            runs-on: macos-15
+            xcode: "/Applications/Xcode_16.4.app"
+            deviceName: "iPhone 16e"
+            osVersion: "18.5"
+            
+          - type: ios
+            runs-on: macos-15
+            xcode: "/Applications/Xcode_16.3.app"
+            deviceName: "iPhone 16"
+            osVersion: "18.4"
+            
+  
+          # watchOS Build Matrix
+          - type: watchos
+            runs-on: macos-15
+            xcode: "/Applications/Xcode_26.0.app"
+            deviceName: "Apple Watch Ultra 3 (49mm)"
+            osVersion: "26.0"
+
+          # tvOS Build
+          - type: tvos
+            runs-on: macos-15
+            xcode: "/Applications/Xcode_26.0.app"
+            deviceName: "Apple TV"
+            osVersion: "26.0"
+
+          # watchOS Build
+          - type: watchos
+            runs-on: macos-15
+            xcode: "/Applications/Xcode_16.4.app"
+            deviceName: Apple Watch Ultra 2 (49mm)
+            osVersion: '11.5'
+
+          # visionOS Build
+          - type: visionos
+            runs-on: macos-15
+            xcode: "/Applications/Xcode_26.0.app"
+            deviceName: "Apple Vision Pro"
+            osVersion: "26.0"
+            download-platform: true
+
     steps:
       - uses: actions/checkout@v4
 
@@ -56,12 +145,25 @@ jobs:
           scheme: ${{ env.PACKAGE_NAME }}
           type: ${{ matrix.type }}
           xcode: ${{ matrix.xcode }}
+          deviceName: ${{ matrix.deviceName }}
+          osVersion: ${{ matrix.osVersion }}
+          download-platform: ${{ matrix.download-platform }}
+          
+      # Common Coverage Steps
+      - name: Process Coverage
+        uses: sersoft-gmbh/swift-coverage-action@v4
+  
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.type && format('{0}{1}', matrix.type, matrix.osVersion) || 'spm' }}
 
   lint:
     name: Linting
     if: "!contains(github.event.head_commit.message, 'ci skip')"
     runs-on: ubuntu-latest
-    needs: [build-ubuntu, build-macos]
+    needs: [build-ubuntu, build-windows, build-macos]
     env:
       MINT_PATH: .mint/lib
       MINT_LINK_PATH: .mint/bin
