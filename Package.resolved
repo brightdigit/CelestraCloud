@@ -1,5 +1,5 @@
 {
-  "originHash" : "484af3b90a062a743ab9bbd0393e2367cfa97cd08263dd783ab3d376016123e0",
+  "originHash" : "f2bfcbc3e9fc5b6ebead1566c47a85fd12fa21192f6b336933da5f50ad46e65f",
   "pins" : [
     {
       "identity" : "mistkit",
@@ -80,6 +80,15 @@
       "state" : {
         "revision" : "279aa6b77be6aa842a4bf3c45fa79fa15edf3e07",
         "version" : "1.2.0"
+      }
+    },
+    {
+      "identity" : "syndikit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/brightdigit/SyndiKit.git",
+      "state" : {
+        "revision" : "1b7991213a1562bb6d93ffedf58533c06fe626f5",
+        "version" : "0.6.1"
       }
     },
     {

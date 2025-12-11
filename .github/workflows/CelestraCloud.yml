@@ -1,0 +1,91 @@
+name: CelestraCloud
+on:
+  push:
+    branches-ignore:
+      - '*WIP'
+env:
+  PACKAGE_NAME: CelestraCloud
+jobs:
+  build-ubuntu:
+    name: Build on Ubuntu
+    runs-on: ubuntu-latest
+    container: ${{ matrix.swift.nightly && format('swiftlang/swift:nightly-{0}-{1}', matrix.swift.version, matrix.os) || format('swift:{0}-{1}', matrix.swift.version, matrix.os) }}
+    if: ${{ !contains(github.event.head_commit.message, 'ci skip') }}
+    strategy:
+      matrix:
+        os: [noble, jammy]
+        swift:
+          - version: "6.1"
+          - version: "6.2"
+          - version: "6.2"
+            nightly: true
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: brightdigit/swift-build@v1.3.3
+
+  build-macos:
+    name: Build on macOS
+    env:
+      PACKAGE_NAME: CelestraCloud
+    runs-on: ${{ matrix.runs-on }}
+    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # SPM Build Matrix
+          - runs-on: macos-15
+            xcode: "/Applications/Xcode_26.0.app"
+          - runs-on: macos-15
+            xcode: "/Applications/Xcode_16.4.app"
+          - runs-on: macos-15
+            xcode: "/Applications/Xcode_16.3.app"
+
+          # macOS Build Matrix
+          - type: macos
+            runs-on: macos-15
+            xcode: "/Applications/Xcode_16.4.app"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and Test
+        uses: brightdigit/swift-build@v1.3.3
+        with:
+          scheme: ${{ env.PACKAGE_NAME }}
+          type: ${{ matrix.type }}
+          xcode: ${{ matrix.xcode }}
+
+  lint:
+    name: Linting
+    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    runs-on: ubuntu-latest
+    needs: [build-ubuntu, build-macos]
+    env:
+      MINT_PATH: .mint/lib
+      MINT_LINK_PATH: .mint/bin
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache mint
+        id: cache-mint
+        uses: actions/cache@v4
+        env:
+          cache-name: cache
+        with:
+          path: |
+            .mint
+            Mint
+          key: ${{ runner.os }}-mint-${{ hashFiles('**/Mintfile') }}
+          restore-keys: |
+            ${{ runner.os }}-mint-
+      - name: Install mint
+        if: steps.cache-mint.outputs.cache-hit == ''
+        run: |
+          git clone https://github.com/yonaskolb/Mint.git
+          cd Mint
+          swift run mint install yonaskolb/mint
+      - name: Lint
+        run: |
+          set -e
+          ./Scripts/lint.sh
