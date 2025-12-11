@@ -100,6 +100,15 @@ let package = Package(
                 .product(name: "Logging", package: "swift-log")
             ],
             swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "CelestraCloudTests",
+            dependencies: [
+                .target(name: "Celestra"),
+                .product(name: "MistKit", package: "MistKit"),
+                .product(name: "CelestraKit", package: "CelestraKit")
+            ],
+            swiftSettings: swiftSettings
         )
     ]
 )
