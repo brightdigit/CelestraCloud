@@ -14,14 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Query filtering and sorting demonstrations using MistKit's QueryFilter API
 - Batch operations for efficient article uploads with chunking (10 records per batch)
 - Duplicate detection via GUID-based queries with content hash comparison
-- Comprehensive web etiquette features:
-  - Per-domain rate limiting (RateLimiter actor)
-  - Robots.txt compliance checking (RobotsTxtService)
+- Comprehensive web etiquette features (using services from CelestraKit):
+  - Per-domain rate limiting (RateLimiter actor from CelestraKit)
+  - Robots.txt compliance checking (RobotsTxtService from CelestraKit)
   - Conditional HTTP requests (If-Modified-Since, ETag support)
   - Failure tracking and exponential backoff
   - Respect for feed TTL and update intervals
 - Server-to-Server authentication for CloudKit access
-- Comprehensive test suite with 41 tests across 5 suites (65%+ coverage)
+- CelestraKit dependency for shared models (Feed, Article) and web etiquette services (RateLimiter, RobotsTxtService)
+- Comprehensive test suite with 22 local tests across 3 suites (additional 19 tests in CelestraKit)
 - CI/CD pipeline with GitHub Actions (Ubuntu + macOS builds, linting)
 - Linting and code formatting (SwiftLint, SwiftFormat)
 - Makefile for common development tasks
@@ -36,16 +37,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Direct field mapping pattern (Feed+MistKit, Article+MistKit extensions)
   - Boolean storage as INT64 (0/1) for CloudKit compatibility
   - Automatic field type conversion with FieldValue enum
-- **Services**:
+- **Local Services**:
   - CloudKitService extensions for CelestraCloud operations
   - RSSFetcherService wrapping SyndiKit for RSS parsing
-  - RobotsTxtService for respectful web crawling
-  - RateLimiter actor for thread-safe delay management
   - CelestraLogger with structured logging categories
+  - CelestraError for error handling
+- **Services from CelestraKit**:
+  - RobotsTxtService actor for respectful web crawling
+  - RateLimiter actor for thread-safe delay management
+  - Feed and Article models for shared data structures
 
 ### Infrastructure
 - Package renamed from "Celestra" to "CelestraCloud"
 - Executable renamed from "celestra" to "celestra-cloud"
+- CelestraKit external dependency added (branch v0.0.1) for shared models and services:
+  - Enables code reuse across Celestra ecosystem (CLI, future mobile apps, etc.)
+  - Provides Feed and Article models
+  - Provides RateLimiter and RobotsTxtService for web etiquette
 - SyndiKit dependency migrated from local path to GitHub (v0.6.1)
 - Migrated comprehensive development infrastructure from MistKit:
   - GitHub Actions workflows (build, test, lint)

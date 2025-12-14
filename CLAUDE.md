@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Celestra is a command-line RSS reader that demonstrates MistKit's CloudKit integration capabilities. It fetches RSS feeds, stores them in CloudKit's public database, and implements comprehensive web etiquette best practices including rate limiting, robots.txt checking, and conditional HTTP requests.
 
-**Tech Stack**: Swift 6.2, MistKit (CloudKit wrapper), SyndiKit (RSS parsing), ArgumentParser (CLI)
+**Tech Stack**: Swift 6.2, MistKit (CloudKit wrapper), CelestraKit (shared models & services), SyndiKit (RSS parsing), ArgumentParser (CLI)
 
 ## Common Commands
 
@@ -67,8 +67,7 @@ Sources/Celestra/
 ├── Services/
 │   ├── CloudKitService+Celestra.swift  # MistKit operations
 │   ├── RSSFetcherService.swift         # SyndiKit wrapper
-│   ├── RobotsTxtService.swift          # Robots.txt parser
-│   ├── RateLimiter.swift               # Per-domain rate limiting
+│   ├── CelestraError.swift             # Error types
 │   └── CelestraLogger.swift            # Structured logging
 ├── Models/
 │   └── BatchOperationResult.swift      # Batch operation tracking
@@ -77,7 +76,7 @@ Sources/Celestra/
     └── Article+MistKit.swift   # Article ↔ CloudKit conversion
 ```
 
-**Shared Models**: The `Feed` and `Article` models live in `../CelestraKit` package (peer dependency) for potential reuse across CLI and other clients.
+**External Dependencies**: The `Feed` and `Article` models, along with `RateLimiter` and `RobotsTxtService`, are provided by the CelestraKit package for reuse across CLI and other clients.
 
 ### Key Architectural Patterns
 
@@ -146,14 +145,14 @@ Articles are processed in batches of 10 (conservative to keep payload size manag
 **5. Web Etiquette Implementation**
 
 Celestra is a respectful RSS client:
-- **Rate Limiting** (RateLimiter): Configurable delays between feeds (default 2s), per-domain tracking
-- **Robots.txt** (RobotsTxtService): Parses and respects robots.txt rules
+- **Rate Limiting**: Uses `RateLimiter` actor from CelestraKit - configurable delays between feeds (default 2s), per-domain tracking
+- **Robots.txt**: Uses `RobotsTxtService` actor from CelestraKit - parses and respects robots.txt rules
 - **Conditional Requests**: Uses If-Modified-Since/ETag headers, handles 304 Not Modified
 - **Failure Tracking**: Tracks consecutive failures per feed, can filter by max failures
 - **Update Intervals**: Respects feed's `minUpdateInterval` to avoid over-fetching
 - **User-Agent**: Identifies as "Celestra/1.0 (MistKit RSS Reader; +https://github.com/brightdigit/MistKit)"
 
-All web etiquette features are demonstrated in UpdateCommand.swift.
+All web etiquette features are demonstrated in UpdateCommand.swift using services from CelestraKit.
 
 ## CloudKit Schema
 
@@ -194,6 +193,10 @@ Code must be concurrency-safe with proper actor isolation.
 - Booleans: Always store as INT64 (0/1) in CloudKit schema
 - Batch operations: Chunk into batches of 10 for large payloads, use non-atomic for partial success
 - Logging: Use CelestraLogger categories (cloudkit, rss, operations, errors)
+
+**External Dependencies:**
+- `RateLimiter` and `RobotsTxtService` are from CelestraKit - contributions should be made to that repository
+- Feed and Article models are also in CelestraKit for reuse across the Celestra ecosystem
 
 **Testing CloudKit Operations:**
 - Use development environment first

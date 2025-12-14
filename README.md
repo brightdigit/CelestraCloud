@@ -308,19 +308,52 @@ let service = try CloudKitService(
 ## Architecture
 
 ```
-Celestra/
+Sources/Celestra/
 ├── Models/
-│   ├── Feed.swift          # Feed metadata model
-│   └── Article.swift       # Article model
+│   └── BatchOperationResult.swift     # Batch operation tracking
 ├── Services/
-│   ├── RSSFetcherService.swift   # RSS parsing with SyndiKit
-│   └── CloudKitService+Celestra.swift  # CloudKit operations
+│   ├── RSSFetcherService.swift        # RSS parsing with SyndiKit
+│   ├── CloudKitService+Celestra.swift # CloudKit operations
+│   ├── CelestraError.swift            # Error types
+│   └── CelestraLogger.swift           # Structured logging
 ├── Commands/
-│   ├── AddFeedCommand.swift      # Add feed command
-│   ├── UpdateCommand.swift       # Update feeds command (demonstrates filters)
-│   └── ClearCommand.swift        # Clear data command
-└── Celestra.swift                # Main CLI entry point
+│   ├── AddFeedCommand.swift           # Add feed command
+│   ├── UpdateCommand.swift            # Update feeds command (demonstrates filters)
+│   └── ClearCommand.swift             # Clear data command
+├── Extensions/
+│   ├── Feed+MistKit.swift             # Feed ↔ CloudKit conversion
+│   └── Article+MistKit.swift          # Article ↔ CloudKit conversion
+├── CelestraConfig.swift               # CloudKit service factory
+└── Celestra.swift                     # Main CLI entry point
+
+External Dependencies (from CelestraKit):
+├── Feed.swift                         # Feed metadata model
+├── Article.swift                      # Article model
+├── RateLimiter.swift                  # Per-domain rate limiting
+└── RobotsTxtService.swift             # Robots.txt compliance checking
 ```
+
+## Dependencies
+
+CelestraCloud builds upon several key dependencies:
+
+### CelestraKit
+[CelestraKit](https://github.com/brightdigit/CelestraKit) provides shared models and web etiquette services:
+- **Feed & Article Models**: Core data structures for RSS feed metadata and articles
+- **RateLimiter**: Actor-based per-domain rate limiting for respectful web crawling
+- **RobotsTxtService**: Robots.txt parsing and compliance checking
+
+This separation allows the models and services to be reused across the Celestra ecosystem (future mobile apps, additional CLI tools, etc.).
+
+### MistKit
+CloudKit Web Services wrapper providing query filtering, sorting, and record modification APIs.
+
+### SyndiKit
+RSS and Atom feed parsing library from BrightDigit.
+
+### Swift Packages
+- **ArgumentParser**: Command-line interface framework
+- **Logging**: Structured logging infrastructure
 
 ## Development
 
@@ -366,12 +399,12 @@ make test
 swift test
 ```
 
-The test suite includes 41 tests across 5 test suites with 65%+ code coverage:
-- RobotsTxtServiceTests (10 tests)
-- RateLimiterTests (9 tests)
+The test suite includes 22 local tests across 3 test suites:
 - Feed+MistKitTests (7 tests)
 - Article+MistKitTests (6 tests)
 - BatchOperationResultTests (9 tests)
+
+Note: RateLimiter and RobotsTxtService tests (19 tests) are maintained in the CelestraKit package.
 
 ### Code Quality
 

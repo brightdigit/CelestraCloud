@@ -536,7 +536,7 @@ func updateArticles(_ articles: [PublicArticle]) async throws -> BatchOperationR
 
 ## Web Etiquette Features
 
-Celestra implements comprehensive web etiquette best practices to be a respectful RSS feed client.
+CelestraCloud demonstrates comprehensive web etiquette best practices using services from the CelestraKit package. These services (`RateLimiter` and `RobotsTxtService`) are maintained in CelestraKit to enable reuse across the Celestra ecosystem.
 
 ### Rate Limiting
 
@@ -557,7 +557,7 @@ celestra update --delay 5.0
 ```
 
 **Technical Details**:
-- Implemented via `RateLimiter` Actor for thread-safe delay tracking
+- Uses `RateLimiter` actor from CelestraKit for thread-safe delay tracking
 - Per-domain tracking prevents hammering same server
 - Async/await pattern ensures non-blocking operation
 
@@ -581,7 +581,7 @@ celestra update --skip-robots-check
 ```
 
 **Technical Details**:
-- Implemented via `RobotsTxtService` Actor
+- Uses `RobotsTxtService` actor from CelestraKit
 - Parses User-Agent sections, Disallow rules, and Crawl-delay directives
 - Network errors default to "allow" rather than blocking feeds
 

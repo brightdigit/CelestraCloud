@@ -129,13 +129,14 @@ This document outlines the requirements for preparing CelestraCloud for its firs
 ### 5. Testing
 
 #### 5.1 Add Unit Tests
-**Current Coverage**: Minimal or none
-**Required Test Coverage**:
-- **RobotsTxtService**: Parsing logic, rule matching, wildcard handling
-- **RateLimiter**: Delay calculation, per-domain tracking, concurrent access
-- **Feed Model**: `toFieldsDict()` conversion, `init(from:)` parsing, field mapping correctness
-- **Article Model**: `toFieldsDict()` conversion, `init(from:)` parsing, optional field handling
-- **BatchOperationResult**: Success rate calculation, error aggregation
+**Status**: Completed - 22 local tests, 19 tests in CelestraKit
+**Local Test Coverage**:
+- **Feed Model**: `toFieldsDict()` conversion, `init(from:)` parsing, field mapping correctness (7 tests)
+- **Article Model**: `toFieldsDict()` conversion, `init(from:)` parsing, optional field handling (6 tests)
+- **BatchOperationResult**: Success rate calculation, error aggregation (9 tests)
+**CelestraKit Test Coverage** (migrated):
+- **RobotsTxtService**: Parsing logic, rule matching, wildcard handling (10 tests)
+- **RateLimiter**: Delay calculation, per-domain tracking, concurrent access (9 tests)
 **Acceptance Criteria**:
 - Test target properly configured in Package.swift
 - Tests run successfully in CI

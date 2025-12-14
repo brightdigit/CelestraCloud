@@ -22,12 +22,14 @@ CelestraCloud is a production-ready command-line RSS reader that showcases MistK
 - ``UpdateCommand``
 - ``ClearCommand``
 
-### Services
+### Local Services
 
 - ``RSSFetcherService``
-- ``RobotsTxtService``
-- ``RateLimiter``
 - ``CelestraLogger``
+
+### External Services (from CelestraKit)
+
+CelestraCloud uses `RateLimiter` and `RobotsTxtService` from the CelestraKit package for web etiquette features.
 
 ### Models
 
