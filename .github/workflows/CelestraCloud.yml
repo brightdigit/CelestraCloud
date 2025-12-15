@@ -73,17 +73,17 @@ jobs:
       matrix:
         include:
           # SPM Build Matrix
-          - runs-on: macos-15
+          - runs-on: macos-26
             xcode: "/Applications/Xcode_26.2.app"
 
           # macOS Build Matrix
           - type: macos
-            runs-on: macos-15
+            runs-on: macos-26
             xcode: "/Applications/Xcode_26.2.app"
 
           # iOS Build
           - type: ios
-            runs-on: macos-15
+            runs-on: macos-26
             xcode: "/Applications/Xcode_26.2.app"
             deviceName: "iPhone 17 Pro"
             osVersion: "26.2"
@@ -92,21 +92,21 @@ jobs:
 
           # watchOS Build Matrix
           - type: watchos
-            runs-on: macos-15
+            runs-on: macos-26
             xcode: "/Applications/Xcode_26.2.app"
             deviceName: "Apple Watch Ultra 3 (49mm)"
             osVersion: "26.2"
 
           # tvOS Build
           - type: tvos
-            runs-on: macos-15
+            runs-on: macos-26
             xcode: "/Applications/Xcode_26.2.app"
             deviceName: "Apple TV"
             osVersion: "26.2"
 
           # visionOS Build
           - type: visionos
-            runs-on: macos-15
+            runs-on: macos-26
             xcode: "/Applications/Xcode_26.2.app"
             deviceName: "Apple Vision Pro"
             osVersion: "26.2"
