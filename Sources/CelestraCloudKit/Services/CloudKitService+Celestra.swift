@@ -34,11 +34,11 @@ public import MistKit
 
 /// CloudKit service extensions for Celestra operations
 @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-public extension CloudKitService {
+extension CloudKitService {
   // MARK: - Feed Operations
 
   /// Create a new Feed record
-  func createFeed(_ feed: Feed) async throws -> RecordInfo {
+  public func createFeed(_ feed: Feed) async throws -> RecordInfo {
     CelestraLogger.cloudkit.info("📝 Creating feed: \(feed.feedURL)")
 
     let operation = RecordOperation.create(
@@ -54,7 +54,7 @@ public extension CloudKitService {
   }
 
   /// Update an existing Feed record
-  func updateFeed(recordName: String, feed: Feed) async throws -> RecordInfo {
+  public func updateFeed(recordName: String, feed: Feed) async throws -> RecordInfo {
     CelestraLogger.cloudkit.info("🔄 Updating feed: \(feed.feedURL)")
 
     let operation = RecordOperation.update(
@@ -71,7 +71,7 @@ public extension CloudKitService {
   }
 
   /// Query feeds with optional filters (demonstrates QueryFilter and QuerySort)
-  func queryFeeds(
+  public func queryFeeds(
     lastAttemptedBefore: Date? = nil,
     minPopularity: Int64? = nil,
     limit: Int = 100
@@ -106,7 +106,7 @@ public extension CloudKitService {
   ///   - guids: Array of article GUIDs to check
   ///   - feedRecordName: Optional feed record name filter to scope the query
   /// - Returns: Array of existing Article records matching the GUIDs
-  func queryArticlesByGUIDs(
+  public func queryArticlesByGUIDs(
     _ guids: [String],
     feedRecordName: String? = nil
   ) async throws -> [Article] {
@@ -181,7 +181,7 @@ public extension CloudKitService {
   /// Create multiple Article records in batches with retry logic
   /// - Parameter articles: Articles to create
   /// - Returns: Batch operation result with success/failure tracking
-  func createArticles(_ articles: [Article]) async throws -> BatchOperationResult {
+  public func createArticles(_ articles: [Article]) async throws -> BatchOperationResult {
     guard !articles.isEmpty else {
       return BatchOperationResult()
     }
@@ -230,7 +230,7 @@ public extension CloudKitService {
   /// Update multiple Article records in batches with retry logic
   /// - Parameter articles: Articles to update (must have recordName set)
   /// - Returns: Batch operation result with success/failure tracking
-  func updateArticles(_ articles: [Article]) async throws -> BatchOperationResult {
+  public func updateArticles(_ articles: [Article]) async throws -> BatchOperationResult {
     guard !articles.isEmpty else {
       return BatchOperationResult()
     }
@@ -294,7 +294,7 @@ public extension CloudKitService {
   // MARK: - Cleanup Operations
 
   /// Delete all Feed records
-  func deleteAllFeeds() async throws {
+  public func deleteAllFeeds() async throws {
     let feeds = try await queryRecords(
       recordType: "Feed",
       limit: 200,
@@ -317,7 +317,7 @@ public extension CloudKitService {
   }
 
   /// Delete all Article records
-  func deleteAllArticles() async throws {
+  public func deleteAllArticles() async throws {
     let articles = try await queryRecords(
       recordType: "Article",
       limit: 200,

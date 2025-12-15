@@ -28,8 +28,12 @@
 //
 
 public import Foundation
-public import Logging
+import Logging
 import SyndiKit
+
+#if canImport(FoundationNetworking)
+  import FoundationNetworking
+#endif
 
 /// Service for fetching and parsing RSS feeds using SyndiKit with web etiquette
 @available(macOS 13.0, *)
@@ -193,7 +197,7 @@ public struct RSSFetcherService {
   /// Parse minimum update interval from RSS feed metadata
   /// - Parameter feed: Parsed feed from SyndiKit
   /// - Returns: Minimum update interval in seconds, or nil if not specified
-  private func parseUpdateInterval(from feed: Feedable) -> TimeInterval? {
+  private func parseUpdateInterval(from feed: any Feedable) -> TimeInterval? {
     // Try to access raw XML for custom elements
     // SyndiKit may not expose all RSS extensions directly
 

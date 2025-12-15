@@ -37,7 +37,7 @@ public struct BatchOperationResult {
   public var successfulRecords: [RecordInfo] = []
 
   /// Records that failed to process
-  public var failedRecords: [(article: Article, error: Error)] = []
+  public var failedRecords: [(article: Article, error: any Error)] = []
 
   public init() {}
 
@@ -86,7 +86,7 @@ public struct BatchOperationResult {
   }
 
   /// Append a failure
-  public mutating func appendFailure(article: Article, error: Error) {
+  public mutating func appendFailure(article: Article, error: any Error) {
     failedRecords.append((article, error))
   }
 }

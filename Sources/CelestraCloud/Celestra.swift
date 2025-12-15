@@ -35,7 +35,7 @@ import MistKit
 @main
 struct Celestra: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
-    commandName: "celestra",
+    commandName: "celestra-cloud",
     abstract: "RSS reader that syncs to CloudKit public database",
     discussion: """
       Celestra demonstrates MistKit's query filtering and sorting features by managing \

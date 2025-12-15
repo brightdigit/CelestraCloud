@@ -53,7 +53,7 @@ struct ClearCommand: AsyncParsableCommand {
       print("⚠️  This will DELETE ALL feeds and articles from CloudKit!")
       print("   Run with --confirm to proceed")
       print("")
-      print("   Example: celestra clear --confirm")
+      print("   Example: celestra-cloud clear --confirm")
       return
     }
 

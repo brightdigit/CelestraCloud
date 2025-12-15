@@ -36,13 +36,13 @@ public enum CelestraError: LocalizedError {
   case cloudKitError(CloudKitError)
 
   /// RSS feed fetch failed
-  case rssFetchFailed(URL, underlying: Error)
+  case rssFetchFailed(URL, underlying: any Error)
 
   /// Invalid feed data received
   case invalidFeedData(String)
 
   /// Batch operation failed
-  case batchOperationFailed([Error])
+  case batchOperationFailed([any Error])
 
   /// CloudKit quota exceeded
   case quotaExceeded

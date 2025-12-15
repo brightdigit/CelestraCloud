@@ -31,9 +31,9 @@ public import CelestraKit
 public import Foundation
 public import MistKit
 
-public extension Feed {
+extension Feed {
   /// Convert to CloudKit record fields dictionary using MistKit's FieldValue
-  func toFieldsDict() -> [String: FieldValue] {
+  public func toFieldsDict() -> [String: FieldValue] {
     var fields: [String: FieldValue] = [
       "feedURL": .string(feedURL),
       "title": .string(title),
@@ -99,7 +99,7 @@ public extension Feed {
   }
 
   /// Create Feed from MistKit RecordInfo
-  init(from record: RecordInfo) {
+  public init(from record: RecordInfo) {
     // Required string fields
     let feedURL: String
     if case .string(let value) = record.fields["feedURL"] {
