@@ -27,11 +27,11 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import Foundation
-import MistKit
+public import Foundation
+public import MistKit
 
 /// Comprehensive error types for Celestra RSS operations
-enum CelestraError: LocalizedError {
+public enum CelestraError: LocalizedError {
   /// CloudKit operation failed
   case cloudKitError(CloudKitError)
 
@@ -65,7 +65,7 @@ enum CelestraError: LocalizedError {
   // MARK: - Retriability
 
   /// Determines if this error can be retried
-  var isRetriable: Bool {
+  public var isRetriable: Bool {
     switch self {
     case .cloudKitError(let ckError):
       return isCloudKitErrorRetriable(ckError)
@@ -79,7 +79,7 @@ enum CelestraError: LocalizedError {
 
   // MARK: - LocalizedError Conformance
 
-  var errorDescription: String? {
+  public var errorDescription: String? {
     switch self {
     case .cloudKitError(let error):
       return "CloudKit operation failed: \(error.localizedDescription)"
@@ -104,7 +104,7 @@ enum CelestraError: LocalizedError {
     }
   }
 
-  var recoverySuggestion: String? {
+  public var recoverySuggestion: String? {
     switch self {
     case .quotaExceeded:
       return "Wait a few minutes for CloudKit quota to reset, then try again."

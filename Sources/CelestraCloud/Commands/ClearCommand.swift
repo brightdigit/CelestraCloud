@@ -28,6 +28,7 @@
 //
 
 import ArgumentParser
+import CelestraCloudKit
 import CelestraKit
 import Foundation
 import MistKit

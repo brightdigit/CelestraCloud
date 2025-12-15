@@ -27,14 +27,14 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import CelestraKit
-import Foundation
-import Logging
-import MistKit
+public import CelestraKit
+public import Foundation
+public import Logging
+public import MistKit
 
 /// CloudKit service extensions for Celestra operations
 @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-extension CloudKitService {
+public extension CloudKitService {
   // MARK: - Feed Operations
 
   /// Create a new Feed record

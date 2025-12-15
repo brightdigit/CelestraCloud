@@ -27,29 +27,43 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import ArgumentParser
-import Foundation
-import MistKit
+public import Foundation
+public import MistKit
+
+// MARK: - Configuration Error
+
+/// Custom error for configuration issues (library-compatible)
+public struct ConfigurationError: LocalizedError {
+  public let message: String
+
+  public init(_ message: String) {
+    self.message = message
+  }
+
+  public var errorDescription: String? {
+    message
+  }
+}
 
 // MARK: - Shared Configuration
 
 /// Shared configuration helper for creating CloudKit service
-enum CelestraConfig {
+public enum CelestraConfig {
   /// Create CloudKit service from environment variables
   @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-  static func createCloudKitService() throws -> CloudKitService {
+  public static func createCloudKitService() throws -> CloudKitService {
     // Validate required environment variables
     guard let containerID = ProcessInfo.processInfo.environment["CLOUDKIT_CONTAINER_ID"] else {
-      throw ValidationError("CLOUDKIT_CONTAINER_ID environment variable required")
+      throw ConfigurationError("CLOUDKIT_CONTAINER_ID environment variable required")
     }
 
     guard let keyID = ProcessInfo.processInfo.environment["CLOUDKIT_KEY_ID"] else {
-      throw ValidationError("CLOUDKIT_KEY_ID environment variable required")
+      throw ConfigurationError("CLOUDKIT_KEY_ID environment variable required")
     }
 
     guard let privateKeyPath = ProcessInfo.processInfo.environment["CLOUDKIT_PRIVATE_KEY_PATH"]
     else {
-      throw ValidationError("CLOUDKIT_PRIVATE_KEY_PATH environment variable required")
+      throw ConfigurationError("CLOUDKIT_PRIVATE_KEY_PATH environment variable required")
     }
 
     // Read private key from file

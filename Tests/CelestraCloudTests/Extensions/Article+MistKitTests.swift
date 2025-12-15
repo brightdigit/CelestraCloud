@@ -3,7 +3,7 @@ import Foundation
 import MistKit
 import Testing
 
-@testable import Celestra
+@testable import CelestraCloudKit
 
 @Suite("Article+MistKit Tests")
 struct ArticleMistKitTests {

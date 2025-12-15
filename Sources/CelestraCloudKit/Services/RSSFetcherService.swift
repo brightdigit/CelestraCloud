@@ -27,41 +27,41 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import Foundation
-import Logging
+public import Foundation
+public import Logging
 import SyndiKit
 
 /// Service for fetching and parsing RSS feeds using SyndiKit with web etiquette
 @available(macOS 13.0, *)
-struct RSSFetcherService {
+public struct RSSFetcherService {
   private let urlSession: URLSession
   private let userAgent: String
 
-  struct FeedData {
-    let title: String
-    let description: String?
-    let items: [FeedItem]
-    let minUpdateInterval: TimeInterval?  // Parsed from <ttl> or <updatePeriod>
+  public struct FeedData {
+    public let title: String
+    public let description: String?
+    public let items: [FeedItem]
+    public let minUpdateInterval: TimeInterval?  // Parsed from <ttl> or <updatePeriod>
   }
 
-  struct FeedItem {
-    let title: String
-    let link: String
-    let description: String?
-    let content: String?
-    let author: String?
-    let pubDate: Date?
-    let guid: String
+  public struct FeedItem {
+    public let title: String
+    public let link: String
+    public let description: String?
+    public let content: String?
+    public let author: String?
+    public let pubDate: Date?
+    public let guid: String
   }
 
-  struct FetchResponse {
-    let feedData: FeedData?  // nil if 304 Not Modified
-    let lastModified: String?
-    let etag: String?
-    let wasModified: Bool
+  public struct FetchResponse {
+    public let feedData: FeedData?  // nil if 304 Not Modified
+    public let lastModified: String?
+    public let etag: String?
+    public let wasModified: Bool
   }
 
-  init(
+  public init(
     userAgent: String = "Celestra/1.0 (MistKit RSS Reader; +https://github.com/brightdigit/MistKit)"
   ) {
     self.userAgent = userAgent
@@ -83,7 +83,7 @@ struct RSSFetcherService {
   ///   - lastModified: Optional Last-Modified header from previous fetch
   ///   - etag: Optional ETag header from previous fetch
   /// - Returns: Fetch response with feed data and HTTP metadata
-  func fetchFeed(
+  public func fetchFeed(
     from url: URL,
     lastModified: String? = nil,
     etag: String? = nil

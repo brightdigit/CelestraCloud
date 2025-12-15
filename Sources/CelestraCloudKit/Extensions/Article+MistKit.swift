@@ -27,11 +27,11 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import CelestraKit
-import Foundation
-import MistKit
+public import CelestraKit
+public import Foundation
+public import MistKit
 
-extension Article {
+public extension Article {
   /// Convert to CloudKit record fields dictionary using MistKit's FieldValue
   func toFieldsDict() -> [String: FieldValue] {
     var fields: [String: FieldValue] = [
