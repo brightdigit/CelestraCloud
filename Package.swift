@@ -80,10 +80,10 @@ let package = Package(
     name: "CelestraCloud",
     platforms: [
         .macOS(.v26),
-        .iOS(.v13),
-        .tvOS(.v13),
-        .watchOS(.v6),
-        .visionOS(.v1)
+        .iOS(.v26),
+        .tvOS(.v26),
+        .watchOS(.v26),
+        .visionOS(.v26)
     ],
     products: [
         .executable(name: "celestra-cloud", targets: ["CelestraCloud"]),
