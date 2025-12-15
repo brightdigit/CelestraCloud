@@ -18,6 +18,8 @@ jobs:
           - version: "6.2"
           - version: "6.2"
             nightly: true
+          - version: "6.3"
+            nightly: true
 
     steps:
       - uses: actions/checkout@v4
@@ -72,65 +74,42 @@ jobs:
         include:
           # SPM Build Matrix
           - runs-on: macos-15
-            xcode: "/Applications/Xcode_26.0.app"
-          - runs-on: macos-15
-            xcode: "/Applications/Xcode_16.4.app"
-          - runs-on: macos-15
-            xcode: "/Applications/Xcode_16.3.app"
+            xcode: "/Applications/Xcode_26.2.app"
 
           # macOS Build Matrix
           - type: macos
             runs-on: macos-15
-            xcode: "/Applications/Xcode_16.4.app"
+            xcode: "/Applications/Xcode_26.2.app"
 
           # iOS Build
           - type: ios
             runs-on: macos-15
-            xcode: "/Applications/Xcode_26.0.app"
+            xcode: "/Applications/Xcode_26.2.app"
             deviceName: "iPhone 17 Pro"
-            osVersion: "26.0.1"
+            osVersion: "26.2"
             download-platform: true
-            
-          - type: ios
-            runs-on: macos-15
-            xcode: "/Applications/Xcode_16.4.app"
-            deviceName: "iPhone 16e"
-            osVersion: "18.5"
-            
-          - type: ios
-            runs-on: macos-15
-            xcode: "/Applications/Xcode_16.3.app"
-            deviceName: "iPhone 16"
-            osVersion: "18.4"
-            
-  
+
+
           # watchOS Build Matrix
           - type: watchos
             runs-on: macos-15
-            xcode: "/Applications/Xcode_26.0.app"
+            xcode: "/Applications/Xcode_26.2.app"
             deviceName: "Apple Watch Ultra 3 (49mm)"
-            osVersion: "26.0"
+            osVersion: "26.2"
 
           # tvOS Build
           - type: tvos
             runs-on: macos-15
-            xcode: "/Applications/Xcode_26.0.app"
+            xcode: "/Applications/Xcode_26.2.app"
             deviceName: "Apple TV"
-            osVersion: "26.0"
-
-          # watchOS Build
-          - type: watchos
-            runs-on: macos-15
-            xcode: "/Applications/Xcode_16.4.app"
-            deviceName: Apple Watch Ultra 2 (49mm)
-            osVersion: '11.5'
+            osVersion: "26.2"
 
           # visionOS Build
           - type: visionos
             runs-on: macos-15
-            xcode: "/Applications/Xcode_26.0.app"
+            xcode: "/Applications/Xcode_26.2.app"
             deviceName: "Apple Vision Pro"
-            osVersion: "26.0"
+            osVersion: "26.2"
             download-platform: true
 
     steps:
