@@ -4,7 +4,7 @@
 ; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
 ;
 [subrepo]
-	remote = https://github.com/brightdigit/CelestraKit.git
+	remote = git@github.com:brightdigit/CelestraKit.git
 	branch = cloud-fixes
 	commit = 4a2c338aa66e7ff38c90c1e305b0f1fcc46d126b
 	parent = 9600475d70ff46379cde61cd56427326f5181315
