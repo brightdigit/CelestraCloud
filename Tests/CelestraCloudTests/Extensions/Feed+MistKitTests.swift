@@ -56,8 +56,7 @@ struct FeedMistKitTests {
     #expect(fields["successfulAttempts"] == .int64(4))
     #expect(fields["failureCount"] == .int64(1))
 
-    // Check date field
-    #expect(fields["addedAt"] == .date(Date(timeIntervalSince1970: 1_000_000)))
+    // Note: addedAt uses CloudKit's built-in createdTimestamp system field, not in dictionary
   }
 
   @Test("toFieldsDict handles optional fields correctly")
@@ -104,8 +103,8 @@ struct FeedMistKitTests {
     #expect(fields["lastFailureReason"] == .string("Network error"))
 
     // Check optional date fields
-    #expect(fields["lastVerified"] == .date(Date(timeIntervalSince1970: 2_000_000)))
-    #expect(fields["lastAttempted"] == .date(Date(timeIntervalSince1970: 3_000_000)))
+    #expect(fields["verifiedTimestamp"] == .date(Date(timeIntervalSince1970: 2_000_000)))
+    #expect(fields["attemptedTimestamp"] == .date(Date(timeIntervalSince1970: 3_000_000)))
 
     // Check optional numeric fields
     #expect(fields["updateFrequency"] == .double(3_600.0))
@@ -160,9 +159,9 @@ struct FeedMistKitTests {
     #expect(fields["imageURL"] == nil)
     #expect(fields["siteURL"] == nil)
     #expect(fields["language"] == nil)
-    #expect(fields["lastVerified"] == nil)
+    #expect(fields["verifiedTimestamp"] == nil)
     #expect(fields["updateFrequency"] == nil)
-    #expect(fields["lastAttempted"] == nil)
+    #expect(fields["attemptedTimestamp"] == nil)
     #expect(fields["etag"] == nil)
     #expect(fields["lastModified"] == nil)
     #expect(fields["lastFailureReason"] == nil)
@@ -185,13 +184,13 @@ struct FeedMistKitTests {
       "isActive": .int64(1),
       "qualityScore": .int64(80),
       "subscriberCount": .int64(200),
-      "addedAt": .date(Date(timeIntervalSince1970: 1_000_000)),
-      "lastVerified": .date(Date(timeIntervalSince1970: 2_000_000)),
+      "createdTimestamp": .date(Date(timeIntervalSince1970: 1_000_000)),
+      "verifiedTimestamp": .date(Date(timeIntervalSince1970: 2_000_000)),
       "updateFrequency": .double(3_600.0),
       "tags": .list([.string("tech"), .string("news")]),
       "totalAttempts": .int64(10),
       "successfulAttempts": .int64(8),
-      "lastAttempted": .date(Date(timeIntervalSince1970: 3_000_000)),
+      "attemptedTimestamp": .date(Date(timeIntervalSince1970: 3_000_000)),
       "etag": .string("etag123"),
       "lastModified": .string("Mon, 01 Jan 2024 00:00:00 GMT"),
       "failureCount": .int64(2),
