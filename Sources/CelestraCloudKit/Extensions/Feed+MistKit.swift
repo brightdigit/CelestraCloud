@@ -99,20 +99,22 @@ extension Feed: CloudKitConvertible {
   }
 
   /// Create Feed from MistKit RecordInfo
-  public init(from record: RecordInfo) {
-    // Required string fields
-    let feedURL: String
-    if case .string(let value) = record.fields["feedURL"] {
-      feedURL = value
-    } else {
-      feedURL = ""
+  public init(from record: RecordInfo) throws {
+    // Required string fields with validation
+    guard case .string(let feedURL) = record.fields["feedURL"],
+          !feedURL.isEmpty else {
+      throw CloudKitConversionError.missingRequiredField(
+        fieldName: "feedURL",
+        recordType: "Feed"
+      )
     }
 
-    let title: String
-    if case .string(let value) = record.fields["title"] {
-      title = value
-    } else {
-      title = ""
+    guard case .string(let title) = record.fields["title"],
+          !title.isEmpty else {
+      throw CloudKitConversionError.missingRequiredField(
+        fieldName: "title",
+        recordType: "Feed"
+      )
     }
 
     // Optional string fields

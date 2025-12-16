@@ -96,7 +96,12 @@ extension CloudKitService {
       limit: limit
     )
 
-    return records.map { Feed(from: $0) }
+    do {
+      return try records.map { try Feed(from: $0) }
+    } catch {
+      CelestraLogger.errors.error("Failed to convert Feed records: \(error)")
+      throw error
+    }
   }
 
   // MARK: - Article Operations
@@ -141,9 +146,16 @@ extension CloudKitService {
         desiredKeys: nil  // Fetch all fields
       )
 
-      // Convert to Article objects
-      let articles = records.map { Article(from: $0) }
-      allArticles.append(contentsOf: articles)
+      // Convert to Article objects, skipping any that fail validation
+      for record in records {
+        do {
+          let article = try Article(from: record)
+          allArticles.append(article)
+        } catch {
+          CelestraLogger.errors.warning("Skipping invalid article record \(record.recordName): \(error)")
+          // Continue processing other articles
+        }
+      }
     }
 
     return allArticles

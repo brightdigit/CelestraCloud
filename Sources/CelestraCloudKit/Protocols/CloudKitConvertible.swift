@@ -25,7 +25,6 @@ protocol CloudKitConvertible {
     /// Create an instance from a CloudKit record
     ///
     /// - Parameter record: The CloudKit RecordInfo containing field data
-    /// - Note: This initializer uses failable extraction with default values for required fields.
-    ///         For validation with error handling, see Issue 5 (throwing initializers).
-    init(from record: RecordInfo)
+    /// - Throws: CloudKitConversionError if required fields are missing or invalid
+    init(from record: RecordInfo) throws
 }

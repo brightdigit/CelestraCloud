@@ -86,34 +86,38 @@ extension Article: CloudKitConvertible {
   }
 
   /// Create Article from MistKit RecordInfo
-  public init(from record: RecordInfo) {
-    // Required string fields
-    let feedRecordName: String
-    if case .string(let value) = record.fields["feedRecordName"] {
-      feedRecordName = value
-    } else {
-      feedRecordName = ""
+  public init(from record: RecordInfo) throws {
+    // Required string fields with validation
+    guard case .string(let feedRecordName) = record.fields["feedRecordName"],
+          !feedRecordName.isEmpty else {
+      throw CloudKitConversionError.missingRequiredField(
+        fieldName: "feedRecordName",
+        recordType: "Article"
+      )
     }
 
-    let guid: String
-    if case .string(let value) = record.fields["guid"] {
-      guid = value
-    } else {
-      guid = ""
+    guard case .string(let guid) = record.fields["guid"],
+          !guid.isEmpty else {
+      throw CloudKitConversionError.missingRequiredField(
+        fieldName: "guid",
+        recordType: "Article"
+      )
     }
 
-    let title: String
-    if case .string(let value) = record.fields["title"] {
-      title = value
-    } else {
-      title = ""
+    guard case .string(let title) = record.fields["title"],
+          !title.isEmpty else {
+      throw CloudKitConversionError.missingRequiredField(
+        fieldName: "title",
+        recordType: "Article"
+      )
     }
 
-    let url: String
-    if case .string(let value) = record.fields["url"] {
-      url = value
-    } else {
-      url = ""
+    guard case .string(let url) = record.fields["url"],
+          !url.isEmpty else {
+      throw CloudKitConversionError.missingRequiredField(
+        fieldName: "url",
+        recordType: "Article"
+      )
     }
 
     // Optional string fields
