@@ -171,7 +171,7 @@ struct FeedMistKitTests {
   }
 
   @Test("init(from:) parses all fields correctly")
-  func testInitFromRecordAllFields() {
+  func testInitFromRecordAllFields() throws {
     let fields: [String: FieldValue] = [
       "feedURL": .string("https://example.com/feed.xml"),
       "title": .string("Test Feed"),
@@ -206,7 +206,7 @@ struct FeedMistKitTests {
       fields: fields
     )
 
-    let feed = Feed(from: record)
+    let feed = try Feed(from: record)
 
     #expect(feed.recordName == "test-record")
     #expect(feed.feedURL == "https://example.com/feed.xml")
@@ -236,7 +236,7 @@ struct FeedMistKitTests {
   }
 
   @Test("init(from:) handles missing optional fields with defaults")
-  func testInitFromRecordMissingFields() {
+  func testInitFromRecordMissingFields() throws {
     let fields: [String: FieldValue] = [
       "feedURL": .string("https://example.com/feed.xml"),
       "title": .string("Minimal Feed"),
@@ -249,7 +249,7 @@ struct FeedMistKitTests {
       fields: fields
     )
 
-    let feed = Feed(from: record)
+    let feed = try Feed(from: record)
 
     // Required fields should be set
     #expect(feed.feedURL == "https://example.com/feed.xml")
@@ -280,7 +280,7 @@ struct FeedMistKitTests {
   }
 
   @Test("Round-trip conversion preserves data")
-  func testRoundTripConversion() {
+  func testRoundTripConversion() throws {
     let originalFeed = Feed(
       recordName: "round-trip",
       recordChangeTag: "tag1",
@@ -322,7 +322,7 @@ struct FeedMistKitTests {
     )
 
     // Convert back to Feed
-    let reconstructedFeed = Feed(from: record)
+    let reconstructedFeed = try Feed(from: record)
 
     // Verify all fields match
     #expect(reconstructedFeed.feedURL == originalFeed.feedURL)
@@ -349,7 +349,7 @@ struct FeedMistKitTests {
   }
 
   @Test("Boolean fields correctly convert between Bool and Int64")
-  func testBooleanFieldConversion() {
+  func testBooleanFieldConversion() throws {
     let feed = Feed(
       recordName: "bool-test",
       recordChangeTag: nil,
@@ -394,7 +394,7 @@ struct FeedMistKitTests {
       fields: fields
     )
 
-    let reconstructed = Feed(from: record)
+    let reconstructed = try Feed(from: record)
 
     #expect(reconstructed.isFeatured == true)
     #expect(reconstructed.isVerified == false)

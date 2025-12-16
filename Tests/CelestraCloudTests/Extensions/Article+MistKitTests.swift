@@ -106,7 +106,7 @@ struct ArticleMistKitTests {
   }
 
   @Test("init(from:) parses all fields correctly")
-  func testInitFromRecordAllFields() {
+  func testInitFromRecordAllFields() throws {
     let fetchedDate = Date(timeIntervalSince1970: 1_000_000)
     let expiresDate = Date(timeIntervalSince1970: 3_000_000)
 
@@ -137,7 +137,7 @@ struct ArticleMistKitTests {
       fields: fields
     )
 
-    let article = Article(from: record)
+    let article = try Article(from: record)
 
     #expect(article.recordName == "complete-article-record")
     #expect(article.feedRecordName == "feed-123")
@@ -158,7 +158,7 @@ struct ArticleMistKitTests {
   }
 
   @Test("init(from:) handles missing optional fields with defaults")
-  func testInitFromRecordMissingFields() {
+  func testInitFromRecordMissingFields() throws {
     let fetchedDate = Date(timeIntervalSince1970: 1_000_000)
     let expiresDate = Date(timeIntervalSince1970: 2_000_000)
 
@@ -179,7 +179,7 @@ struct ArticleMistKitTests {
       fields: fields
     )
 
-    let article = Article(from: record)
+    let article = try Article(from: record)
 
     // Required fields should be set
     #expect(article.feedRecordName == "feed-123")
@@ -202,7 +202,7 @@ struct ArticleMistKitTests {
   }
 
   @Test("Round-trip conversion preserves data")
-  func testRoundTripConversion() {
+  func testRoundTripConversion() throws {
     let originalArticle = Article(
       recordName: "roundtrip-article",
       recordChangeTag: "rt-tag",
@@ -236,7 +236,7 @@ struct ArticleMistKitTests {
     )
 
     // Convert back to Article
-    let reconstructedArticle = Article(from: record)
+    let reconstructedArticle = try Article(from: record)
 
     // Verify all fields match
     #expect(reconstructedArticle.feedRecordName == originalArticle.feedRecordName)
