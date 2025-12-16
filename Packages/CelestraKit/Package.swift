@@ -62,9 +62,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(path: "../Syndikit"),
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.6.0"),
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.0.0")
+        .package(url: "https://github.com/brightdigit/SyndiKit.git", from: "0.6.1")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -72,9 +70,7 @@ let package = Package(
         .target(
             name: "CelestraKit",
             dependencies: [
-                .product(name: "SyndiKit", package: "Syndikit"),
-                .product(name: "Logging", package: "swift-log"),
-                .product(name: "Crypto", package: "swift-crypto")
+                .product(name: "SyndiKit", package: "SyndiKit")
             ],
             swiftSettings: swiftSettings
         ),
