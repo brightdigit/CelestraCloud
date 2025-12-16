@@ -91,7 +91,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/brightdigit/MistKit.git", from: "1.0.0-alpha.3"),
-        .package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1"),  // Shared models
+        .package(path: "Packages/CelestraKit"),  // Local development
         .package(url: "https://github.com/brightdigit/SyndiKit.git", from: "0.6.1"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0")
