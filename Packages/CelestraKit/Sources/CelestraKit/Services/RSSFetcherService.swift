@@ -7,7 +7,7 @@
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation
-//  files (the “Software”), to deal in the Software without
+//  files (the "Software"), to deal in the Software without
 //  restriction, including without limitation the rights to use,
 //  copy, modify, merge, publish, distribute, sublicense, and/or
 //  sell copies of the Software, and to permit persons to whom the
@@ -17,7 +17,7 @@
 //  The above copyright notice and this permission notice shall be
 //  included in all copies or substantial portions of the Software.
 //
-//  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 //  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 //  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
@@ -32,53 +32,34 @@ import Logging
 import SyndiKit
 
 #if canImport(FoundationNetworking)
-  import FoundationNetworking
+  public import FoundationNetworking
 #endif
 
 /// Service for fetching and parsing RSS feeds using SyndiKit with web etiquette
-@available(macOS 13.0, *)
 public struct RSSFetcherService {
   private let urlSession: URLSession
-  private let userAgent: String
-
-  public struct FeedData {
-    public let title: String
-    public let description: String?
-    public let items: [FeedItem]
-    public let minUpdateInterval: TimeInterval?  // Parsed from <ttl> or <updatePeriod>
-  }
-
-  public struct FeedItem {
-    public let title: String
-    public let link: String
-    public let description: String?
-    public let content: String?
-    public let author: String?
-    public let pubDate: Date?
-    public let guid: String
-  }
-
-  public struct FetchResponse {
-    public let feedData: FeedData?  // nil if 304 Not Modified
-    public let lastModified: String?
-    public let etag: String?
-    public let wasModified: Bool
-  }
+  private let userAgent: UserAgent
 
   public init(
-    userAgent: String = "Celestra/1.0 (MistKit RSS Reader; +https://github.com/brightdigit/MistKit)"
+    userAgent: UserAgent,
+    configuration: URLSessionConfiguration = .default
   ) {
     self.userAgent = userAgent
 
-    // Create custom URLSession with proper configuration
-    let configuration = URLSessionConfiguration.default
+    // Configure URLSession with proper headers
     configuration.httpAdditionalHeaders = [
-      "User-Agent": userAgent,
+      "User-Agent": userAgent.string,
       "Accept":
         "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.7",
     ]
 
     self.urlSession = URLSession(configuration: configuration)
+  }
+
+  // Internal initializer for testing with custom URLSession
+  internal init(urlSession: URLSession, userAgent: UserAgent) {
+    self.urlSession = urlSession
+    self.userAgent = userAgent
   }
 
   /// Fetch and parse RSS feed from URL with conditional request support
@@ -153,6 +134,9 @@ public struct RSSFetcherService {
 
         // Skip if link is empty
         guard !link.isEmpty else {
+          CelestraLogger.rss.warning(
+            "⚠️ Dropping feed item with empty link: title='\(entry.title)', id='\(entry.id.description)'"
+          )
           return nil
         }
 
@@ -163,7 +147,11 @@ public struct RSSFetcherService {
           content: entry.contentHtml,
           author: entry.authors.first?.name,
           pubDate: entry.published,
-          guid: entry.id.description  // Use id's description as guid
+          // GUID Strategy: Use SyndiKit's EntryID.description which provides:
+          // - RSS: <guid> element value, or <link> as fallback
+          // - Atom: <id> element value (required by spec)
+          // This ensures globally unique identifiers for deduplication
+          guid: entry.id.description
         )
       }
 
@@ -198,20 +186,38 @@ public struct RSSFetcherService {
   /// - Parameter feed: Parsed feed from SyndiKit
   /// - Returns: Minimum update interval in seconds, or nil if not specified
   private func parseUpdateInterval(from feed: any Feedable) -> TimeInterval? {
-    // Try to access raw XML for custom elements
-    // SyndiKit may not expose all RSS extensions directly
+    // Only RSS feeds support TTL and Syndication module
+    // Atom and JSON feeds don't have equivalent metadata
+    guard let rssFeed = feed as? RSSFeed else {
+      return nil
+    }
 
-    // For now, we'll use a simple heuristic:
-    // - If feed has <ttl> tag (in minutes), use that
-    // - If feed has <sy:updatePeriod> and <sy:updateFrequency> (Syndication module), use that
-    // - Otherwise, default to nil (no preference)
+    // Priority 1: Use <ttl> if present (in minutes)
+    if let ttl = rssFeed.channel.ttl, ttl > 0 {
+      return TimeInterval(ttl * 60)  // Convert minutes to seconds
+    }
 
-    // Note: SyndiKit's Feedable protocol doesn't expose these directly,
-    // so we'd need to access the raw XML or extend SyndiKit
-    // For this implementation, we'll parse common values if available
+    // Priority 2: Use Syndication module (<sy:updatePeriod> and <sy:updateFrequency>)
+    if let syndication = rssFeed.channel.syndication {
+      let baseInterval: TimeInterval
+      switch syndication.period {
+      case .hourly:
+        baseInterval = 3_600  // 1 hour
+      case .daily:
+        baseInterval = 86_400  // 1 day
+      case .weekly:
+        baseInterval = 604_800  // 1 week
+      case .monthly:
+        baseInterval = 2_592_000  // 30 days (approximation)
+      case .yearly:
+        baseInterval = 31_536_000  // 365 days
+      }
 
-    // Default: no specific interval (1 hour minimum is reasonable)
-    // This could be enhanced by parsing the raw XML data
-    nil  // TODO: Implement RSS <ttl> and <sy:*> parsing if needed
+      // frequency = how many times per period
+      // Calculate minimum interval between updates
+      return baseInterval / TimeInterval(syndication.frequency)
+    }
+
+    return nil  // No TTL or syndication info found
   }
 }

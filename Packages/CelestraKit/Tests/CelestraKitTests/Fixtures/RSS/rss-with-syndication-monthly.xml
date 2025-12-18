@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/">
+  <channel>
+    <title>Syndication Monthly Feed</title>
+    <link>https://example.com</link>
+    <description>Feed with monthly syndication</description>
+
+    <sy:updatePeriod>monthly</sy:updatePeriod>
+    <sy:updateFrequency>1</sy:updateFrequency>
+
+    <item>
+      <title>Test Item</title>
+      <link>https://example.com/item</link>
+      <guid>item-1</guid>
+    </item>
+  </channel>
+</rss>

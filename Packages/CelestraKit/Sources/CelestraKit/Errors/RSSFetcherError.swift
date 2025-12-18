@@ -2,7 +2,8 @@
 //  RSSFetcherError.swift
 //  CelestraKit
 //
-//  Created for Celestra on 2025-12-16.
+//  Created by Leo Dion.
+//  Copyright © 2025 BrightDigit.
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation
@@ -30,15 +31,15 @@ public import Foundation
 
 /// Errors thrown by RSSFetcherService
 public enum RSSFetcherError: LocalizedError {
-    case invalidFeedData(String)
-    case rssFetchFailed(URL, underlying: Error)
+  case invalidFeedData(String)
+  case rssFetchFailed(URL, underlying: any Error)
 
-    public var errorDescription: String? {
-        switch self {
-        case .invalidFeedData(let message):
-            return "Invalid feed data: \(message)"
-        case .rssFetchFailed(let url, let error):
-            return "Failed to fetch RSS feed from \(url.absoluteString): \(error.localizedDescription)"
-        }
+  public var errorDescription: String? {
+    switch self {
+    case .invalidFeedData(let message):
+      return "Invalid feed data: \(message)"
+    case .rssFetchFailed(let url, let error):
+      return "Failed to fetch RSS feed from \(url.absoluteString): \(error.localizedDescription)"
     }
+  }
 }

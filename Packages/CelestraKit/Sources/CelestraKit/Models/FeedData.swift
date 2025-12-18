@@ -1,5 +1,5 @@
 //
-//  CloudKitConversionError.swift
+//  FeedData.swift
 //  CelestraKit
 //
 //  Created by Leo Dion.
@@ -29,20 +29,35 @@
 
 public import Foundation
 
-/// Errors thrown during CloudKit record conversion
-public enum CloudKitConversionError: LocalizedError {
-  case missingRequiredField(fieldName: String, recordType: String)
-  case invalidFieldType(fieldName: String, expected: String, actual: String)
-  case invalidFieldValue(fieldName: String, reason: String)
+/// Represents RSS/Atom feed metadata and content
+public struct FeedData: Sendable, Codable, Hashable {
+  /// Feed title
+  public let title: String
 
-  public var errorDescription: String? {
-    switch self {
-    case .missingRequiredField(let field, let type):
-      return "Required field '\(field)' missing in \(type) record"
-    case .invalidFieldType(let field, let expected, let actual):
-      return "Invalid type for '\(field)': expected \(expected), got \(actual)"
-    case .invalidFieldValue(let field, let reason):
-      return "Invalid value for '\(field)': \(reason)"
-    }
+  /// Feed description or subtitle
+  public let description: String?
+
+  /// Array of feed items/entries
+  public let items: [FeedItem]
+
+  /// Minimum update interval in seconds, parsed from RSS <ttl> or Syndication module
+  public let minUpdateInterval: TimeInterval?
+
+  /// Initialize a FeedData instance
+  /// - Parameters:
+  ///   - title: Feed title
+  ///   - description: Feed description or subtitle (optional)
+  ///   - items: Array of feed items/entries
+  ///   - minUpdateInterval: Minimum update interval in seconds (optional)
+  public init(
+    title: String,
+    description: String? = nil,
+    items: [FeedItem],
+    minUpdateInterval: TimeInterval? = nil
+  ) {
+    self.title = title
+    self.description = description
+    self.items = items
+    self.minUpdateInterval = minUpdateInterval
   }
 }

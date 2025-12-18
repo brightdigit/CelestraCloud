@@ -1,5 +1,5 @@
 //
-//  CloudKitConversionError.swift
+//  FeedItem.swift
 //  CelestraKit
 //
 //  Created by Leo Dion.
@@ -29,20 +29,53 @@
 
 public import Foundation
 
-/// Errors thrown during CloudKit record conversion
-public enum CloudKitConversionError: LocalizedError {
-  case missingRequiredField(fieldName: String, recordType: String)
-  case invalidFieldType(fieldName: String, expected: String, actual: String)
-  case invalidFieldValue(fieldName: String, reason: String)
+/// Represents a single RSS/Atom feed entry/item
+public struct FeedItem: Sendable, Codable, Hashable {
+  /// Item title
+  public let title: String
 
-  public var errorDescription: String? {
-    switch self {
-    case .missingRequiredField(let field, let type):
-      return "Required field '\(field)' missing in \(type) record"
-    case .invalidFieldType(let field, let expected, let actual):
-      return "Invalid type for '\(field)': expected \(expected), got \(actual)"
-    case .invalidFieldValue(let field, let reason):
-      return "Invalid value for '\(field)': \(reason)"
-    }
+  /// Item link/URL
+  public let link: String
+
+  /// Item summary or excerpt
+  public let description: String?
+
+  /// Full HTML content
+  public let content: String?
+
+  /// Author name
+  public let author: String?
+
+  /// Publication date
+  public let pubDate: Date?
+
+  /// Globally unique identifier
+  public let guid: String
+
+  /// Initialize a FeedItem instance
+  /// - Parameters:
+  ///   - title: Item title
+  ///   - link: Item link/URL
+  ///   - description: Item summary or excerpt (optional)
+  ///   - content: Full HTML content (optional)
+  ///   - author: Author name (optional)
+  ///   - pubDate: Publication date (optional)
+  ///   - guid: Globally unique identifier
+  public init(
+    title: String,
+    link: String,
+    description: String? = nil,
+    content: String? = nil,
+    author: String? = nil,
+    pubDate: Date? = nil,
+    guid: String
+  ) {
+    self.title = title
+    self.link = link
+    self.description = description
+    self.content = content
+    self.author = author
+    self.pubDate = pubDate
+    self.guid = guid
   }
 }

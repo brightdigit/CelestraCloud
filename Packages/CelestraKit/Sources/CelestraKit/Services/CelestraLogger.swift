@@ -2,7 +2,8 @@
 //  CelestraLogger.swift
 //  CelestraKit
 //
-//  Created for Celestra on 2025-12-16.
+//  Created by Leo Dion.
+//  Copyright © 2025 BrightDigit.
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation

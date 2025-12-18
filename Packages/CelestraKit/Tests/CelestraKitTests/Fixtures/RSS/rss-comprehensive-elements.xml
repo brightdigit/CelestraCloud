@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>Comprehensive RSS Elements Test</title>
+    <link>https://example.com</link>
+    <description>Testing various RSS 2.0 elements</description>
+    <language>en-us</language>
+    <copyright>Copyright 2024</copyright>
+    <managingEditor>editor@example.com (Jane Editor)</managingEditor>
+    <webMaster>webmaster@example.com (Bob Webmaster)</webMaster>
+    <category>Technology</category>
+    <category>News</category>
+
+    <!-- Item with all standard RSS 2.0 elements -->
+    <item>
+      <title>Comprehensive Item</title>
+      <link>https://example.com/post/1</link>
+      <description>Item description</description>
+      <author>author@example.com (John Doe)</author>
+      <category>Programming</category>
+      <category domain="https://example.com/categories/tech">Technology</category>
+      <comments>https://example.com/post/1#comments</comments>
+      <enclosure url="https://example.com/podcast.mp3" length="12345678" type="audio/mpeg"/>
+      <guid isPermaLink="true">https://example.com/post/1</guid>
+      <pubDate>Mon, 01 Jan 2024 12:00:00 GMT</pubDate>
+      <source url="https://source.com/feed">Source Feed</source>
+      <dc:creator>John Doe</dc:creator>
+      <content:encoded><![CDATA[<p>Full HTML content</p>]]></content:encoded>
+    </item>
+
+    <!-- Item with plain text author (non-spec compliant) -->
+    <item>
+      <title>Plain Text Author</title>
+      <link>https://example.com/post/2</link>
+      <description>Testing plain text author</description>
+      <author>Plain Text Name</author>
+      <guid>post-2</guid>
+    </item>
+
+    <!-- Item with email-only author -->
+    <item>
+      <title>Email Only Author</title>
+      <link>https://example.com/post/3</link>
+      <description>Testing email-only author</description>
+      <author>author@example.com</author>
+      <guid>post-3</guid>
+    </item>
+
+    <!-- Item with media:thumbnail (Media RSS) -->
+    <item>
+      <title>Item with Media Elements</title>
+      <link>https://example.com/post/4</link>
+      <description>Testing media RSS elements</description>
+      <guid>post-4</guid>
+      <media:thumbnail url="https://example.com/thumb.jpg" width="200" height="150"/>
+      <media:content url="https://example.com/video.mp4" type="video/mp4" medium="video"/>
+    </item>
+
+    <!-- Item with multiple enclosures (technically invalid but common) -->
+    <item>
+      <title>Multiple Enclosures</title>
+      <link>https://example.com/post/5</link>
+      <description>Testing multiple enclosures</description>
+      <guid>post-5</guid>
+      <enclosure url="https://example.com/audio.mp3" length="1000000" type="audio/mpeg"/>
+      <enclosure url="https://example.com/video.mp4" length="5000000" type="video/mp4"/>
+    </item>
+  </channel>
+</rss>

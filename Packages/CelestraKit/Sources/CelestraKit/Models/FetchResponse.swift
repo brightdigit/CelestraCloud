@@ -1,5 +1,5 @@
 //
-//  CloudKitConversionError.swift
+//  FetchResponse.swift
 //  CelestraKit
 //
 //  Created by Leo Dion.
@@ -29,20 +29,35 @@
 
 public import Foundation
 
-/// Errors thrown during CloudKit record conversion
-public enum CloudKitConversionError: LocalizedError {
-  case missingRequiredField(fieldName: String, recordType: String)
-  case invalidFieldType(fieldName: String, expected: String, actual: String)
-  case invalidFieldValue(fieldName: String, reason: String)
+/// Response from fetching an RSS/Atom feed with HTTP caching support
+public struct FetchResponse: Sendable, Codable {
+  /// Feed data, or nil if 304 Not Modified was returned
+  public let feedData: FeedData?
 
-  public var errorDescription: String? {
-    switch self {
-    case .missingRequiredField(let field, let type):
-      return "Required field '\(field)' missing in \(type) record"
-    case .invalidFieldType(let field, let expected, let actual):
-      return "Invalid type for '\(field)': expected \(expected), got \(actual)"
-    case .invalidFieldValue(let field, let reason):
-      return "Invalid value for '\(field)': \(reason)"
-    }
+  /// Last-Modified HTTP header value from the response
+  public let lastModified: String?
+
+  /// ETag HTTP header value from the response
+  public let etag: String?
+
+  /// Whether the feed was modified since last fetch
+  public let wasModified: Bool
+
+  /// Initialize a FetchResponse instance
+  /// - Parameters:
+  ///   - feedData: Feed data, or nil if 304 Not Modified
+  ///   - lastModified: Last-Modified HTTP header value (optional)
+  ///   - etag: ETag HTTP header value (optional)
+  ///   - wasModified: Whether the feed was modified
+  public init(
+    feedData: FeedData? = nil,
+    lastModified: String? = nil,
+    etag: String? = nil,
+    wasModified: Bool
+  ) {
+    self.feedData = feedData
+    self.lastModified = lastModified
+    self.etag = etag
+    self.wasModified = wasModified
   }
 }

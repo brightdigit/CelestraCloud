@@ -79,6 +79,7 @@ let package = Package(
         .testTarget(
             name: "CelestraKitTests",
             dependencies: ["CelestraKit"],
+            resources: [.copy("Fixtures")],
             swiftSettings: swiftSettings
         ),
     ]

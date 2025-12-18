@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Feed with Empty Link Items</title>
+    <link>https://example.com</link>
+    <description>Some items have no links</description>
+
+    <item>
+      <title>Valid Item</title>
+      <link>https://example.com/valid</link>
+      <guid>valid-1</guid>
+      <description>A valid item with link</description>
+    </item>
+
+    <item>
+      <title>Item with Empty Link</title>
+      <link></link>
+      <guid>invalid-1</guid>
+      <description>This item has empty link</description>
+    </item>
+
+    <item>
+      <title>Item with No Link Element</title>
+      <guid>invalid-2</guid>
+      <description>This item has no link element at all</description>
+    </item>
+  </channel>
+</rss>

@@ -30,13 +30,14 @@
 public import Foundation
 
 #if canImport(FoundationNetworking)
-  import FoundationNetworking
+  public import FoundationNetworking
 #endif
 
 /// Service for fetching and parsing robots.txt files
 public actor RobotsTxtService {
   private var cache: [String: RobotsRules] = [:]
-  private let userAgent: String
+  private let userAgent: UserAgent
+  private let urlSession: URLSession
 
   /// Represents parsed robots.txt rules for a domain
   public struct RobotsRules {
@@ -66,7 +67,26 @@ public actor RobotsTxtService {
     }
   }
 
-  public init(userAgent: String = "Celestra") {
+  public init(
+    userAgent: UserAgent,
+    configuration: URLSessionConfiguration = .default
+  ) {
+    self.userAgent = userAgent
+
+    // Configure URLSession with User-Agent header
+    configuration.httpAdditionalHeaders = [
+      "User-Agent": userAgent.string
+    ]
+
+    self.urlSession = URLSession(configuration: configuration)
+  }
+
+  /// Internal initializer for testing with custom URLSession
+  /// - Parameters:
+  ///   - urlSession: Custom URLSession (typically configured with MockURLProtocol)
+  ///   - userAgent: User agent to identify the bot
+  internal init(urlSession: URLSession, userAgent: UserAgent) {
+    self.urlSession = urlSession
     self.userAgent = userAgent
   }
 
@@ -115,10 +135,13 @@ public actor RobotsTxtService {
 
   /// Fetch and parse robots.txt for a domain
   private func fetchAndParseRobotsTxt(for host: String) async throws -> RobotsRules {
-    let robotsURL = URL(string: "https://\(host)/robots.txt")!
+    guard let robotsURL = URL(string: "https://\(host)/robots.txt") else {
+      // Invalid host string - fail open (allow access)
+      return RobotsRules(disallowedPaths: [], crawlDelay: nil, fetchedAt: Date())
+    }
 
     do {
-      let (data, response) = try await URLSession.shared.data(from: robotsURL)
+      let (data, response) = try await urlSession.data(from: robotsURL)
 
       guard let httpResponse = response as? HTTPURLResponse else {
         // Default to allow if we can't get a response
@@ -172,7 +195,7 @@ public actor RobotsTxtService {
         // Check if this section applies to us
         let agentPattern = value.lowercased()
         isRelevantUserAgent =
-          agentPattern == "*" || agentPattern == userAgent.lowercased()
+          agentPattern == "*" || agentPattern == userAgent.name.lowercased()
 
       case "disallow":
         if isRelevantUserAgent && !value.isEmpty {

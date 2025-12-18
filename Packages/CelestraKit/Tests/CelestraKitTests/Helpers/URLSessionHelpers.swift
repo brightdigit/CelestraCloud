@@ -1,5 +1,5 @@
 //
-//  CloudKitConversionError.swift
+//  URLSessionHelpers.swift
 //  CelestraKit
 //
 //  Created by Leo Dion.
@@ -27,22 +27,30 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-public import Foundation
+import Foundation
+import Testing
 
-/// Errors thrown during CloudKit record conversion
-public enum CloudKitConversionError: LocalizedError {
-  case missingRequiredField(fieldName: String, recordType: String)
-  case invalidFieldType(fieldName: String, expected: String, actual: String)
-  case invalidFieldValue(fieldName: String, reason: String)
+#if canImport(FoundationNetworking)
+  import FoundationNetworking
+#endif
 
-  public var errorDescription: String? {
-    switch self {
-    case .missingRequiredField(let field, let type):
-      return "Required field '\(field)' missing in \(type) record"
-    case .invalidFieldType(let field, let expected, let actual):
-      return "Invalid type for '\(field)': expected \(expected), got \(actual)"
-    case .invalidFieldValue(let field, let reason):
-      return "Invalid value for '\(field)': \(reason)"
-    }
-  }
+// Register MockURLProtocol globally once when module loads
+private let mockURLProtocolRegistration: Void = {
+  URLProtocol.registerClass(MockURLProtocol.self)
+}()
+
+/// Semaphore to serialize test suites using MockURLProtocol
+/// Prevents concurrent test suites from interfering with each other's mock handlers
+internal let mockURLProtocolSemaphore = DispatchSemaphore(value: 1)
+
+/// Tag for tests that use network mocking
+extension Tag {
+  @Tag static var networkMock: Self
+}
+
+/// Creates a URLSession configured to use MockURLProtocol
+internal func createMockURLSession() -> URLSession {
+  let config = URLSessionConfiguration.ephemeral
+  config.protocolClasses = [MockURLProtocol.self]
+  return URLSession(configuration: config)
 }

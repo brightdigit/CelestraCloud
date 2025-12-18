@@ -1,5 +1,5 @@
 //
-//  CloudKitConversionError.swift
+//  FixtureLoader.swift
 //  CelestraKit
 //
 //  Created by Leo Dion.
@@ -27,22 +27,36 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-public import Foundation
+import Foundation
 
-/// Errors thrown during CloudKit record conversion
-public enum CloudKitConversionError: LocalizedError {
-  case missingRequiredField(fieldName: String, recordType: String)
-  case invalidFieldType(fieldName: String, expected: String, actual: String)
-  case invalidFieldValue(fieldName: String, reason: String)
+internal enum FixtureLoader {
+  internal enum FixtureError: Error {
+    case fileNotFound(String)
+    case invalidData
+  }
 
-  public var errorDescription: String? {
-    switch self {
-    case .missingRequiredField(let field, let type):
-      return "Required field '\(field)' missing in \(type) record"
-    case .invalidFieldType(let field, let expected, let actual):
-      return "Invalid type for '\(field)': expected \(expected), got \(actual)"
-    case .invalidFieldValue(let field, let reason):
-      return "Invalid value for '\(field)': \(reason)"
+  /// Load fixture data from Tests/CelestraKitTests/Fixtures/
+  internal static func load(_ filename: String) throws -> Data {
+    // Get the test bundle
+    #if SWIFT_PACKAGE
+      let bundle = Bundle.module
+    #else
+      let bundle = Bundle(for: TestBundleClass.self)
+    #endif
+
+    guard
+      let url = bundle.url(
+        forResource: filename,
+        withExtension: nil,
+        subdirectory: "Fixtures"
+      )
+    else {
+      throw FixtureError.fileNotFound(filename)
     }
+
+    return try Data(contentsOf: url)
   }
 }
+
+// Helper class for getting test bundle in non-SPM contexts
+private class TestBundleClass {}

@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:brightdigit/CelestraKit.git
 	branch = cloud-fixes
-	commit = 70daa94ed11d16c51feba3818afdf3f760a895ea
-	parent = b1dd180a66de73880601f9a2457edd3c68402036
+	commit = 4fbdbfde4871355bdc617491bf0e18ec5d49caa1
+	parent = f400611fb5cb55b91874894a254280f55f9635f7
 	method = merge
 	cmdver = 0.4.9

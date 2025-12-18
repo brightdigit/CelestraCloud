@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Example RSS Feed</title>
+    <link>https://example.com</link>
+    <description>A sample RSS feed for testing</description>
+    <language>en-us</language>
+
+    <item>
+      <title>First Post</title>
+      <link>https://example.com/post/1</link>
+      <description>This is the first post</description>
+      <pubDate>Mon, 01 Jan 2024 12:00:00 GMT</pubDate>
+      <guid>https://example.com/post/1</guid>
+    </item>
+
+    <item>
+      <title>Second Post</title>
+      <link>https://example.com/post/2</link>
+      <description>This is the second post</description>
+      <dc:creator>John Doe</dc:creator>
+      <pubDate>Tue, 02 Jan 2024 12:00:00 GMT</pubDate>
+      <guid>unique-guid-123</guid>
+      <content:encoded><![CDATA[<p>Full HTML content here</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>
