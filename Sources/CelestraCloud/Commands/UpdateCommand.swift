@@ -95,8 +95,8 @@ struct UpdateCommand: AsyncParsableCommand {
 
     // 4. Create services
     let service = try CelestraConfig.createCloudKitService()
-    let fetcher = RSSFetcherService()
-    let robotsService = RobotsTxtService()
+    let fetcher = RSSFetcherService(userAgent: .cloud(build: 1))
+    let robotsService = RobotsTxtService(userAgent: .cloud(build: 1))
     let rateLimiter = RateLimiter(defaultDelay: delay)
 
     // 5. Query feeds with filters (demonstrates QueryFilter and QuerySort)
@@ -253,13 +253,13 @@ struct UpdateCommand: AsyncParsableCommand {
                     // Omit contentText to let it recalculate from new content
                     author: article.author,
                     url: article.url,
-                    imageURL: existing.imageURL,        // Preserve enriched field
+                    imageURL: existing.imageURL,  // Preserve enriched field
                     publishedDate: article.publishedDate,
                     fetchedAt: Date(),
                     ttlDays: 30,
                     // Omit wordCount and estimatedReadingTime to let them recalculate
-                    language: existing.language,        // Preserve enriched field
-                    tags: existing.tags                 // Preserve enriched field
+                    language: existing.language,  // Preserve enriched field
+                    tags: existing.tags  // Preserve enriched field
                   )
                   modifiedArticles.append(updated)
                 }

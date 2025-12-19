@@ -94,7 +94,7 @@ All CloudKit operations are in `CloudKitService+Celestra.swift` extension:
 
 **2. Field Mapping Pattern**
 
-Models use direct field mapping (not protocol-based) for simplicity:
+Models use direct field mapping with validation (CloudKitConvertible protocol):
 
 ```swift
 // To CloudKit
@@ -110,19 +110,30 @@ func toFieldsDict() -> [String: FieldValue] {
     return fields
 }
 
-// From CloudKit
-init(from record: RecordInfo) {
-    if case .string(let value) = record.fields["title"] {
-        self.title = value
+// From CloudKit - with validation (throws CloudKitConversionError)
+init(from record: RecordInfo) throws {
+    // Required fields throw if missing or empty
+    guard case .string(let title) = record.fields["title"],
+          !title.isEmpty else {
+        throw CloudKitConversionError.missingRequiredField(
+            fieldName: "title",
+            recordType: "Feed"
+        )
     }
-    // Boolean extraction
+
+    // Boolean extraction with default
     if case .int64(let value) = record.fields["isActive"] {
         self.isActive = value != 0
     } else {
-        self.isActive = true  // Default
+        self.isActive = true  // Default for optional fields
     }
 }
 ```
+
+**Validation Behavior:**
+- Required fields (feedURL, title for Feed; feedRecordName, guid, title, url for Article) throw `CloudKitConversionError` if missing or empty
+- Invalid articles are skipped with warning logs; one bad article won't fail the entire feed update
+- Feed conversion errors propagate (fail-fast for feed metadata)
 
 **3. Duplicate Detection Strategy**
 
@@ -195,8 +206,9 @@ Code must be concurrency-safe with proper actor isolation.
 - Logging: Use CelestraLogger categories (cloudkit, rss, operations, errors)
 
 **External Dependencies:**
-- `RateLimiter` and `RobotsTxtService` are from CelestraKit - contributions should be made to that repository
+- `RateLimiter`, `RobotsTxtService`, and `RSSFetcherService` are from CelestraKit - contributions should be made to that repository
 - Feed and Article models are also in CelestraKit for reuse across the Celestra ecosystem
+- Web etiquette suite (rate limiting, robots.txt, RSS fetching) is now complete in CelestraKit
 
 **Testing CloudKit Operations:**
 - Use development environment first

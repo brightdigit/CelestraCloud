@@ -1,5 +1,5 @@
 {
-  "originHash" : "010703c0cc2ca88b6851e0f293e34cdf0e3076d6efb5213cdbddc8762c62dccf",
+  "originHash" : "3eb69230d8ecb091ec1be278306c1615165d0038815c6eea9040c835d0685942",
   "pins" : [
     {
       "identity" : "celestrakit",
@@ -7,7 +7,7 @@
       "location" : "https://github.com/brightdigit/CelestraKit.git",
       "state" : {
         "branch" : "v0.0.1",
-        "revision" : "4a2c338aa66e7ff38c90c1e305b0f1fcc46d126b"
+        "revision" : "d50f9471e359f7aedd2d2259964a9c4e80698ae5"
       }
     },
     {
@@ -69,8 +69,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log.git",
       "state" : {
-        "revision" : "b1fa4ef41fe21b13120c034854042d12c43f66b2",
-        "version" : "1.7.1"
+        "revision" : "bc386b95f2a16ccd0150a8235e7c69eab2b866ca",
+        "version" : "1.8.0"
       }
     },
     {
@@ -78,8 +78,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-openapi-runtime",
       "state" : {
-        "revision" : "7722cf8eac05c1f1b5b05895b04cfcc29576d9be",
-        "version" : "1.8.3"
+        "revision" : "7cdf33371bf89b23b9cf4fd3ce8d3c825c28fbe8",
+        "version" : "1.9.0"
       }
     },
     {
