@@ -2,11 +2,12 @@
 //  CloudKitConversionError.swift
 //  CelestraCloud
 //
-//  Created for Celestra on 2025-12-16.
+//  Created by Leo Dion.
+//  Copyright © 2025 BrightDigit.
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation
-//  files (the "Software"), to deal in the Software without
+//  files (the “Software”), to deal in the Software without
 //  restriction, including without limitation the rights to use,
 //  copy, modify, merge, publish, distribute, sublicense, and/or
 //  sell copies of the Software, and to permit persons to whom the
@@ -16,7 +17,7 @@
 //  The above copyright notice and this permission notice shall be
 //  included in all copies or substantial portions of the Software.
 //
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+//  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 //  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 //  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
@@ -30,18 +31,18 @@ public import Foundation
 
 /// Errors thrown during CloudKit record conversion
 public enum CloudKitConversionError: LocalizedError {
-    case missingRequiredField(fieldName: String, recordType: String)
-    case invalidFieldType(fieldName: String, expected: String, actual: String)
-    case invalidFieldValue(fieldName: String, reason: String)
+  case missingRequiredField(fieldName: String, recordType: String)
+  case invalidFieldType(fieldName: String, expected: String, actual: String)
+  case invalidFieldValue(fieldName: String, reason: String)
 
-    public var errorDescription: String? {
-        switch self {
-        case .missingRequiredField(let field, let type):
-            return "Required field '\(field)' missing in \(type) record"
-        case .invalidFieldType(let field, let expected, let actual):
-            return "Invalid type for '\(field)': expected \(expected), got \(actual)"
-        case .invalidFieldValue(let field, let reason):
-            return "Invalid value for '\(field)': \(reason)"
-        }
+  public var errorDescription: String? {
+    switch self {
+    case .missingRequiredField(let field, let type):
+      return "Required field '\(field)' missing in \(type) record"
+    case .invalidFieldType(let field, let expected, let actual):
+      return "Invalid type for '\(field)': expected \(expected), got \(actual)"
+    case .invalidFieldValue(let field, let reason):
+      return "Invalid value for '\(field)': \(reason)"
     }
+  }
 }

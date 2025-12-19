@@ -152,7 +152,8 @@ extension CloudKitService {
           let article = try Article(from: record)
           allArticles.append(article)
         } catch {
-          CelestraLogger.errors.warning("Skipping invalid article record \(record.recordName): \(error)")
+          CelestraLogger.errors.warning(
+            "Skipping invalid article record \(record.recordName): \(error)")
           // Continue processing other articles
         }
       }

@@ -56,7 +56,7 @@ struct AddFeedCommand: AsyncParsableCommand {
     }
 
     // 2. Fetch RSS content to validate and extract title
-    let fetcher = RSSFetcherService()
+    let fetcher = RSSFetcherService(userAgent: .cloud(build: 1))
     let response = try await fetcher.fetchFeed(from: url)
 
     guard let feedData = response.feedData else {

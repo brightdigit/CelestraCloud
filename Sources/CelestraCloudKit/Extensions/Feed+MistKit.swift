@@ -102,7 +102,8 @@ extension Feed: CloudKitConvertible {
   public init(from record: RecordInfo) throws {
     // Required string fields with validation
     guard case .string(let feedURL) = record.fields["feedURL"],
-          !feedURL.isEmpty else {
+      !feedURL.isEmpty
+    else {
       throw CloudKitConversionError.missingRequiredField(
         fieldName: "feedURL",
         recordType: "Feed"
@@ -110,7 +111,8 @@ extension Feed: CloudKitConvertible {
     }
 
     guard case .string(let title) = record.fields["title"],
-          !title.isEmpty else {
+      !title.isEmpty
+    else {
       throw CloudKitConversionError.missingRequiredField(
         fieldName: "title",
         recordType: "Feed"
