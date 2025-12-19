@@ -50,7 +50,10 @@ extension Tag {
 
 /// Creates a URLSession configured to use MockURLProtocol
 internal func createMockURLSession() -> URLSession {
-  let config = URLSessionConfiguration.ephemeral
+  // Create a copy to avoid mutating shared .ephemeral singleton
+  guard let config = URLSessionConfiguration.ephemeral.copy() as? URLSessionConfiguration else {
+    preconditionFailure("Failed to copy URLSessionConfiguration")
+  }
   config.protocolClasses = [MockURLProtocol.self]
   return URLSession(configuration: config)
 }

@@ -73,12 +73,19 @@ public actor RobotsTxtService {
   ) {
     self.userAgent = userAgent
 
-    // Configure URLSession with User-Agent header
-    configuration.httpAdditionalHeaders = [
-      "User-Agent": userAgent.string
-    ]
+    // Create a copy to avoid mutating shared .default singleton
+    guard
+      let config = createURLSessionConfiguration(
+        from: configuration,
+        headers: [
+          "User-Agent": userAgent.string
+        ]
+      )
+    else {
+      preconditionFailure("Failed to copy URLSessionConfiguration")
+    }
 
-    self.urlSession = URLSession(configuration: configuration)
+    self.urlSession = URLSession(configuration: config)
   }
 
   /// Internal initializer for testing with custom URLSession

@@ -33,36 +33,11 @@ import Foundation
   import FoundationNetworking
 #endif
 
-/// Actor to manage MockURLProtocol handlers safely across concurrent test suites
-internal actor MockURLProtocolManager {
-  internal static let shared = MockURLProtocolManager()
-
-  private var handlers: [ObjectIdentifier: (URLRequest) throws -> (HTTPURLResponse, Data?)] = [:]
-
-  internal func setHandler(
-    for session: URLSession,
-    handler: @escaping (URLRequest) throws -> (HTTPURLResponse, Data?)
-  ) {
-    let id = ObjectIdentifier(session)
-    handlers[id] = handler
-  }
-
-  internal func getHandler(for session: URLSession) -> ((URLRequest) throws -> (HTTPURLResponse, Data?))? {
-    let id = ObjectIdentifier(session)
-    return handlers[id]
-  }
-
-  internal func clearHandler(for session: URLSession) {
-    let id = ObjectIdentifier(session)
-    handlers.removeValue(forKey: id)
-  }
-}
-
 /// Mock URLProtocol for intercepting network requests in tests
-/// Uses actor-based handler management to support concurrent test suites
+/// Tests use a static handler with semaphore-based serialization to prevent race conditions
 internal final class MockURLProtocol: URLProtocol, @unchecked Sendable {
-  /// Fallback static handler for backwards compatibility
-  /// Prefer using withMockHandler() helper instead
+  /// Static handler for intercepting requests
+  /// Tests must use mockURLProtocolSemaphore to serialize access
   nonisolated(unsafe) internal static var requestHandler:
     (
       (URLRequest) throws -> (

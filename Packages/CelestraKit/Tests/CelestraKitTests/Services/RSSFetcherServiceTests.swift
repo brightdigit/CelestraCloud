@@ -126,7 +126,8 @@ final class RSSFetcherServiceTests {
       )
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
     let result = try await service.fetchFeed(from: feedURL)
 
     let items = try #require(result.feedData?.items)
@@ -172,7 +173,8 @@ final class RSSFetcherServiceTests {
       return (response, nil)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
 
     let result = try await service.fetchFeed(
       from: feedURL,
@@ -206,7 +208,8 @@ final class RSSFetcherServiceTests {
       return (response, nil)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
     _ = try await service.fetchFeed(from: feedURL, lastModified: expectedLastModified)
 
     #expect(headersSent)
@@ -230,7 +233,8 @@ final class RSSFetcherServiceTests {
       return (response, nil)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
     _ = try await service.fetchFeed(from: feedURL, etag: expectedEtag)
 
     #expect(headersSent)
@@ -251,7 +255,8 @@ final class RSSFetcherServiceTests {
       return (response, mockData)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
 
     await #expect(throws: RSSFetcherError.self) {
       try await service.fetchFeed(from: feedURL)
@@ -266,7 +271,8 @@ final class RSSFetcherServiceTests {
       throw URLError(.notConnectedToInternet)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
 
     await #expect(throws: RSSFetcherError.self) {
       try await service.fetchFeed(from: feedURL)
@@ -286,7 +292,8 @@ final class RSSFetcherServiceTests {
         return (response, nil)
       }
 
-      let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+      let service = RSSFetcherService(
+        urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
 
       await #expect(throws: RSSFetcherError.self) {
         try await service.fetchFeed(from: feedURL)
@@ -296,6 +303,10 @@ final class RSSFetcherServiceTests {
 
   // MARK: - Item Filtering
 
+  // TODO: File upstream issue with SyndiKit for RSS feeds with empty <link> elements
+  // SyndiKit currently fails to parse valid RSS feeds where some items have empty/missing links
+  // The RSS spec allows optional link elements in items, but SyndiKit rejects such feeds
+  // Repository: https://github.com/brightdigit/SyndiKit/issues
   @Test(
     "All items have valid links", .disabled("SyndiKit doesn't parse RSS with empty link elements"))
   func filterItemsWithEmptyLinks() async throws {
@@ -310,7 +321,8 @@ final class RSSFetcherServiceTests {
       return (response, mockData)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
     let result = try await service.fetchFeed(from: feedURL)
 
     let items = try #require(result.feedData?.items)
@@ -336,7 +348,8 @@ final class RSSFetcherServiceTests {
       return (response, mockData)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
     let result = try await service.fetchFeed(from: feedURL)
 
     let interval = try #require(result.feedData?.minUpdateInterval)
@@ -360,7 +373,8 @@ final class RSSFetcherServiceTests {
       return (response, mockData)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
     let result = try await service.fetchFeed(from: feedURL)
 
     let interval = try #require(result.feedData?.minUpdateInterval)
@@ -382,7 +396,8 @@ final class RSSFetcherServiceTests {
       return (response, mockData)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
     let result = try await service.fetchFeed(from: feedURL)
 
     let interval = try #require(result.feedData?.minUpdateInterval)
@@ -404,7 +419,8 @@ final class RSSFetcherServiceTests {
       return (response, mockData)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
     let result = try await service.fetchFeed(from: feedURL)
 
     let interval = try #require(result.feedData?.minUpdateInterval)
@@ -426,7 +442,8 @@ final class RSSFetcherServiceTests {
       return (response, mockData)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
     let result = try await service.fetchFeed(from: feedURL)
 
     let interval = try #require(result.feedData?.minUpdateInterval)
@@ -448,7 +465,8 @@ final class RSSFetcherServiceTests {
       return (response, mockData)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
     let result = try await service.fetchFeed(from: feedURL)
 
     let interval = try #require(result.feedData?.minUpdateInterval)
@@ -472,7 +490,8 @@ final class RSSFetcherServiceTests {
       return (response, mockData)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
     let result = try await service.fetchFeed(from: feedURL)
 
     let interval = try #require(result.feedData?.minUpdateInterval)
@@ -497,7 +516,8 @@ final class RSSFetcherServiceTests {
       return (response, mockData)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
     let result = try await service.fetchFeed(from: feedURL)
 
     // Atom feeds don't support TTL or syndication module
@@ -517,7 +537,8 @@ final class RSSFetcherServiceTests {
       return (response, mockData)
     }
 
-    let service = RSSFetcherService(urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
+    let service = RSSFetcherService(
+      urlSession: createMockURLSession(), userAgent: UserAgent.app(build: 1))
     let result = try await service.fetchFeed(from: feedURL)
 
     #expect(result.feedData?.minUpdateInterval == nil)

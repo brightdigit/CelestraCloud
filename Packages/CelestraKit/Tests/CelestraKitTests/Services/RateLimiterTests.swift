@@ -18,6 +18,8 @@ struct RateLimiterTests {
     #expect(elapsed < 0.1)
   }
 
+  // TODO: Investigate timing precision issues on iOS Simulator in CI
+  // Tests pass locally but fail in CI due to timing precision differences
   @Test("Same domain applies per-domain delay", .disabled("Fails in CI on iOS Simulator"))
   func testSameDomainPerDomainDelay() async {
     let limiter = RateLimiter(defaultDelay: 0.1, perDomainDelay: 0.3)
@@ -57,6 +59,8 @@ struct RateLimiterTests {
     #expect(elapsed < 0.1)
   }
 
+  // TODO: Investigate timing precision issues on iOS Simulator in CI
+  // Tests pass locally but fail in CI due to timing precision differences
   @Test("Minimum interval is respected", .disabled("Fails in CI on iOS Simulator"))
   func testMinimumIntervalRespected() async {
     let limiter = RateLimiter(defaultDelay: 0.1, perDomainDelay: 0.2)
@@ -127,6 +131,8 @@ struct RateLimiterTests {
     #expect(elapsed < 0.1)
   }
 
+  // TODO: Investigate timing precision issues on iOS Simulator in CI
+  // Tests pass locally but fail in CI due to timing precision differences
   @Test("Global wait enforces delay across domains", .disabled("Fails in CI on iOS Simulator"))
   func testWaitGlobalEnforcesDelay() async {
     let limiter = RateLimiter(defaultDelay: 0.2, perDomainDelay: 0.5)

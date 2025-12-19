@@ -46,14 +46,21 @@ public struct RSSFetcherService {
   ) {
     self.userAgent = userAgent
 
-    // Configure URLSession with proper headers
-    configuration.httpAdditionalHeaders = [
-      "User-Agent": userAgent.string,
-      "Accept":
-        "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.7",
-    ]
+    // Create a copy to avoid mutating shared .default singleton
+    guard
+      let config = createURLSessionConfiguration(
+        from: configuration,
+        headers: [
+          "User-Agent": userAgent.string,
+          "Accept":
+            "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.7",
+        ]
+      )
+    else {
+      preconditionFailure("Failed to copy URLSessionConfiguration")
+    }
 
-    self.urlSession = URLSession(configuration: configuration)
+    self.urlSession = URLSession(configuration: config)
   }
 
   // Internal initializer for testing with custom URLSession
@@ -215,6 +222,10 @@ public struct RSSFetcherService {
 
       // frequency = how many times per period
       // Calculate minimum interval between updates
+      guard syndication.frequency > 0 else {
+        CelestraLogger.rss.warning("⚠️ Invalid syndication frequency (0), using period as interval")
+        return baseInterval
+      }
       return baseInterval / TimeInterval(syndication.frequency)
     }
 

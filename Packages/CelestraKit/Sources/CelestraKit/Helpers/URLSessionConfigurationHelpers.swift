@@ -1,5 +1,5 @@
 //
-//  UserAgent.swift
+//  URLSessionConfigurationHelpers.swift
 //  CelestraKit
 //
 //  Created by Leo Dion.
@@ -27,51 +27,28 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-public import Foundation
+import Foundation
 
-public struct UserAgent: Sendable {
-  private enum Names {
-    static let cloud = "CelestraCloud"
-    static let app = "Celestra"
+#if canImport(FoundationNetworking)
+  import FoundationNetworking
+#endif
+
+/// Creates a copy of a URLSessionConfiguration with additional HTTP headers.
+///
+/// This function safely copies the configuration to avoid mutating shared singletons
+/// like `.default` or `.ephemeral`.
+///
+/// - Parameters:
+///   - configuration: The source configuration to copy
+///   - headers: HTTP headers to add to the configuration
+/// - Returns: A new configuration with the headers set, or nil if copy fails
+internal func createURLSessionConfiguration(
+  from configuration: URLSessionConfiguration,
+  headers: [String: String]
+) -> URLSessionConfiguration? {
+  guard let config = configuration.copy() as? URLSessionConfiguration else {
+    return nil
   }
-
-  private init(name: String, build: Int, url: URL) {
-    self.name = name
-    self.build = build
-    self.url = url
-  }
-
-  public let name: String
-  let build: Int
-  let url: URL
-
-  public static func cloud(build: Int) -> UserAgent {
-    .init(name: Names.cloud, build: build, url: .Agent.cloud)
-  }
-
-  public static func app(build: Int) -> UserAgent {
-    .init(name: Names.app, build: build, url: .Agent.app)
-  }
-
-  public var string: String {
-    "\(name)/\(build) (\(url))"
-  }
-}
-
-extension URL {
-  fileprivate enum Agent {
-    static let cloud: URL = {
-      guard let url = URL(string: "https://github.com/brightdigit/CelestraCloud") else {
-        preconditionFailure("Invalid URL for cloud agent")
-      }
-      return url
-    }()
-
-    static let app: URL = {
-      guard let url = URL(string: "https://celestr.app") else {
-        preconditionFailure("Invalid URL for app agent")
-      }
-      return url
-    }()
-  }
+  config.httpAdditionalHeaders = headers
+  return config
 }
