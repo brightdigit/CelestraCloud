@@ -1,5 +1,5 @@
 //
-//  CelestraLogger.swift
+//  CloudKitConversionError.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -27,16 +27,22 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-public import CelestraKit
-public import Logging
+public import Foundation
 
-/// Extended logging infrastructure for CelestraCloud
-///
-/// Note: RSS and errors loggers are provided by CelestraKit
-extension CelestraLogger {
-  /// Logger for CloudKit operations
-  public static let cloudkit = Logger(label: "com.brightdigit.Celestra.cloudkit")
+/// Errors thrown during CloudKit record conversion
+public enum CloudKitConversionError: LocalizedError {
+  case missingRequiredField(fieldName: String, recordType: String)
+  case invalidFieldType(fieldName: String, expected: String, actual: String)
+  case invalidFieldValue(fieldName: String, reason: String)
 
-  /// Logger for batch and async operations
-  public static let operations = Logger(label: "com.brightdigit.Celestra.operations")
+  public var errorDescription: String? {
+    switch self {
+    case .missingRequiredField(let field, let type):
+      return "Required field '\(field)' missing in \(type) record"
+    case .invalidFieldType(let field, let expected, let actual):
+      return "Invalid type for '\(field)': expected \(expected), got \(actual)"
+    case .invalidFieldValue(let field, let reason):
+      return "Invalid value for '\(field)': \(reason)"
+    }
+  }
 }
