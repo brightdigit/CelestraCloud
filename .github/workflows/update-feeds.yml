@@ -25,6 +25,14 @@ on:
           - standard
           - stale
           - all
+      environment:
+        description: 'CloudKit environment'
+        required: false
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - production
       delay:
         description: 'Rate limit delay in seconds'
         required: false
@@ -33,7 +41,7 @@ on:
 env:
   CLOUDKIT_CONTAINER_ID: ${{ secrets.CLOUDKIT_CONTAINER_ID }}
   CLOUDKIT_KEY_ID: ${{ secrets.CLOUDKIT_KEY_ID }}
-  CLOUDKIT_ENVIRONMENT: production
+  CLOUDKIT_ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
   CLOUDKIT_PRIVATE_KEY_PATH: /tmp/cloudkit_key.pem
 
 jobs:
@@ -248,6 +256,7 @@ jobs:
           echo "## RSS Feed Update Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Tier:** ${{ needs.determine-tier.outputs.tier }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
           echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Binary Cache:** ${{ needs.build.outputs.cache-hit == 'true' && '✅ Hit (reused)' || '🔨 Miss (rebuilt)' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
