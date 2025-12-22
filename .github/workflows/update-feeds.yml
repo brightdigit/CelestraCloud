@@ -1,0 +1,263 @@
+name: Update RSS Feeds
+
+on:
+  # Multiple schedules for different tiers
+  schedule:
+    # Tier 1: High-priority feeds (hourly)
+    - cron: '0 * * * *'
+
+    # Tier 2: Standard feeds (every 6 hours)
+    - cron: '0 */6 * * *'
+
+    # Tier 3: Stale feeds (daily at 2 AM UTC)
+    - cron: '0 2 * * *'
+
+  # Manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: 'Feed tier to update (high/standard/stale/all)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - high
+          - standard
+          - stale
+          - all
+      delay:
+        description: 'Rate limit delay in seconds'
+        required: false
+        default: '2.0'
+
+env:
+  CLOUDKIT_CONTAINER_ID: ${{ secrets.CLOUDKIT_CONTAINER_ID }}
+  CLOUDKIT_KEY_ID: ${{ secrets.CLOUDKIT_KEY_ID }}
+  CLOUDKIT_ENVIRONMENT: production
+  CLOUDKIT_PRIVATE_KEY_PATH: /tmp/cloudkit_key.pem
+
+jobs:
+  # Determine which tier to run based on schedule or manual input
+  determine-tier:
+    runs-on: ubuntu-latest
+    outputs:
+      tier: ${{ steps.set-tier.outputs.tier }}
+      runs_high: ${{ steps.set-tier.outputs.runs_high }}
+      runs_standard: ${{ steps.set-tier.outputs.runs_standard }}
+      runs_stale: ${{ steps.set-tier.outputs.runs_stale }}
+
+    steps:
+      - id: set-tier
+        run: |
+          # Check if manual dispatch
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TIER="${{ github.event.inputs.tier }}"
+            echo "Manual dispatch: tier=$TIER"
+          else
+            # Determine tier based on current time
+            HOUR=$(date -u +%H)
+
+            # Check if this is the 6-hour mark (0, 6, 12, 18)
+            if [ $((HOUR % 6)) -eq 0 ] && [ "$HOUR" -ne 2 ]; then
+              TIER="standard"
+              echo "Scheduled run (6-hour): tier=$TIER"
+            # Check if this is 2 AM UTC (daily stale run)
+            elif [ "$HOUR" -eq 2 ]; then
+              TIER="stale"
+              echo "Scheduled run (daily): tier=$TIER"
+            # Otherwise, hourly high-priority run
+            else
+              TIER="high"
+              echo "Scheduled run (hourly): tier=$TIER"
+            fi
+          fi
+
+          echo "tier=$TIER" >> $GITHUB_OUTPUT
+
+          # Set run flags for each tier
+          if [ "$TIER" = "all" ]; then
+            echo "runs_high=true" >> $GITHUB_OUTPUT
+            echo "runs_standard=true" >> $GITHUB_OUTPUT
+            echo "runs_stale=true" >> $GITHUB_OUTPUT
+          else
+            echo "runs_high=$( [ "$TIER" = "high" ] && echo true || echo false )" >> $GITHUB_OUTPUT
+            echo "runs_standard=$( [ "$TIER" = "standard" ] && echo true || echo false )" >> $GITHUB_OUTPUT
+            echo "runs_stale=$( [ "$TIER" = "stale" ] && echo true || echo false )" >> $GITHUB_OUTPUT
+          fi
+
+  # Build the binary (cached based on code changes)
+  build:
+    runs-on: ubuntu-latest
+    container: swift:6.2-noble
+    outputs:
+      cache-hit: ${{ steps.cache-binary.outputs.cache-hit }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache compiled binary
+        id: cache-binary
+        uses: actions/cache@v4
+        with:
+          path: .build/release/celestra-cloud
+          key: celestra-cloud-${{ runner.os }}-${{ hashFiles('Sources/**/*.swift', 'Package.swift', 'Package.resolved') }}
+
+      - name: Build CelestraCloud
+        if: steps.cache-binary.outputs.cache-hit != 'true'
+        run: swift build -c release
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: celestra-cloud-binary
+          path: .build/release/celestra-cloud
+          retention-days: 1
+
+  # High-priority feeds (hourly)
+  update-high-priority:
+    needs: [determine-tier, build]
+    if: needs.determine-tier.outputs.runs_high == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    strategy:
+      matrix:
+        include:
+          - name: "Pass 1: Very popular feeds"
+            args: "--min-popularity 100 --max-failures 2 --delay 2.0"
+          - name: "Pass 2: Popular feeds"
+            args: "--min-popularity 10 --max-failures 5 --delay 2.5"
+
+      fail-fast: false
+
+    steps:
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: celestra-cloud-binary
+          path: ./bin
+
+      - name: Make binary executable
+        run: chmod +x ./bin/celestra-cloud
+
+      - name: Create CloudKit private key file
+        run: |
+          echo "${{ secrets.CLOUDKIT_PRIVATE_KEY }}" > $CLOUDKIT_PRIVATE_KEY_PATH
+          chmod 600 $CLOUDKIT_PRIVATE_KEY_PATH
+
+      - name: ${{ matrix.name }}
+        run: |
+          echo "::group::${{ matrix.name }}"
+          echo "Running: ./bin/celestra-cloud update ${{ matrix.args }}"
+          ./bin/celestra-cloud update ${{ matrix.args }} || echo "::warning::Pass completed with errors"
+          echo "::endgroup::"
+        continue-on-error: true
+
+      - name: Cleanup private key
+        if: always()
+        run: rm -f $CLOUDKIT_PRIVATE_KEY_PATH
+
+  # Standard feeds (every 6 hours)
+  update-standard:
+    needs: [determine-tier, build]
+    if: needs.determine-tier.outputs.runs_standard == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: celestra-cloud-binary
+          path: ./bin
+
+      - name: Make binary executable
+        run: chmod +x ./bin/celestra-cloud
+
+      - name: Create CloudKit private key file
+        run: |
+          echo "${{ secrets.CLOUDKIT_PRIVATE_KEY }}" > $CLOUDKIT_PRIVATE_KEY_PATH
+          chmod 600 $CLOUDKIT_PRIVATE_KEY_PATH
+
+      - name: Update standard popularity feeds
+        run: |
+          echo "::group::Standard Feeds Update"
+          echo "Running feeds with minimum popularity of 10, max failures 5"
+          ./bin/celestra-cloud update \
+            --min-popularity 10 \
+            --max-failures 5 \
+            --delay 2.5 \
+          || echo "::warning::Standard feeds update had errors"
+          echo "::endgroup::"
+        continue-on-error: true
+
+      - name: Cleanup private key
+        if: always()
+        run: rm -f $CLOUDKIT_PRIVATE_KEY_PATH
+
+  # Stale feeds (daily)
+  update-stale:
+    needs: [determine-tier, build]
+    if: needs.determine-tier.outputs.runs_stale == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: celestra-cloud-binary
+          path: ./bin
+
+      - name: Make binary executable
+        run: chmod +x ./bin/celestra-cloud
+
+      - name: Create CloudKit private key file
+        run: |
+          echo "${{ secrets.CLOUDKIT_PRIVATE_KEY }}" > $CLOUDKIT_PRIVATE_KEY_PATH
+          chmod 600 $CLOUDKIT_PRIVATE_KEY_PATH
+
+      - name: Update stale feeds
+        run: |
+          echo "::group::Stale Feeds Update"
+          # Calculate date 7 days ago in ISO8601 format (Linux date command)
+          WEEK_AGO=$(date -u -d '7 days ago' '+%Y-%m-%dT%H:%M:%SZ')
+          echo "Updating feeds not attempted since: $WEEK_AGO"
+          ./bin/celestra-cloud update \
+            --last-attempted-before "$WEEK_AGO" \
+            --max-failures 10 \
+            --delay 3.0 \
+          || echo "::warning::Stale feeds update had errors"
+          echo "::endgroup::"
+        continue-on-error: true
+
+      - name: Cleanup private key
+        if: always()
+        run: rm -f $CLOUDKIT_PRIVATE_KEY_PATH
+
+  # Summary report
+  summary:
+    needs: [determine-tier, build, update-high-priority, update-standard, update-stale]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## RSS Feed Update Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tier:** ${{ needs.determine-tier.outputs.tier }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Binary Cache:** ${{ needs.build.outputs.cache-hit == 'true' && '✅ Hit (reused)' || '🔨 Miss (rebuilt)' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Build: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- High Priority: ${{ needs.update-high-priority.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Standard: ${{ needs.update-standard.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Stale: ${{ needs.update-stale.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Smart Scheduling Strategy" >> $GITHUB_STEP_SUMMARY
+          echo "- **High Priority (Hourly)**: Popular feeds (min 10-100 subscribers), max 5 failures" >> $GITHUB_STEP_SUMMARY
+          echo "- **Standard (Every 6h)**: Medium popularity feeds (min 10 subscribers), max 5 failures" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stale (Daily)**: Feeds not updated in 7+ days, max 10 failures" >> $GITHUB_STEP_SUMMARY
