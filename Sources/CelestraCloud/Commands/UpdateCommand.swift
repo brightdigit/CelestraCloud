@@ -7,7 +7,7 @@
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation
-//  files (the “Software”), to deal in the Software without
+//  files (the "Software"), to deal in the Software without
 //  restriction, including without limitation the rights to use,
 //  copy, modify, merge, publish, distribute, sublicense, and/or
 //  sell copies of the Software, and to permit persons to whom the
@@ -17,7 +17,7 @@
 //  The above copyright notice and this permission notice shall be
 //  included in all copies or substantial portions of the Software.
 //
-//  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 //  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 //  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
@@ -27,337 +27,311 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import ArgumentParser
 import CelestraCloudKit
 import CelestraKit
 import Foundation
 import Logging
 import MistKit
 
-struct UpdateCommand: AsyncParsableCommand {
-  static let configuration = CommandConfiguration(
-    commandName: "update",
-    abstract: "Fetch and update RSS feeds in CloudKit with web etiquette",
-    discussion: """
-      Queries feeds from CloudKit (optionally filtered by date and popularity), \
-      fetches new articles from each feed, and uploads them to CloudKit. \
-      This command demonstrates MistKit's QueryFilter functionality and implements \
-      web etiquette best practices including rate limiting, robots.txt checking, \
-      and conditional HTTP requests.
-      """
-  )
-
-  @Option(name: .long, help: "Only update feeds last attempted before this date (ISO8601 format)")
-  var lastAttemptedBefore: String?
-
-  @Option(name: .long, help: "Only update feeds with minimum popularity count")
-  var minPopularity: Int64?
-
-  @Option(name: .long, help: "Delay between feed fetches in seconds (default: 2.0)")
-  var delay: Double = 2.0
-
-  @Flag(name: .long, help: "Skip robots.txt checking (for testing)")
-  var skipRobotsCheck: Bool = false
-
-  @Option(name: .long, help: "Skip feeds with failure count above this threshold")
-  var maxFailures: Int64?
-
+enum UpdateCommand {
   @available(macOS 13.0, *)
-  func run() async throws {
+  static func run(args: [String]) async throws {
+    // Parse command-line arguments
+    var cliOverrides: [String: Any] = [:]
+    var i = 0
+    while i < args.count {
+      let arg = args[i]
+      switch arg {
+      case "--update-delay":
+        guard i + 1 < args.count, let value = Double(args[i + 1]) else {
+          print("Error: --update-delay requires a numeric value")
+          throw ExitError()
+        }
+        cliOverrides["update.delay"] = value
+        i += 2
+      case "--update-skip-robots-check":
+        cliOverrides["update.skip_robots_check"] = true
+        i += 1
+      case "--update-max-failures":
+        guard i + 1 < args.count, let value = Int64(args[i + 1]) else {
+          print("Error: --update-max-failures requires an integer value")
+          throw ExitError()
+        }
+        cliOverrides["update.max_failures"] = value
+        i += 2
+      case "--update-min-popularity":
+        guard i + 1 < args.count, let value = Int64(args[i + 1]) else {
+          print("Error: --update-min-popularity requires an integer value")
+          throw ExitError()
+        }
+        cliOverrides["update.min_popularity"] = value
+        i += 2
+      case "--update-last-attempted-before":
+        guard i + 1 < args.count else {
+          print("Error: --update-last-attempted-before requires a date value")
+          throw ExitError()
+        }
+        let formatter = ISO8601DateFormatter()
+        guard let date = formatter.date(from: args[i + 1]) else {
+          print("Error: Invalid date format. Use ISO8601 (e.g., 2025-01-01T00:00:00Z)")
+          throw ExitError()
+        }
+        cliOverrides["update.last_attempted_before"] = date
+        i += 2
+      default:
+        print("Unknown option: \(arg)")
+        throw ExitError()
+      }
+    }
+
+    // Load configuration
+    let loader = ConfigurationLoader(cliOverrides: cliOverrides)
+    let config = try await loader.loadConfiguration()
+
     print("🔄 Starting feed update...")
-    print("   ⏱️  Rate limit: \(delay) seconds between feeds")
-    if skipRobotsCheck {
+    print("   ⏱️  Rate limit: \(config.update.delay) seconds between feeds")
+    if config.update.skipRobotsCheck {
       print("   ⚠️  Skipping robots.txt checks")
     }
 
-    // 1. Parse date filter if provided
-    var cutoffDate: Date?
-    if let dateString = lastAttemptedBefore {
+    // Display filters
+    if let date = config.update.lastAttemptedBefore {
       let formatter = ISO8601DateFormatter()
-      guard let date = formatter.date(from: dateString) else {
-        throw ValidationError(
-          "Invalid date format. Use ISO8601 (e.g., 2025-01-01T00:00:00Z)"
-        )
-      }
-      cutoffDate = date
       print("   Filter: last attempted before \(formatter.string(from: date))")
     }
-
-    // 2. Display popularity filter if provided
-    if let minPop = minPopularity {
+    if let minPop = config.update.minPopularity {
       print("   Filter: minimum popularity \(minPop)")
     }
-
-    // 3. Display failure threshold if provided
-    if let maxFail = maxFailures {
+    if let maxFail = config.update.maxFailures {
       print("   Filter: maximum failures \(maxFail)")
     }
 
-    // 4. Create services
-    let service = try CelestraConfig.createCloudKitService()
+    // Create services
+    let validatedCloudKit = try config.cloudkit.validated()
+    let service = try CelestraConfig.createCloudKitService(from: validatedCloudKit)
     let fetcher = RSSFetcherService(userAgent: .cloud(build: 1))
     let robotsService = RobotsTxtService(userAgent: .cloud(build: 1))
-    let rateLimiter = RateLimiter(defaultDelay: delay)
+    let rateLimiter = RateLimiter(defaultDelay: config.update.delay)
 
-    // 5. Query feeds with filters (demonstrates QueryFilter and QuerySort)
+    // Query feeds with filters
     print("📋 Querying feeds...")
     var feeds = try await service.queryFeeds(
-      lastAttemptedBefore: cutoffDate,
-      minPopularity: minPopularity
+      lastAttemptedBefore: config.update.lastAttemptedBefore,
+      minPopularity: config.update.minPopularity
     )
 
     // Filter by failure count if specified
-    if let maxFail = maxFailures {
+    if let maxFail = config.update.maxFailures {
       feeds = feeds.filter { $0.failureCount <= maxFail }
     }
 
     print("✅ Found \(feeds.count) feed(s) to update")
 
-    // 6. Process each feed
+    // Process each feed
     var successCount = 0
     var errorCount = 0
     var skippedCount = 0
     var notModifiedCount = 0
 
     for (index, feed) in feeds.enumerated() {
-      print("\n[\(index + 1)/\(feeds.count)] 📰 \(feed.title)")
+      print("\n[\(index + 1)/\(feeds.count)] Updating: \(feed.title)")
+      print("   URL: \(feed.feedURL)")
 
-      // Check if feed should be skipped based on minUpdateInterval
-      if let minInterval = feed.minUpdateInterval,
-        let lastAttempted = feed.lastAttempted
-      {
-        let timeSinceLastAttempt = Date().timeIntervalSince(lastAttempted)
-        if timeSinceLastAttempt < minInterval {
-          let remainingTime = Int((minInterval - timeSinceLastAttempt) / 60)
-          print("   ⏭️  Skipped (update requested in \(remainingTime) minutes)")
-          skippedCount += 1
-          continue
-        }
-      }
-
-      // Apply rate limiting
+      // Check rate limit for this domain
       guard let url = URL(string: feed.feedURL) else {
         print("   ❌ Invalid URL")
         errorCount += 1
         continue
       }
 
-      await rateLimiter.waitIfNeeded(for: url, minimumInterval: feed.minUpdateInterval)
-
       // Check robots.txt unless skipped
-      if !skipRobotsCheck {
+      if !config.update.skipRobotsCheck {
         do {
           let isAllowed = try await robotsService.isAllowed(url)
           if !isAllowed {
-            print("   🚫 Blocked by robots.txt")
+            print("   ⏭️  Skipped: robots.txt disallows")
             skippedCount += 1
             continue
           }
         } catch {
-          print("   ⚠️  robots.txt check failed, proceeding anyway: \(error.localizedDescription)")
+          print("   ⚠️  Could not check robots.txt: \(error.localizedDescription)")
+          // Continue anyway - failure to fetch robots.txt shouldn't block updates
         }
       }
 
+      // Wait for rate limit
+      await rateLimiter.waitIfNeeded(for: url)
+
       // Track attempt - start with existing values
-      var totalAttempts = feed.totalAttempts + 1
+      let totalAttempts = feed.totalAttempts + 1
       var successfulAttempts = feed.successfulAttempts
       var failureCount = feed.failureCount
-      var lastFailureReason: String? = feed.lastFailureReason
-      var lastModified = feed.lastModified
-      var etag = feed.etag
-      var minUpdateInterval = feed.minUpdateInterval
+      var newEtag = feed.etag
+      var newLastModified = feed.lastModified
 
       do {
-        // Fetch RSS with conditional request support
+        // Fetch feed with conditional request headers
         let response = try await fetcher.fetchFeed(
           from: url,
           lastModified: feed.lastModified,
           etag: feed.etag
         )
 
-        // Update HTTP metadata
-        lastModified = response.lastModified
-        etag = response.etag
-
         // Handle 304 Not Modified
-        if !response.wasModified {
-          print("   ✅ Not modified (saved bandwidth)")
+        guard let feedData = response.feedData else {
+          print("   ℹ️  Not modified (304)")
           notModifiedCount += 1
-          successfulAttempts += 1
-          failureCount = 0  // Reset failure count on success
-          lastFailureReason = nil
-        } else {
-          guard let feedData = response.feedData else {
-            throw CelestraError.invalidFeedData("No feed data in response")
-          }
+          // Update ETag and Last-Modified even for 304
+          newEtag = response.etag ?? feed.etag
+          newLastModified = response.lastModified ?? feed.lastModified
 
-          print("   ✅ Fetched \(feedData.items.count) articles")
+          // Update feed metadata
+          let updatedFeed = Feed(
+            recordName: feed.recordName,
+            feedURL: feed.feedURL,
+            title: feed.title,
+            description: feed.description,
+            isFeatured: feed.isFeatured,
+            isVerified: feed.isVerified,
+            subscriberCount: feed.subscriberCount,
+            totalAttempts: totalAttempts,
+            successfulAttempts: successfulAttempts + 1, // 304 counts as success
+            lastAttempted: Date(),
+            isActive: feed.isActive,
+            etag: newEtag,
+            lastModified: newLastModified,
+            failureCount: 0, // Reset failure count on successful fetch
+            minUpdateInterval: feed.minUpdateInterval
+          )
+          _ = try await service.updateFeed(recordName: feed.recordName!, feed: updatedFeed)
 
-          // Update minUpdateInterval if feed provides one
-          if let interval = feedData.minUpdateInterval {
-            minUpdateInterval = interval
-          }
-
-          // Convert to PublicArticle
-          guard let recordName = feed.recordName else {
-            print("   ❌ No record name")
-            errorCount += 1
-            continue
-          }
-
-          let articles = feedData.items.map { item in
-            Article(
-              feedRecordName: recordName,
-              guid: item.guid,
-              title: item.title,
-              excerpt: item.description,
-              content: item.content,
-              author: item.author,
-              url: item.link,
-              publishedDate: item.pubDate,
-              ttlDays: 30
-            )
-          }
-
-          // Duplicate detection and update logic
-          if !articles.isEmpty {
-            let guids = articles.map { $0.guid }
-            let existingArticles = try await service.queryArticlesByGUIDs(
-              guids,
-              feedRecordName: recordName
-            )
-
-            // Create map of existing articles by GUID for fast lookup
-            let existingMap = Dictionary(
-              uniqueKeysWithValues: existingArticles.map { ($0.guid, $0) }
-            )
-
-            // Separate articles into new vs modified
-            var newArticles: [Article] = []
-            var modifiedArticles: [Article] = []
-
-            for article in articles {
-              if let existing = existingMap[article.guid] {
-                // Check if content changed
-                if existing.contentHash != article.contentHash {
-                  // Content changed - need to update
-                  // Create new article with existing recordName
-                  let updated = Article(
-                    recordName: existing.recordName,
-                    recordChangeTag: existing.recordChangeTag,
-                    feedRecordName: article.feedRecordName,
-                    guid: article.guid,
-                    title: article.title,
-                    excerpt: article.excerpt,
-                    content: article.content,
-                    // Omit contentText to let it recalculate from new content
-                    author: article.author,
-                    url: article.url,
-                    imageURL: existing.imageURL,  // Preserve enriched field
-                    publishedDate: article.publishedDate,
-                    fetchedAt: Date(),
-                    ttlDays: 30,
-                    // Omit wordCount and estimatedReadingTime to let them recalculate
-                    language: existing.language,  // Preserve enriched field
-                    tags: existing.tags  // Preserve enriched field
-                  )
-                  modifiedArticles.append(updated)
-                }
-                // else: content unchanged - skip
-              } else {
-                // New article
-                newArticles.append(article)
-              }
-            }
-
-            let unchangedCount = articles.count - newArticles.count - modifiedArticles.count
-
-            // Upload new articles
-            if !newArticles.isEmpty {
-              let createResult = try await service.createArticles(newArticles)
-              if createResult.isFullSuccess {
-                print("   ✅ Created \(createResult.successCount) new article(s)")
-                CelestraLogger.operations.info(
-                  "Created \(createResult.successCount) articles for \(feed.title)")
-              } else {
-                print(
-                  "   ⚠️ Created \(createResult.successCount)/\(createResult.totalProcessed) article(s)"
-                )
-                CelestraLogger.errors.warning(
-                  "Partial create failure: \(createResult.failureCount) failures")
-              }
-            }
-
-            // Update modified articles
-            if !modifiedArticles.isEmpty {
-              let updateResult = try await service.updateArticles(modifiedArticles)
-              if updateResult.isFullSuccess {
-                print("   🔄 Updated \(updateResult.successCount) modified article(s)")
-                CelestraLogger.operations.info(
-                  "Updated \(updateResult.successCount) articles for \(feed.title)")
-              } else {
-                print(
-                  "   ⚠️ Updated \(updateResult.successCount)/\(updateResult.totalProcessed) article(s)"
-                )
-                CelestraLogger.errors.warning(
-                  "Partial update failure: \(updateResult.failureCount) failures")
-              }
-            }
-
-            // Report unchanged articles
-            if unchangedCount > 0 {
-              print("   ℹ️  Skipped \(unchangedCount) unchanged article(s)")
-            }
-
-            // Report if nothing to do
-            if newArticles.isEmpty && modifiedArticles.isEmpty {
-              print("   ℹ️  No new or modified articles")
-            }
-          }
-
-          successfulAttempts += 1
-          failureCount = 0  // Reset failure count on success
-          lastFailureReason = nil
+          successCount += 1
+          continue
         }
+
+        print("   ✅ Fetched: \(feedData.items.count) articles")
+
+        // Update ETag and Last-Modified from response
+        newEtag = response.etag
+        newLastModified = response.lastModified
+
+        // Process articles (create new, update modified)
+        let guids = feedData.items.map { $0.guid }
+        let existingArticles = try await service.queryArticlesByGUIDs(guids, feedRecordName: feed.recordName)
+        let existingMap: [String: Article] = Dictionary(uniqueKeysWithValues: existingArticles.map { ($0.guid, $0) })
+
+        var newArticles: [Article] = []
+        var modifiedArticles: [Article] = []
+
+        for item in feedData.items {
+          let article = Article(
+            feedRecordName: feed.recordName!,
+            guid: item.guid,
+            title: item.title,
+            excerpt: item.description,
+            content: item.content,
+            author: item.author,
+            url: item.link,
+            publishedDate: item.pubDate
+          )
+
+          if let existing = existingMap[article.guid] {
+            // Check if content changed
+            if existing.contentHash != article.contentHash {
+              let updated = Article(
+                recordName: existing.recordName,
+                recordChangeTag: existing.recordChangeTag,
+                feedRecordName: article.feedRecordName,
+                guid: article.guid,
+                title: article.title,
+                excerpt: article.excerpt,
+                content: article.content,
+                author: article.author,
+                url: article.url,
+                publishedDate: article.publishedDate
+              )
+              modifiedArticles.append(updated)
+            }
+          } else {
+            newArticles.append(article)
+          }
+        }
+
+        print("   📝 New: \(newArticles.count), Modified: \(modifiedArticles.count)")
+
+        // Create new articles
+        if !newArticles.isEmpty {
+          let createResult = try await service.createArticles(newArticles)
+          print("   ✅ Created \(createResult.successCount) articles")
+          if createResult.failureCount > 0 {
+            print("   ⚠️  Failed to create \(createResult.failureCount) articles")
+          }
+        }
+
+        // Update modified articles
+        if !modifiedArticles.isEmpty {
+          let updateResult = try await service.updateArticles(modifiedArticles)
+          print("   ✅ Updated \(updateResult.successCount) articles")
+          if updateResult.failureCount > 0 {
+            print("   ⚠️  Failed to update \(updateResult.failureCount) articles")
+          }
+        }
+
+        // Update feed metadata
+        let updatedFeed = Feed(
+          recordName: feed.recordName,
+          feedURL: feed.feedURL,
+          title: feedData.title, // Update title from feed
+          description: feedData.description, // Update description
+          isFeatured: feed.isFeatured,
+          isVerified: feed.isVerified,
+          subscriberCount: feed.subscriberCount,
+          totalAttempts: totalAttempts,
+          successfulAttempts: successfulAttempts + 1,
+          lastAttempted: Date(),
+          isActive: feed.isActive,
+          etag: newEtag,
+          lastModified: newLastModified,
+          failureCount: 0, // Reset on success
+          minUpdateInterval: feedData.minUpdateInterval
+        )
+        _ = try await service.updateFeed(recordName: feed.recordName!, feed: updatedFeed)
 
         successCount += 1
       } catch {
         print("   ❌ Error: \(error.localizedDescription)")
         errorCount += 1
         failureCount += 1
-        lastFailureReason = error.localizedDescription
-      }
 
-      // Update feed with new metadata
-      let updatedFeed = Feed(
-        recordName: feed.recordName,
-        recordChangeTag: feed.recordChangeTag,
-        feedURL: feed.feedURL,
-        title: feed.title,
-        description: feed.description,
-        subscriberCount: feed.subscriberCount,
-        totalAttempts: totalAttempts,
-        successfulAttempts: successfulAttempts,
-        lastAttempted: Date(),
-        isActive: feed.isActive,
-        etag: etag,
-        lastModified: lastModified,
-        failureCount: failureCount,
-        lastFailureReason: lastFailureReason,
-        minUpdateInterval: minUpdateInterval
-      )
-
-      // Update feed record in CloudKit
-      if let recordName = feed.recordName {
-        _ = try await service.updateFeed(recordName: recordName, feed: updatedFeed)
+        // Update feed with failure
+        let updatedFeed = Feed(
+          recordName: feed.recordName,
+          feedURL: feed.feedURL,
+          title: feed.title,
+          description: feed.description,
+          isFeatured: feed.isFeatured,
+          isVerified: feed.isVerified,
+          subscriberCount: feed.subscriberCount,
+          totalAttempts: totalAttempts,
+          successfulAttempts: successfulAttempts,
+          lastAttempted: Date(),
+          isActive: feed.isActive,
+          etag: feed.etag,
+          lastModified: feed.lastModified,
+          failureCount: failureCount,
+          minUpdateInterval: feed.minUpdateInterval
+        )
+        try? await service.updateFeed(recordName: feed.recordName!, feed: updatedFeed)
       }
     }
 
-    // 7. Print summary
-    print("\n✅ Update complete!")
-    print("   Success: \(successCount)")
-    print("   Not Modified: \(notModifiedCount)")
-    print("   Skipped: \(skippedCount)")
-    print("   Errors: \(errorCount)")
+    // Summary
+    print("\n" + String(repeating: "─", count: 50))
+    print("📊 Update Summary")
+    print("   Total feeds: \(feeds.count)")
+    print("   ✅ Successful: \(successCount)")
+    print("   ❌ Errors: \(errorCount)")
+    print("   ⏭️  Skipped (robots.txt): \(skippedCount)")
+    print("   ℹ️  Not modified (304): \(notModifiedCount)")
   }
 }

@@ -7,7 +7,7 @@
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation
-//  files (the “Software”), to deal in the Software without
+//  files (the "Software"), to deal in the Software without
 //  restriction, including without limitation the rights to use,
 //  copy, modify, merge, publish, distribute, sublicense, and/or
 //  sell copies of the Software, and to permit persons to whom the
@@ -17,7 +17,7 @@
 //  The above copyright notice and this permission notice shall be
 //  included in all copies or substantial portions of the Software.
 //
-//  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 //  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 //  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
@@ -27,29 +27,18 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import ArgumentParser
 import CelestraCloudKit
 import CelestraKit
 import Foundation
 import MistKit
 
-struct ClearCommand: AsyncParsableCommand {
-  static let configuration = CommandConfiguration(
-    commandName: "clear",
-    abstract: "Delete all feeds and articles from CloudKit",
-    discussion: """
-      Removes all Feed and Article records from the CloudKit public database. \
-      Use with caution as this operation cannot be undone.
-      """
-  )
-
-  @Flag(name: .long, help: "Skip confirmation prompt")
-  var confirm: Bool = false
-
+enum ClearCommand {
   @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-  func run() async throws {
+  static func run(args: [String]) async throws {
     // Require confirmation
-    if !confirm {
+    let hasConfirm = args.contains("--confirm")
+
+    if !hasConfirm {
       print("⚠️  This will DELETE ALL feeds and articles from CloudKit!")
       print("   Run with --confirm to proceed")
       print("")
@@ -59,7 +48,11 @@ struct ClearCommand: AsyncParsableCommand {
 
     print("🗑️  Clearing all data from CloudKit...")
 
-    let service = try CelestraConfig.createCloudKitService()
+    // Load configuration and create CloudKit service
+    let loader = ConfigurationLoader()
+    let config = try await loader.loadConfiguration()
+    let validatedCloudKit = try config.cloudkit.validated()
+    let service = try CelestraConfig.createCloudKitService(from: validatedCloudKit)
 
     // Delete articles first (to avoid orphans)
     print("📋 Deleting articles...")

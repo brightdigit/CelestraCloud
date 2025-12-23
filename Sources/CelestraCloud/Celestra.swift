@@ -7,7 +7,7 @@
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation
-//  files (the “Software”), to deal in the Software without
+//  files (the "Software"), to deal in the Software without
 //  restriction, including without limitation the rights to use,
 //  copy, modify, merge, publish, distribute, sublicense, and/or
 //  sell copies of the Software, and to permit persons to whom the
@@ -17,7 +17,7 @@
 //  The above copyright notice and this permission notice shall be
 //  included in all copies or substantial portions of the Software.
 //
-//  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 //  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 //  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
@@ -27,24 +27,69 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import ArgumentParser
 import CelestraCloudKit
 import Foundation
-import MistKit
 
 @main
-struct Celestra: AsyncParsableCommand {
-  static let configuration = CommandConfiguration(
-    commandName: "celestra-cloud",
-    abstract: "RSS reader that syncs to CloudKit public database",
-    discussion: """
-      Celestra demonstrates MistKit's query filtering and sorting features by managing \
-      RSS feeds in CloudKit's public database.
-      """,
-    subcommands: [
-      AddFeedCommand.self,
-      UpdateCommand.self,
-      ClearCommand.self,
-    ]
-  )
+struct Celestra {
+  static func main() async {
+    let args = Array(CommandLine.arguments.dropFirst())
+
+    guard let command = args.first else {
+      printUsage()
+      exit(1)
+    }
+
+    do {
+      switch command {
+      case "add-feed":
+        try await AddFeedCommand.run(args: Array(args.dropFirst()))
+      case "update":
+        try await UpdateCommand.run(args: Array(args.dropFirst()))
+      case "clear":
+        try await ClearCommand.run(args: Array(args.dropFirst()))
+      case "help", "--help", "-h":
+        printUsage()
+      default:
+        print("Unknown command: \(command)")
+        printUsage()
+        exit(1)
+      }
+    } catch {
+      print("Error: \(error)")
+      exit(1)
+    }
+  }
+
+  static func printUsage() {
+    print("""
+      celestra-cloud - RSS reader that syncs to CloudKit public database
+
+      USAGE:
+        celestra-cloud <command> [options]
+
+      COMMANDS:
+        add-feed <url>              Add a new RSS feed to CloudKit
+        update [options]            Fetch and update RSS feeds
+        clear --confirm             Delete all feeds and articles
+
+      UPDATE OPTIONS:
+        --update-delay <seconds>                    Delay between feeds (default: 2.0)
+        --update-skip-robots-check                  Skip robots.txt checking
+        --update-max-failures <count>               Skip feeds above failure threshold
+        --update-min-popularity <count>             Only update popular feeds
+        --update-last-attempted-before <iso8601>    Only update feeds before date
+
+      CLOUDKIT OPTIONS (via environment variables):
+        CLOUDKIT_CONTAINER_ID       CloudKit container identifier
+        CLOUDKIT_KEY_ID             Server-to-Server key ID
+        CLOUDKIT_PRIVATE_KEY_PATH   Path to .pem private key file
+        CLOUDKIT_ENVIRONMENT        Either 'development' or 'production'
+
+      EXAMPLES:
+        celestra-cloud add-feed https://example.com/feed.xml
+        celestra-cloud update --update-delay 3.0
+        celestra-cloud clear --confirm
+      """)
+  }
 }

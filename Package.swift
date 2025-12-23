@@ -91,9 +91,9 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/brightdigit/MistKit.git", from: "1.0.0-alpha.3"),
-        .package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1"),  
-        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0")
+        .package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1"),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0")
     ],
     targets: [
         .target(
@@ -101,15 +101,15 @@ let package = Package(
             dependencies: [
                 .product(name: "MistKit", package: "MistKit"),
                 .product(name: "CelestraKit", package: "CelestraKit"),
-                .product(name: "Logging", package: "swift-log")
+                .product(name: "Logging", package: "swift-log"),
+                .product(name: "Configuration", package: "swift-configuration")
             ],
             swiftSettings: swiftSettings
         ),
         .executableTarget(
             name: "CelestraCloud",
             dependencies: [
-                .target(name: "CelestraCloudKit"),
-                .product(name: "ArgumentParser", package: "swift-argument-parser")
+                .target(name: "CelestraCloudKit")
             ],
             swiftSettings: swiftSettings
         ),

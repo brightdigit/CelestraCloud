@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Celestra is a command-line RSS reader that demonstrates MistKit's CloudKit integration capabilities. It fetches RSS feeds, stores them in CloudKit's public database, and implements comprehensive web etiquette best practices including rate limiting, robots.txt checking, and conditional HTTP requests.
 
-**Tech Stack**: Swift 6.2, MistKit (CloudKit wrapper), CelestraKit (shared models & services), SyndiKit (RSS parsing), ArgumentParser (CLI)
+**Tech Stack**: Swift 6.2, MistKit (CloudKit wrapper), CelestraKit (shared models & services), SyndiKit (RSS parsing), Swift Configuration (configuration management)
 
 ## Common Commands
 
@@ -18,18 +18,21 @@ swift build
 
 # Run with environment variables
 source .env
-swift run celestra <command>
+swift run celestra-cloud <command>
 
 # Add a feed
-swift run celestra add-feed https://example.com/feed.xml
+swift run celestra-cloud add-feed https://example.com/feed.xml
 
 # Update feeds with filters
-swift run celestra update
-swift run celestra update --last-attempted-before 2025-01-01T00:00:00Z
-swift run celestra update --min-popularity 10 --delay 3.0
+swift run celestra-cloud update
+swift run celestra-cloud update --update-last-attempted-before 2025-01-01T00:00:00Z
+swift run celestra-cloud update --update-min-popularity 10 --update-delay 3.0
 
 # Clear all data
-swift run celestra clear --confirm
+swift run celestra-cloud clear --confirm
+
+# Using both environment variables and CLI arguments (CLI wins)
+UPDATE_DELAY=2.0 swift run celestra-cloud update --update-delay 3.0
 ```
 
 ### Environment Setup
@@ -57,16 +60,23 @@ Schema is defined in `schema.ckdb` using CloudKit's text-based schema language.
 ### High-Level Structure
 
 ```
-Sources/Celestra/
-├── Celestra.swift              # CLI entry point with ArgumentParser
+Sources/CelestraCloud/
+├── Celestra.swift              # CLI entry point
+└── Commands/                   # CLI subcommands
+    ├── AddFeedCommand.swift    # Parse and add RSS feeds
+    ├── UpdateCommand.swift     # Fetch/update feeds (shows MistKit QueryFilter)
+    └── ClearCommand.swift      # Delete all records
+
+Sources/CelestraCloudKit/
+├── Configuration/              # Swift Configuration integration
+│   ├── CelestraConfiguration.swift          # Root config struct
+│   ├── CloudKitConfiguration.swift          # CloudKit credentials config
+│   ├── UpdateCommandConfiguration.swift     # Update command options
+│   ├── ConfigurationLoader.swift            # Multi-source config loader
+│   └── ConfigurationError.swift             # Enhanced errors
 ├── CelestraConfig.swift        # CloudKit service factory
-├── Commands/                   # CLI subcommands
-│   ├── AddFeedCommand.swift    # Parse and add RSS feeds
-│   ├── UpdateCommand.swift     # Fetch/update feeds (shows MistKit QueryFilter)
-│   └── ClearCommand.swift      # Delete all records
 ├── Services/
 │   ├── CloudKitService+Celestra.swift  # MistKit operations
-│   ├── RSSFetcherService.swift         # SyndiKit wrapper
 │   ├── CelestraError.swift             # Error types
 │   └── CelestraLogger.swift            # Structured logging
 ├── Models/
@@ -183,6 +193,105 @@ Two record types in public database:
 
 **Relationship Design**: Uses string-based `feedRecordName` instead of CKReference for simplicity and clearer querying patterns. Trade-off: Manual cascade delete vs automatic with CKReference.
 
+## Swift Configuration (v1.0.0)
+
+CelestraCloud uses Apple's Swift Configuration library for unified configuration management across environment variables and command-line arguments.
+
+### Configuration Architecture
+
+**Priority Order**: CLI arguments > Environment variables > Defaults
+
+```swift
+// ConfigurationLoader creates a provider hierarchy
+let loader = ConfigurationLoader(cliOverrides: cliArgs)
+let config = loader.loadConfiguration()
+```
+
+### Built-in Providers Used
+
+1. **InMemoryProvider** - CLI argument overrides (highest priority)
+2. **EnvironmentVariablesProvider** - System environment variables
+
+### Package Trait Configuration
+
+To enable `CommandLineArgumentsProvider` support (opt-in feature):
+
+```swift
+.package(
+    url: "https://github.com/apple/swift-configuration",
+    from: "1.0.0",
+    traits: [.defaults, "CommandLineArguments"]
+)
+```
+
+### Configuration Key Mapping
+
+**Command-line arguments** use kebab-case:
+- `--cloudkit-container-id` → `cloudkit.container_id`
+- `--update-delay` → `update.delay`
+- `--update-skip-robots-check` → `update.skip_robots_check`
+
+**Environment variables** use SCREAMING_SNAKE_CASE:
+- `CLOUDKIT_CONTAINER_ID` → `cloudkit.container_id`
+- `UPDATE_DELAY` → `update.delay`
+- `UPDATE_SKIP_ROBOTS_CHECK` → `update.skip_robots_check`
+
+### Usage Examples
+
+**Via environment variables:**
+```bash
+export CLOUDKIT_CONTAINER_ID="iCloud.com.brightdigit.Celestra"
+export UPDATE_DELAY=3.0
+celestra-cloud update
+```
+
+**Via command-line arguments:**
+```bash
+celestra-cloud update --cloudkit-container-id "iCloud.com.brightdigit.Celestra" --update-delay 3.0
+```
+
+**Priority demonstration:**
+```bash
+# Environment has UPDATE_DELAY=2.0, but CLI overrides to 3.0
+UPDATE_DELAY=2.0 celestra-cloud update --update-delay 3.0
+# Uses 3.0 (CLI wins)
+```
+
+### Adding New Configuration Options
+
+To add a new configuration option (e.g., `--concurrency`):
+
+1. **Add to configuration struct:**
+```swift
+// In UpdateCommandConfiguration.swift
+public var concurrency: Int = 1
+```
+
+2. **Update ConfigurationLoader:**
+```swift
+// In ConfigurationLoader.loadConfiguration()
+let update = UpdateCommandConfiguration(
+    // ... existing fields
+    concurrency: configReader.int(forKey: "update.concurrency", default: 1)
+)
+```
+
+3. **Access in command:**
+```swift
+// In UpdateCommand.swift
+let config = loader.loadConfiguration()
+let concurrency = config.update.concurrency
+```
+
+Users can now use:
+- `--update-concurrency 3` (CLI)
+- `UPDATE_CONCURRENCY=3` (environment)
+
+### Key Documentation
+
+- See `.claude/https_-swiftpackageindex.com-apple-swift-configuration-1.0.0-documentation-configuration.md` for complete Swift Configuration API reference
+- Provider hierarchy documentation: Configuration providers are queried in order, first non-nil value wins
+
 ## Swift 6.2 Features
 
 Package.swift enables extensive Swift 6.2 upcoming and experimental features:
@@ -199,7 +308,7 @@ Code must be concurrency-safe with proper actor isolation.
 
 **When Adding Features:**
 - MistKit operations go in `CloudKitService+Celestra.swift` extension
-- New commands inherit from `AsyncParsableCommand` in Commands/ directory
+- Configuration options: Add to appropriate struct in `Configuration/` directory, update `ConfigurationLoader`
 - All CloudKit field types: Use FieldValue enum (.string, .int64, .date, .double, etc.)
 - Booleans: Always store as INT64 (0/1) in CloudKit schema
 - Batch operations: Chunk into batches of 10 for large payloads, use non-atomic for partial success
