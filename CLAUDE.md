@@ -197,32 +197,53 @@ Two record types in public database:
 
 CelestraCloud uses Apple's Swift Configuration library for unified configuration management across environment variables and command-line arguments.
 
+**Migration Note**: CelestraCloud migrated from ArgumentParser to Swift Configuration in December 2024. See `.claude/MIGRATION_SWIFT_CONFIGURATION.md` for the complete migration guide, including code comparisons and lessons learned.
+
 ### Configuration Architecture
 
 **Priority Order**: CLI arguments > Environment variables > Defaults
 
 ```swift
-// ConfigurationLoader creates a provider hierarchy
-let loader = ConfigurationLoader(cliOverrides: cliArgs)
-let config = loader.loadConfiguration()
+// ConfigurationLoader uses CommandLineArgumentsProvider
+let loader = ConfigurationLoader()
+let config = await loader.loadConfiguration()
 ```
 
 ### Built-in Providers Used
 
-1. **InMemoryProvider** - CLI argument overrides (highest priority)
+1. **CommandLineArgumentsProvider** - Automatic CLI argument parsing (highest priority)
 2. **EnvironmentVariablesProvider** - System environment variables
 
-### Package Trait Configuration
+**Package Trait**: `CommandLineArguments` trait is enabled in Package.swift to support CommandLineArgumentsProvider.
 
-To enable `CommandLineArgumentsProvider` support (opt-in feature):
+### Configuration Reference
 
-```swift
-.package(
-    url: "https://github.com/apple/swift-configuration",
-    from: "1.0.0",
-    traits: [.defaults, "CommandLineArguments"]
-)
-```
+#### CloudKit Configuration (Required)
+
+All CloudKit settings are **required** and must be provided via environment variables:
+
+| Environment Variable | Type | Default | Description |
+|---------------------|------|---------|-------------|
+| `CLOUDKIT_CONTAINER_ID` | String | None | CloudKit container identifier (e.g., `iCloud.com.brightdigit.Celestra`) |
+| `CLOUDKIT_KEY_ID` | String | None | Server-to-Server key ID from Apple Developer Console |
+| `CLOUDKIT_PRIVATE_KEY_PATH` | String | None | Absolute path to `.pem` private key file |
+| `CLOUDKIT_ENVIRONMENT` | String | `development` | CloudKit environment: `development` or `production` |
+
+**Note**: CloudKit credentials are marked as secrets and automatically redacted from logs.
+
+#### Update Command Configuration (Optional)
+
+All update command settings are **optional** and can be provided via environment variables OR CLI arguments:
+
+| Option | Env Variable | CLI Argument | Type | Default | Description |
+|--------|--------------|--------------|------|---------|-------------|
+| Delay | `UPDATE_DELAY` | `--update-delay <seconds>` | Double | `2.0` | Delay between feed updates in seconds |
+| Skip Robots | `UPDATE_SKIP_ROBOTS_CHECK` | `--update-skip-robots-check` | Bool | `false` | Skip robots.txt validation (flag) |
+| Max Failures | `UPDATE_MAX_FAILURES` | `--update-max-failures <count>` | Int64 | None | Skip feeds above this failure threshold |
+| Min Popularity | `UPDATE_MIN_POPULARITY` | `--update-min-popularity <count>` | Int64 | None | Only update feeds with minimum subscribers |
+| Last Attempted Before | `UPDATE_LAST_ATTEMPTED_BEFORE` | `--update-last-attempted-before <iso8601>` | Date | None | Only update feeds attempted before this date |
+
+**Date Format**: ISO8601 (e.g., `2025-01-01T00:00:00Z`)
 
 ### Configuration Key Mapping
 
@@ -242,19 +263,29 @@ To enable `CommandLineArgumentsProvider` support (opt-in feature):
 ```bash
 export CLOUDKIT_CONTAINER_ID="iCloud.com.brightdigit.Celestra"
 export UPDATE_DELAY=3.0
+export UPDATE_MAX_FAILURES=5
 celestra-cloud update
 ```
 
 **Via command-line arguments:**
 ```bash
-celestra-cloud update --cloudkit-container-id "iCloud.com.brightdigit.Celestra" --update-delay 3.0
+celestra-cloud update \
+  --update-delay 3.0 \
+  --update-max-failures 5 \
+  --update-min-popularity 10
 ```
 
-**Priority demonstration:**
+**Mixed (CLI overrides ENV):**
 ```bash
-# Environment has UPDATE_DELAY=2.0, but CLI overrides to 3.0
-UPDATE_DELAY=2.0 celestra-cloud update --update-delay 3.0
-# Uses 3.0 (CLI wins)
+# Environment has UPDATE_DELAY=2.0, but CLI overrides to 5.0
+UPDATE_DELAY=2.0 celestra-cloud update --update-delay 5.0
+# Uses 5.0 (CLI wins)
+```
+
+**Filtering by date:**
+```bash
+# Only update feeds last attempted before January 1, 2025
+celestra-cloud update --update-last-attempted-before 2025-01-01T00:00:00Z
 ```
 
 ### Adding New Configuration Options
@@ -272,20 +303,20 @@ public var concurrency: Int = 1
 // In ConfigurationLoader.loadConfiguration()
 let update = UpdateCommandConfiguration(
     // ... existing fields
-    concurrency: configReader.int(forKey: "update.concurrency", default: 1)
+    concurrency: readInt(forKey: "update.concurrency") ?? 1
 )
 ```
 
 3. **Access in command:**
 ```swift
 // In UpdateCommand.swift
-let config = loader.loadConfiguration()
+let config = try await loader.loadConfiguration()
 let concurrency = config.update.concurrency
 ```
 
-Users can now use:
-- `--update-concurrency 3` (CLI)
-- `UPDATE_CONCURRENCY=3` (environment)
+**No manual parsing needed!** Users can now use:
+- `--update-concurrency 3` (CLI - kebab-case)
+- `UPDATE_CONCURRENCY=3` (environment - SCREAMING_SNAKE_CASE)
 
 ### Key Documentation
 
