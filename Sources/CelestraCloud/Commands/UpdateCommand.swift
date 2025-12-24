@@ -36,56 +36,8 @@ import MistKit
 enum UpdateCommand {
   @available(macOS 13.0, *)
   static func run(args: [String]) async throws {
-    // Parse command-line arguments
-    var cliOverrides: [String: Any] = [:]
-    var i = 0
-    while i < args.count {
-      let arg = args[i]
-      switch arg {
-      case "--update-delay":
-        guard i + 1 < args.count, let value = Double(args[i + 1]) else {
-          print("Error: --update-delay requires a numeric value")
-          throw ExitError()
-        }
-        cliOverrides["update.delay"] = value
-        i += 2
-      case "--update-skip-robots-check":
-        cliOverrides["update.skip_robots_check"] = true
-        i += 1
-      case "--update-max-failures":
-        guard i + 1 < args.count, let value = Int64(args[i + 1]) else {
-          print("Error: --update-max-failures requires an integer value")
-          throw ExitError()
-        }
-        cliOverrides["update.max_failures"] = value
-        i += 2
-      case "--update-min-popularity":
-        guard i + 1 < args.count, let value = Int64(args[i + 1]) else {
-          print("Error: --update-min-popularity requires an integer value")
-          throw ExitError()
-        }
-        cliOverrides["update.min_popularity"] = value
-        i += 2
-      case "--update-last-attempted-before":
-        guard i + 1 < args.count else {
-          print("Error: --update-last-attempted-before requires a date value")
-          throw ExitError()
-        }
-        let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: args[i + 1]) else {
-          print("Error: Invalid date format. Use ISO8601 (e.g., 2025-01-01T00:00:00Z)")
-          throw ExitError()
-        }
-        cliOverrides["update.last_attempted_before"] = date
-        i += 2
-      default:
-        print("Unknown option: \(arg)")
-        throw ExitError()
-      }
-    }
-
-    // Load configuration
-    let loader = ConfigurationLoader(cliOverrides: cliOverrides)
+    // CommandLineArgumentsProvider automatically parses all arguments
+    let loader = ConfigurationLoader()
     let config = try await loader.loadConfiguration()
 
     print("🔄 Starting feed update...")

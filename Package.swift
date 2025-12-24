@@ -93,7 +93,11 @@ let package = Package(
         .package(url: "https://github.com/brightdigit/MistKit.git", from: "1.0.0-alpha.3"),
         .package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0")
+        .package(
+            url: "https://github.com/apple/swift-configuration.git",
+            from: "1.0.0",
+            traits: [.defaults, "CommandLineArguments"]
+        )
     ],
     targets: [
         .target(

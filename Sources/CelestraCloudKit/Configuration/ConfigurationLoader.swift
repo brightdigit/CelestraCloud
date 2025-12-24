@@ -36,55 +36,21 @@ internal import MistKit
 public actor ConfigurationLoader {
   private let configReader: ConfigReader
 
-  public init(cliOverrides: [String: Any] = [:]) {
+  public init() {
     var providers: [any ConfigProvider] = []
 
-    // Priority 1: CLI overrides (highest)
-    if !cliOverrides.isEmpty {
-      let configValues = Self.convertToConfigValues(cliOverrides)
-      providers.append(InMemoryProvider(name: "CLI", values: configValues))
-    }
+    // Priority 1: Command-line arguments (highest)
+    providers.append(CommandLineArgumentsProvider(
+      secretsSpecifier: .specific([
+        "--cloudkit-key-id",
+        "--cloudkit-private-key-path"
+      ])
+    ))
 
     // Priority 2: Environment variables
     providers.append(EnvironmentVariablesProvider())
 
     self.configReader = ConfigReader(providers: providers)
-  }
-
-  /// Convert [String: Any] to [AbsoluteConfigKey: ConfigValue]
-  private static func convertToConfigValues(_ dict: [String: Any]) -> [AbsoluteConfigKey: ConfigValue] {
-    var result: [AbsoluteConfigKey: ConfigValue] = [:]
-
-    for (key, value) in dict {
-      // AbsoluteConfigKey initializer takes components array without label
-      let configKey = AbsoluteConfigKey(key.split(separator: ".").map(String.init), context: [:])
-
-      let configValue: ConfigValue
-      switch value {
-      case let stringValue as String:
-        configValue = ConfigValue(.string(stringValue), isSecret: false)
-      case let intValue as Int:
-        configValue = ConfigValue(.int(intValue), isSecret: false)
-      case let int64Value as Int64:
-        // ConfigContent only supports Int, convert Int64 to Int
-        configValue = ConfigValue(.int(Int(int64Value)), isSecret: false)
-      case let doubleValue as Double:
-        configValue = ConfigValue(.double(doubleValue), isSecret: false)
-      case let boolValue as Bool:
-        configValue = ConfigValue(.bool(boolValue), isSecret: false)
-      case let dateValue as Date:
-        // ConfigContent doesn't have a date type, convert to ISO8601 string
-        let formatter = ISO8601DateFormatter()
-        configValue = ConfigValue(.string(formatter.string(from: dateValue)), isSecret: false)
-      default:
-        // Skip unsupported types
-        continue
-      }
-
-      result[configKey] = configValue
-    }
-
-    return result
   }
 
   /// Load complete configuration with all defaults applied
@@ -113,10 +79,8 @@ public actor ConfigurationLoader {
         readInt64(forKey: "UPDATE_MAX_FAILURES"),
       minPopularity: readInt64(forKey: "update.min_popularity") ??
         readInt64(forKey: "UPDATE_MIN_POPULARITY"),
-      lastAttemptedBefore: parseDateString(
-        readString(forKey: "update.last_attempted_before") ??
-        readString(forKey: "UPDATE_LAST_ATTEMPTED_BEFORE")
-      )
+      lastAttemptedBefore: readDate(forKey: "update.last_attempted_before") ??
+        readDate(forKey: "UPDATE_LAST_ATTEMPTED_BEFORE")
     )
 
     return CelestraConfiguration(
@@ -151,9 +115,8 @@ public actor ConfigurationLoader {
     return value == "production" ? .production : .development
   }
 
-  private func parseDateString(_ value: String?) -> Date? {
-    guard let value = value else { return nil }
-    let formatter = ISO8601DateFormatter()
-    return formatter.date(from: value)
+  private func readDate(forKey key: String) -> Date? {
+    // Swift Configuration automatically converts ISO8601 strings to Date
+    configReader.string(forKey: ConfigKey(key), as: Date.self)
   }
 }
