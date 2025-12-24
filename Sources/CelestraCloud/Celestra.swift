@@ -31,7 +31,7 @@ import CelestraCloudKit
 import Foundation
 
 @main
-struct Celestra {
+enum Celestra {
   static func main() async {
     let args = Array(CommandLine.arguments.dropFirst())
 

@@ -1,5 +1,5 @@
 //
-//  CloudKitConfiguration.swift
+//  ValidatedCloudKitConfiguration.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -30,50 +30,22 @@
 public import Foundation
 public import MistKit
 
-/// CloudKit credentials and environment settings
-public struct CloudKitConfiguration: Sendable {
-  public var containerID: String?
-  public var keyID: String?
-  public var privateKeyPath: String?
-  public var environment: MistKit.Environment
+/// Validated CloudKit configuration with all required fields
+public struct ValidatedCloudKitConfiguration: Sendable {
+  public let containerID: String
+  public let keyID: String
+  public let privateKeyPath: String
+  public let environment: MistKit.Environment
 
   public init(
-    containerID: String? = nil,
-    keyID: String? = nil,
-    privateKeyPath: String? = nil,
-    environment: MistKit.Environment = .development
+    containerID: String,
+    keyID: String,
+    privateKeyPath: String,
+    environment: MistKit.Environment
   ) {
     self.containerID = containerID
     self.keyID = keyID
     self.privateKeyPath = privateKeyPath
     self.environment = environment
-  }
-
-  /// Validate that all required fields are present
-  public func validated() throws -> ValidatedCloudKitConfiguration {
-    guard let containerID = containerID, !containerID.isEmpty else {
-      throw EnhancedConfigurationError(
-        "CloudKit container ID required",
-        key: "cloudkit.container_id"
-      )
-    }
-    guard let keyID = keyID, !keyID.isEmpty else {
-      throw EnhancedConfigurationError(
-        "CloudKit key ID required",
-        key: "cloudkit.key_id"
-      )
-    }
-    guard let privateKeyPath = privateKeyPath, !privateKeyPath.isEmpty else {
-      throw EnhancedConfigurationError(
-        "CloudKit private key path required",
-        key: "cloudkit.private_key_path"
-      )
-    }
-    return ValidatedCloudKitConfiguration(
-      containerID: containerID,
-      keyID: keyID,
-      privateKeyPath: privateKeyPath,
-      environment: environment
-    )
   }
 }
