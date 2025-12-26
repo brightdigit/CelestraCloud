@@ -1,5 +1,5 @@
 //
-//  UpdateCommandConfiguration.swift
+//  ConfigurationKeys.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -27,27 +27,29 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-public import Foundation
+/// Configuration keys for reading from providers
+internal enum ConfigurationKeys {
+  enum CloudKit {
+    static let containerID = "cloudkit.container_id"
+    static let containerIDEnv = "CLOUDKIT_CONTAINER_ID"
+    static let keyID = "cloudkit.key_id"
+    static let keyIDEnv = "CLOUDKIT_KEY_ID"
+    static let privateKeyPath = "cloudkit.private_key_path"
+    static let privateKeyPathEnv = "CLOUDKIT_PRIVATE_KEY_PATH"
+    static let environment = "cloudkit.environment"
+    static let environmentEnv = "CLOUDKIT_ENVIRONMENT"
+  }
 
-/// Configuration for the update command
-public struct UpdateCommandConfiguration: Sendable {
-  public var delay: Double
-  public var skipRobotsCheck: Bool
-  public var maxFailures: Int?
-  public var minPopularity: Int?
-  public var lastAttemptedBefore: Date?
-
-  public init(
-    delay: Double = 2.0,
-    skipRobotsCheck: Bool = false,
-    maxFailures: Int? = nil,
-    minPopularity: Int? = nil,
-    lastAttemptedBefore: Date? = nil
-  ) {
-    self.delay = delay
-    self.skipRobotsCheck = skipRobotsCheck
-    self.maxFailures = maxFailures
-    self.minPopularity = minPopularity
-    self.lastAttemptedBefore = lastAttemptedBefore
+  enum Update {
+    static let delay = "update.delay"
+    static let delayEnv = "UPDATE_DELAY"
+    static let skipRobotsCheck = "update.skip_robots_check"
+    static let skipRobotsCheckEnv = "UPDATE_SKIP_ROBOTS_CHECK"
+    static let maxFailures = "update.max_failures"
+    static let maxFailuresEnv = "UPDATE_MAX_FAILURES"
+    static let minPopularity = "update.min_popularity"
+    static let minPopularityEnv = "UPDATE_MIN_POPULARITY"
+    static let lastAttemptedBefore = "update.last_attempted_before"
+    static let lastAttemptedBeforeEnv = "UPDATE_LAST_ATTEMPTED_BEFORE"
   }
 }

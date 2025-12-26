@@ -53,62 +53,34 @@ public actor ConfigurationLoader {
     self.configReader = ConfigReader(providers: providers)
   }
 
-  // MARK: - Configuration Keys
-
-  private enum ConfigKeys {
-    enum CloudKit {
-      static let containerID = "cloudkit.container_id"
-      static let containerIDEnv = "CLOUDKIT_CONTAINER_ID"
-      static let keyID = "cloudkit.key_id"
-      static let keyIDEnv = "CLOUDKIT_KEY_ID"
-      static let privateKeyPath = "cloudkit.private_key_path"
-      static let privateKeyPathEnv = "CLOUDKIT_PRIVATE_KEY_PATH"
-      static let environment = "cloudkit.environment"
-      static let environmentEnv = "CLOUDKIT_ENVIRONMENT"
-    }
-
-    enum Update {
-      static let delay = "update.delay"
-      static let delayEnv = "UPDATE_DELAY"
-      static let skipRobotsCheck = "update.skip_robots_check"
-      static let skipRobotsCheckEnv = "UPDATE_SKIP_ROBOTS_CHECK"
-      static let maxFailures = "update.max_failures"
-      static let maxFailuresEnv = "UPDATE_MAX_FAILURES"
-      static let minPopularity = "update.min_popularity"
-      static let minPopularityEnv = "UPDATE_MIN_POPULARITY"
-      static let lastAttemptedBefore = "update.last_attempted_before"
-      static let lastAttemptedBeforeEnv = "UPDATE_LAST_ATTEMPTED_BEFORE"
-    }
-  }
-
   /// Load complete configuration with all defaults applied
   public func loadConfiguration() async throws -> CelestraConfiguration {
     // CloudKit configuration
     let cloudkit = CloudKitConfiguration(
-      containerID: readString(forKey: ConfigKeys.CloudKit.containerID) ??
-        readString(forKey: ConfigKeys.CloudKit.containerIDEnv),
-      keyID: readString(forKey: ConfigKeys.CloudKit.keyID) ??
-        readString(forKey: ConfigKeys.CloudKit.keyIDEnv),
-      privateKeyPath: readString(forKey: ConfigKeys.CloudKit.privateKeyPath) ??
-        readString(forKey: ConfigKeys.CloudKit.privateKeyPathEnv),
+      containerID: readString(forKey: ConfigurationKeys.CloudKit.containerID) ??
+        readString(forKey: ConfigurationKeys.CloudKit.containerIDEnv),
+      keyID: readString(forKey: ConfigurationKeys.CloudKit.keyID) ??
+        readString(forKey: ConfigurationKeys.CloudKit.keyIDEnv),
+      privateKeyPath: readString(forKey: ConfigurationKeys.CloudKit.privateKeyPath) ??
+        readString(forKey: ConfigurationKeys.CloudKit.privateKeyPathEnv),
       environment: parseEnvironment(
-        readString(forKey: ConfigKeys.CloudKit.environment) ??
-        readString(forKey: ConfigKeys.CloudKit.environmentEnv)
+        readString(forKey: ConfigurationKeys.CloudKit.environment) ??
+        readString(forKey: ConfigurationKeys.CloudKit.environmentEnv)
       )
     )
 
     // Update command configuration
     let update = UpdateCommandConfiguration(
-      delay: readDouble(forKey: ConfigKeys.Update.delay) ??
-        readDouble(forKey: ConfigKeys.Update.delayEnv) ?? 2.0,
-      skipRobotsCheck: readBool(forKey: ConfigKeys.Update.skipRobotsCheck) ??
-        readBool(forKey: ConfigKeys.Update.skipRobotsCheckEnv) ?? false,
-      maxFailures: readInt64(forKey: ConfigKeys.Update.maxFailures) ??
-        readInt64(forKey: ConfigKeys.Update.maxFailuresEnv),
-      minPopularity: readInt64(forKey: ConfigKeys.Update.minPopularity) ??
-        readInt64(forKey: ConfigKeys.Update.minPopularityEnv),
-      lastAttemptedBefore: readDate(forKey: ConfigKeys.Update.lastAttemptedBefore) ??
-        readDate(forKey: ConfigKeys.Update.lastAttemptedBeforeEnv)
+      delay: readDouble(forKey: ConfigurationKeys.Update.delay) ??
+        readDouble(forKey: ConfigurationKeys.Update.delayEnv) ?? 2.0,
+      skipRobotsCheck: readBool(forKey: ConfigurationKeys.Update.skipRobotsCheck) ??
+        readBool(forKey: ConfigurationKeys.Update.skipRobotsCheckEnv) ?? false,
+      maxFailures: readInt(forKey: ConfigurationKeys.Update.maxFailures) ??
+        readInt(forKey: ConfigurationKeys.Update.maxFailuresEnv),
+      minPopularity: readInt(forKey: ConfigurationKeys.Update.minPopularity) ??
+        readInt(forKey: ConfigurationKeys.Update.minPopularityEnv),
+      lastAttemptedBefore: readDate(forKey: ConfigurationKeys.Update.lastAttemptedBefore) ??
+        readDate(forKey: ConfigurationKeys.Update.lastAttemptedBeforeEnv)
     )
 
     return CelestraConfiguration(
@@ -131,11 +103,8 @@ public actor ConfigurationLoader {
     configReader.bool(forKey: ConfigKey(key))
   }
 
-  private func readInt64(forKey key: String) -> Int64? {
-    if let intValue = configReader.int(forKey: ConfigKey(key)) {
-      return Int64(intValue)
-    }
-    return nil
+  private func readInt(forKey key: String) -> Int? {
+    configReader.int(forKey: ConfigKey(key))
   }
 
   private func parseEnvironment(_ value: String?) -> MistKit.Environment {

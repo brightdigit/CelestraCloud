@@ -1,5 +1,5 @@
 //
-//  UpdateCommandConfiguration.swift
+//  ConfigSource.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -29,25 +29,10 @@
 
 public import Foundation
 
-/// Configuration for the update command
-public struct UpdateCommandConfiguration: Sendable {
-  public var delay: Double
-  public var skipRobotsCheck: Bool
-  public var maxFailures: Int?
-  public var minPopularity: Int?
-  public var lastAttemptedBefore: Date?
-
-  public init(
-    delay: Double = 2.0,
-    skipRobotsCheck: Bool = false,
-    maxFailures: Int? = nil,
-    minPopularity: Int? = nil,
-    lastAttemptedBefore: Date? = nil
-  ) {
-    self.delay = delay
-    self.skipRobotsCheck = skipRobotsCheck
-    self.maxFailures = maxFailures
-    self.minPopularity = minPopularity
-    self.lastAttemptedBefore = lastAttemptedBefore
-  }
+/// Configuration source type for error reporting
+public enum ConfigSource: String, Sendable {
+  case cli = "CLI argument"
+  case environment = "Environment variable"
+  case file = "Config file"
+  case defaults = "Default value"
 }

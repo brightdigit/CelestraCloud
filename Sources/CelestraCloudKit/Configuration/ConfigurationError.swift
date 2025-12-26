@@ -52,11 +52,3 @@ public struct EnhancedConfigurationError: LocalizedError {
     return parts.joined(separator: " ")
   }
 }
-
-/// Configuration source type for error reporting
-public enum ConfigSource: String, Sendable {
-  case cli = "CLI argument"
-  case environment = "Environment variable"
-  case file = "Config file"
-  case defaults = "Default value"
-}

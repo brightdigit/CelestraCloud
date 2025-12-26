@@ -73,7 +73,7 @@ extension CloudKitService {
   /// Query feeds with optional filters (demonstrates QueryFilter and QuerySort)
   public func queryFeeds(
     lastAttemptedBefore: Date? = nil,
-    minPopularity: Int64? = nil,
+    minPopularity: Int? = nil,
     limit: Int = 100
   ) async throws -> [Feed] {
     var filters: [QueryFilter] = []
@@ -85,7 +85,7 @@ extension CloudKitService {
 
     // Filter by minimum popularity if provided
     if let minPop = minPopularity {
-      filters.append(.greaterThanOrEquals("subscriberCount", .int64(Int(minPop))))
+      filters.append(.greaterThanOrEquals("subscriberCount", .int64(minPop)))
     }
 
     // Query with filters and sort by feedURL (always queryable+sortable)
