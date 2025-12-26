@@ -96,7 +96,7 @@ let package = Package(
         .package(
             url: "https://github.com/apple/swift-configuration.git",
             from: "1.0.0",
-            traits: [.defaults, "CommandLineArguments"]
+            traits: ["CommandLineArguments"]
         )
     ],
     targets: [
