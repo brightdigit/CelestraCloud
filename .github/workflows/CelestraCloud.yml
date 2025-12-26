@@ -12,6 +12,7 @@ jobs:
     container: ${{ matrix.swift.nightly && format('swiftlang/swift:nightly-{0}-{1}', matrix.swift.version, matrix.os) || format('swift:{0}-{1}', matrix.swift.version, matrix.os) }}
     if: ${{ !contains(github.event.head_commit.message, 'ci skip') }}
     strategy:
+      fail-fast: false
       matrix:
         os: [noble, jammy]
         swift:
@@ -49,6 +50,8 @@ jobs:
         swift:
           - version: swift-6.2-release
             build: 6.2-RELEASE
+          - version: swift-6.3-branch
+            build: 6.3-DEVELOPMENT-SNAPSHOT-2025-12-21-a
     steps:
       - uses: actions/checkout@v4
       - uses: brightdigit/swift-build@v1.4.0
