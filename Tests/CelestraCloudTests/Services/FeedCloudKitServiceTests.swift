@@ -66,7 +66,7 @@ internal struct FeedCloudKitServiceTests {
       etag: "etag-123",
       lastModified: "Mon, 01 Jan 2024 00:00:00 GMT",
       failureCount: 1,
-      minUpdateInterval: 3600
+      minUpdateInterval: 3_600
     )
   }
 
@@ -157,7 +157,7 @@ internal struct FeedCloudKitServiceTests {
       "subscriberCount": .int64(50),
       "totalAttempts": .int64(10),
       "successfulAttempts": .int64(9),
-      "failureCount": .int64(1)
+      "failureCount": .int64(1),
     ]
     let mockRecord = createMockRecordInfo(recordName: "feed-1", fields: feedFields)
     mock.queryRecordsResult = .success([mockRecord])

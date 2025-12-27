@@ -77,7 +77,9 @@ internal final class MockCloudKitRecordOperator: CloudKitRecordOperating, @unche
     return try queryRecordsResult.get()
   }
 
-  internal func modifyRecords(_ operations: [RecordOperation]) async throws(CloudKitError) -> [RecordInfo] {
+  internal func modifyRecords(_ operations: [RecordOperation]) async throws(CloudKitError)
+    -> [RecordInfo]
+  {
     modifyCalls.append(ModifyCall(operations: operations))
     return try modifyRecordsResult.get()
   }

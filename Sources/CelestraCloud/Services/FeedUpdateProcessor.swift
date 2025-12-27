@@ -32,26 +32,6 @@ import CelestraKit
 import Foundation
 import MistKit
 
-/// Result of processing a single feed update
-internal enum FeedUpdateResult {
-  case success
-  case notModified
-  case skipped
-  case error
-}
-
-/// Metadata for updating a feed record
-private struct FeedMetadataUpdate {
-  let title: String
-  let description: String?
-  let etag: String?
-  let lastModified: String?
-  let minUpdateInterval: TimeInterval?
-  let totalAttempts: Int64
-  let successfulAttempts: Int64
-  let failureCount: Int64
-}
-
 /// Processes individual feed updates
 @available(macOS 13.0, *)
 internal struct FeedUpdateProcessor {
@@ -60,19 +40,25 @@ internal struct FeedUpdateProcessor {
   private let robotsService: RobotsTxtService
   private let rateLimiter: RateLimiter
   private let skipRobotsCheck: Bool
+  private let categorizer: ArticleCategorizer
+  private let metadataBuilder: FeedMetadataBuilder
 
   internal init(
     service: CloudKitService,
     fetcher: RSSFetcherService,
     robotsService: RobotsTxtService,
     rateLimiter: RateLimiter,
-    skipRobotsCheck: Bool
+    skipRobotsCheck: Bool,
+    categorizer: ArticleCategorizer = ArticleCategorizer(),
+    metadataBuilder: FeedMetadataBuilder = FeedMetadataBuilder()
   ) {
     self.service = service
     self.fetcher = fetcher
     self.robotsService = robotsService
     self.rateLimiter = rateLimiter
     self.skipRobotsCheck = skipRobotsCheck
+    self.categorizer = categorizer
+    self.metadataBuilder = metadataBuilder
   }
 
   /// Process a single feed update
@@ -114,101 +100,55 @@ internal struct FeedUpdateProcessor {
 
       guard let feedData = response.feedData else {
         print("   ℹ️  Not modified (304)")
-        let metadata = FeedMetadataUpdate(
-          title: feed.title,
-          description: feed.description,
-          etag: response.etag ?? feed.etag,
-          lastModified: response.lastModified ?? feed.lastModified,
-          minUpdateInterval: feed.minUpdateInterval,
-          totalAttempts: totalAttempts,
-          successfulAttempts: feed.successfulAttempts + 1,
-          failureCount: 0
+        let metadata = metadataBuilder.buildNotModifiedMetadata(
+          feed: feed,
+          response: response,
+          totalAttempts: totalAttempts
         )
         return await updateFeedMetadata(feed: feed, recordName: recordName, metadata: metadata)
       }
 
       print("   ✅ Fetched: \(feedData.items.count) articles")
-      let guids = feedData.items.map { $0.guid }
+
       let existingArticles = try await service.queryArticlesByGUIDs(
-        guids,
+        feedData.items.map(\.guid),
         feedRecordName: recordName
       )
-      let existingMap = Dictionary(uniqueKeysWithValues: existingArticles.map { ($0.guid, $0) })
 
-      var newArticles: [Article] = []
-      var modifiedArticles: [Article] = []
+      let categorization = categorizer.categorize(
+        items: feedData.items,
+        existingArticles: existingArticles,
+        feedRecordName: recordName
+      )
 
-      for item in feedData.items {
-        let article = Article(
-          feedRecordName: recordName,
-          guid: item.guid,
-          title: item.title,
-          excerpt: item.description,
-          content: item.content,
-          author: item.author,
-          url: item.link,
-          publishedDate: item.pubDate
-        )
-        if let existing = existingMap[article.guid] {
-          if existing.contentHash != article.contentHash {
-            modifiedArticles.append(
-              Article(
-                recordName: existing.recordName,
-                recordChangeTag: existing.recordChangeTag,
-                feedRecordName: article.feedRecordName,
-                guid: article.guid,
-                title: article.title,
-                excerpt: article.excerpt,
-                content: article.content,
-                author: article.author,
-                url: article.url,
-                publishedDate: article.publishedDate
-              )
-            )
-          }
-        } else {
-          newArticles.append(article)
-        }
-      }
-
-      print("   📝 New: \(newArticles.count), Modified: \(modifiedArticles.count)")
-      if !newArticles.isEmpty {
-        let result = try await service.createArticles(newArticles)
+      print("   📝 New: \(categorization.new.count), Modified: \(categorization.modified.count)")
+      if !categorization.new.isEmpty {
+        let result = try await service.createArticles(categorization.new)
         print("   ✅ Created \(result.successCount) articles")
         if result.failureCount > 0 {
           print("   ⚠️  Failed to create \(result.failureCount) articles")
         }
       }
-      if !modifiedArticles.isEmpty {
-        let result = try await service.updateArticles(modifiedArticles)
+      if !categorization.modified.isEmpty {
+        let result = try await service.updateArticles(categorization.modified)
         print("   ✅ Updated \(result.successCount) articles")
         if result.failureCount > 0 {
           print("   ⚠️  Failed to update \(result.failureCount) articles")
         }
       }
 
-      let metadata = FeedMetadataUpdate(
-        title: feedData.title,
-        description: feedData.description,
-        etag: response.etag,
-        lastModified: response.lastModified,
-        minUpdateInterval: feedData.minUpdateInterval,
-        totalAttempts: totalAttempts,
-        successfulAttempts: feed.successfulAttempts + 1,
-        failureCount: 0
+      let metadata = metadataBuilder.buildSuccessMetadata(
+        feedData: feedData,
+        response: response,
+        feed: feed,
+        totalAttempts: totalAttempts
       )
       return await updateFeedMetadata(feed: feed, recordName: recordName, metadata: metadata)
     } catch {
       print("   ❌ Error: \(error.localizedDescription)")
-      let metadata = FeedMetadataUpdate(
-        title: feed.title,
-        description: feed.description,
-        etag: feed.etag,
-        lastModified: feed.lastModified,
-        minUpdateInterval: feed.minUpdateInterval,
-        totalAttempts: totalAttempts,
-        successfulAttempts: feed.successfulAttempts,
-        failureCount: feed.failureCount + 1
+      let metadata = metadataBuilder.buildErrorMetadata(
+        feed: feed,
+        totalAttempts: totalAttempts
       )
       _ = await updateFeedMetadata(feed: feed, recordName: recordName, metadata: metadata)
       return .error

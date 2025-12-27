@@ -1,5 +1,5 @@
 //
-//  CloudKitRecordOperating.swift
+//  FeedUpdateResult.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -27,33 +27,10 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-public import MistKit
-
-/// Protocol for CloudKit record operations, enabling testability via dependency injection
-public protocol CloudKitRecordOperating: Sendable {
-  /// Query records from CloudKit
-  /// - Parameters:
-  ///   - recordType: The type of record to query
-  ///   - filters: Optional query filters
-  ///   - sortBy: Optional sort descriptors
-  ///   - limit: Maximum number of records to return (optional)
-  ///   - desiredKeys: Optional list of field keys to fetch
-  /// - Returns: Array of matching record info
-  func queryRecords(
-    recordType: String,
-    filters: [QueryFilter]?,
-    sortBy: [QuerySort]?,
-    limit: Int?,
-    desiredKeys: [String]?
-  ) async throws(CloudKitError) -> [RecordInfo]
-
-  /// Modify records in CloudKit (create, update, delete)
-  /// - Parameter operations: Array of record operations to perform
-  /// - Returns: Array of modified record info
-  func modifyRecords(_ operations: [RecordOperation]) async throws(CloudKitError) -> [RecordInfo]
+/// Result of processing a single feed update
+internal enum FeedUpdateResult: Sendable, Equatable {
+  case success
+  case notModified
+  case skipped
+  case error
 }
-
-// MARK: - CloudKitService Conformance
-
-@available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-extension CloudKitService: CloudKitRecordOperating {}

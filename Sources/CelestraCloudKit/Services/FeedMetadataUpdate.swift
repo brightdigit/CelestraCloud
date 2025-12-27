@@ -1,5 +1,5 @@
 //
-//  CloudKitRecordOperating.swift
+//  FeedMetadataUpdate.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -27,33 +27,36 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-public import MistKit
+public import Foundation
 
-/// Protocol for CloudKit record operations, enabling testability via dependency injection
-public protocol CloudKitRecordOperating: Sendable {
-  /// Query records from CloudKit
-  /// - Parameters:
-  ///   - recordType: The type of record to query
-  ///   - filters: Optional query filters
-  ///   - sortBy: Optional sort descriptors
-  ///   - limit: Maximum number of records to return (optional)
-  ///   - desiredKeys: Optional list of field keys to fetch
-  /// - Returns: Array of matching record info
-  func queryRecords(
-    recordType: String,
-    filters: [QueryFilter]?,
-    sortBy: [QuerySort]?,
-    limit: Int?,
-    desiredKeys: [String]?
-  ) async throws(CloudKitError) -> [RecordInfo]
+/// Metadata for updating a feed record
+public struct FeedMetadataUpdate: Sendable, Equatable {
+  public let title: String
+  public let description: String?
+  public let etag: String?
+  public let lastModified: String?
+  public let minUpdateInterval: TimeInterval?
+  public let totalAttempts: Int64
+  public let successfulAttempts: Int64
+  public let failureCount: Int64
 
-  /// Modify records in CloudKit (create, update, delete)
-  /// - Parameter operations: Array of record operations to perform
-  /// - Returns: Array of modified record info
-  func modifyRecords(_ operations: [RecordOperation]) async throws(CloudKitError) -> [RecordInfo]
+  public init(
+    title: String,
+    description: String?,
+    etag: String?,
+    lastModified: String?,
+    minUpdateInterval: TimeInterval?,
+    totalAttempts: Int64,
+    successfulAttempts: Int64,
+    failureCount: Int64
+  ) {
+    self.title = title
+    self.description = description
+    self.etag = etag
+    self.lastModified = lastModified
+    self.minUpdateInterval = minUpdateInterval
+    self.totalAttempts = totalAttempts
+    self.successfulAttempts = successfulAttempts
+    self.failureCount = failureCount
+  }
 }
-
-// MARK: - CloudKitService Conformance
-
-@available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-extension CloudKitService: CloudKitRecordOperating {}

@@ -73,7 +73,7 @@ internal struct ArticleCloudKitServiceTests {
       "url": .string("https://example.com/article"),
       "fetchedTimestamp": .date(Date(timeIntervalSince1970: 1_000_000)),
       "expiresTimestamp": .date(Date(timeIntervalSince1970: 1_000_000 + 30 * 24 * 60 * 60)),
-      "contentHash": .string("abc123")
+      "contentHash": .string("abc123"),
     ]
   }
 
@@ -96,7 +96,9 @@ internal struct ArticleCloudKitServiceTests {
     let service = ArticleCloudKitService(recordOperator: mock)
 
     let fields = createArticleRecordFields(guid: "guid-1")
-    mock.queryRecordsResult = .success([createMockRecordInfo(recordName: "article-1", fields: fields)])
+    mock.queryRecordsResult = .success([
+      createMockRecordInfo(recordName: "article-1", fields: fields)
+    ])
 
     let result = try await service.queryArticlesByGUIDs(["guid-1", "guid-2"])
 
@@ -156,7 +158,7 @@ internal struct ArticleCloudKitServiceTests {
 
     let mockRecords = [
       createMockRecordInfo(recordName: "new-1"),
-      createMockRecordInfo(recordName: "new-2")
+      createMockRecordInfo(recordName: "new-2"),
     ]
     mock.modifyRecordsResult = .success(mockRecords)
 

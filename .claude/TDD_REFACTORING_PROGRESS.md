@@ -25,61 +25,63 @@ We're refactoring the codebase to fix SwiftLint issues while improving testabili
 - [x] Wrote `ArticleCloudKitServiceTests` (11 tests) - all passing
 - [x] Implemented `ArticleCloudKitService` (`Sources/CelestraCloudKit/Services/ArticleCloudKitService.swift`)
 
-## In Progress
+## Completed (Session 2025-12-27)
 
-### Next: ArticleCategorizer (Pure Function)
-Write tests for `ArticleCategorizer` - a pure function type that categorizes feed items into new vs modified articles.
+### Phase 4: Pure Function Types (TDD)
+- [x] Wrote `ArticleCategorizerTests` (10 tests) - all passing
+- [x] Implemented `ArticleCategorizer` (`Sources/CelestraCloudKit/Services/ArticleCategorizer.swift`)
+- [x] Wrote `FeedMetadataBuilderTests` (9 tests) - all passing
+- [x] Implemented `FeedMetadataBuilder` (`Sources/CelestraCloudKit/Services/FeedMetadataBuilder.swift`)
+- [x] Extracted `FeedMetadataUpdate` to `Sources/CelestraCloudKit/Services/FeedMetadataUpdate.swift`
+- [x] Extracted `FeedUpdateResult` to `Sources/CelestraCloud/Services/FeedUpdateResult.swift`
 
-**Location**: `Sources/CelestraCloud/Services/ArticleCategorizer.swift`
-**Tests**: `Tests/CelestraCloudTests/Services/ArticleCategorizerTests.swift`
+### Phase 5: Refactoring
+- [x] Refactored `FeedUpdateProcessor.swift` to use `ArticleCategorizer` and `FeedMetadataBuilder`
+  - Added dependency injection with default values
+  - Replaced 40+ lines of categorization logic with categorizer.categorize()
+  - Replaced 3 metadata building sections with metadataBuilder methods
+  - Reduced file from 248 lines to ~160 lines
 
-```swift
-internal struct ArticleCategorizer {
-  internal struct Result {
-    let new: [Article]
-    let modified: [Article]
-  }
-
-  func categorize(
-    items: [FeedItem],
-    existingArticles: [Article],
-    feedRecordName: String
-  ) -> Result
-}
-```
+### Test Results
+- **Total tests passing**: 61 tests in 7 suites (100% pass rate)
+- **New tests added**: 19 tests (10 + 9)
+- **ArticleCategorizerTests**: 10/10 passing
+- **FeedMetadataBuilderTests**: 9/9 passing
 
 ## Remaining Tasks
 
-### TDD Implementation
-- [ ] Write `ArticleCategorizerTests` (pure function - no mocks needed)
-- [ ] Implement `ArticleCategorizer`
-- [ ] Write `FeedMetadataBuilderTests` (pure function - no mocks needed)
-- [ ] Implement `FeedMetadataBuilder`
+### Refactoring (Future Work)
+- [ ] Refactor `CloudKitService+Celestra.swift` to thin facade using new service types (optional optimization)
+- [ ] Extract `UpdateSummary.swift` from `UpdateCommand.swift` (optional cleanup)
 
-### Refactoring
-- [ ] Refactor `CloudKitService+Celestra.swift` to thin facade using new service types
-- [ ] Refactor `FeedUpdateProcessor.swift` to use `ArticleCategorizer` and `FeedMetadataBuilder`
-- [ ] Extract `FeedUpdateResult.swift` and `FeedMetadataUpdate.swift` to separate files
-- [ ] Extract `UpdateSummary.swift` from `UpdateCommand.swift`
-
-### Lint Fixes
+### Lint Fixes (Low Priority)
 - [ ] Remove unused `import CelestraCloudKit` from `Celestra.swift` (line 30)
-- [ ] Rename `Article+MistKitTests.swift` to `ArticleMistKitTests.swift`
-- [ ] Split `Feed+MistKitTests.swift` into `FeedMistKitTests.swift` and `FeedMistKitRoundTripTests.swift`
-- [ ] Add `internal` keyword to all test declarations for explicit ACL
-- [ ] Run `LINT_MODE=STRICT ./Scripts/lint.sh` to verify
+- [ ] Rename `Article+MistKitTests.swift` to `ArticleMistKitTests.swift` (naming convention)
+- [ ] Split `Feed+MistKitTests.swift` into `FeedMistKitTests.swift` and `FeedMistKitRoundTripTests.swift` (file length)
+- [ ] Add `internal` keyword to all test declarations for explicit ACL (if not already done by linter)
 
-## Files Created So Far
+## Files Created
 
-### Source Files
+### Source Files (CelestraCloudKit - Public Library)
 - `Sources/CelestraCloudKit/Protocols/CloudKitRecordOperating.swift`
 - `Sources/CelestraCloudKit/Services/FeedCloudKitService.swift`
 - `Sources/CelestraCloudKit/Services/ArticleCloudKitService.swift`
+- `Sources/CelestraCloudKit/Services/ArticleCategorizer.swift` (pure function)
+- `Sources/CelestraCloudKit/Services/FeedMetadataBuilder.swift` (pure function)
+- `Sources/CelestraCloudKit/Services/FeedMetadataUpdate.swift` (data type)
+
+### Source Files (CelestraCloud - Executable)
+- `Sources/CelestraCloud/Services/FeedUpdateResult.swift` (enum)
 
 ### Test Files
 - `Tests/CelestraCloudTests/Mocks/MockCloudKitRecordOperator.swift`
-- `Tests/CelestraCloudTests/Services/FeedCloudKitServiceTests.swift`
-- `Tests/CelestraCloudTests/Services/ArticleCloudKitServiceTests.swift`
+- `Tests/CelestraCloudTests/Services/FeedCloudKitServiceTests.swift` (9 tests)
+- `Tests/CelestraCloudTests/Services/ArticleCloudKitServiceTests.swift` (11 tests)
+- `Tests/CelestraCloudTests/Services/ArticleCategorizerTests.swift` (10 tests)
+- `Tests/CelestraCloudTests/Services/FeedMetadataBuilderTests.swift` (9 tests)
+
+### Files Modified
+- `Sources/CelestraCloud/Services/FeedUpdateProcessor.swift` (refactored to use new types, reduced from 248 to ~160 lines)
 
 ## Reference
 
