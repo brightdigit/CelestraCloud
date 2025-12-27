@@ -29,27 +29,27 @@
 
 /// Configuration keys for reading from providers
 internal enum ConfigurationKeys {
-  enum CloudKit {
-    static let containerID = "cloudkit.container_id"
-    static let containerIDEnv = "CLOUDKIT_CONTAINER_ID"
-    static let keyID = "cloudkit.key_id"
-    static let keyIDEnv = "CLOUDKIT_KEY_ID"
-    static let privateKeyPath = "cloudkit.private_key_path"
-    static let privateKeyPathEnv = "CLOUDKIT_PRIVATE_KEY_PATH"
-    static let environment = "cloudkit.environment"
-    static let environmentEnv = "CLOUDKIT_ENVIRONMENT"
+  internal enum CloudKit {
+    internal static let containerID = "cloudkit.container_id"
+    internal static let containerIDEnv = "CLOUDKIT_CONTAINER_ID"
+    internal static let keyID = "cloudkit.key_id"
+    internal static let keyIDEnv = "CLOUDKIT_KEY_ID"
+    internal static let privateKeyPath = "cloudkit.private_key_path"
+    internal static let privateKeyPathEnv = "CLOUDKIT_PRIVATE_KEY_PATH"
+    internal static let environment = "cloudkit.environment"
+    internal static let environmentEnv = "CLOUDKIT_ENVIRONMENT"
   }
 
-  enum Update {
-    static let delay = "update.delay"
-    static let delayEnv = "UPDATE_DELAY"
-    static let skipRobotsCheck = "update.skip_robots_check"
-    static let skipRobotsCheckEnv = "UPDATE_SKIP_ROBOTS_CHECK"
-    static let maxFailures = "update.max_failures"
-    static let maxFailuresEnv = "UPDATE_MAX_FAILURES"
-    static let minPopularity = "update.min_popularity"
-    static let minPopularityEnv = "UPDATE_MIN_POPULARITY"
-    static let lastAttemptedBefore = "update.last_attempted_before"
-    static let lastAttemptedBeforeEnv = "UPDATE_LAST_ATTEMPTED_BEFORE"
+  internal enum Update {
+    internal static let delay = "update.delay"
+    internal static let delayEnv = "UPDATE_DELAY"
+    internal static let skipRobotsCheck = "update.skip_robots_check"
+    internal static let skipRobotsCheckEnv = "UPDATE_SKIP_ROBOTS_CHECK"
+    internal static let maxFailures = "update.max_failures"
+    internal static let maxFailuresEnv = "UPDATE_MAX_FAILURES"
+    internal static let minPopularity = "update.min_popularity"
+    internal static let minPopularityEnv = "UPDATE_MIN_POPULARITY"
+    internal static let lastAttemptedBefore = "update.last_attempted_before"
+    internal static let lastAttemptedBeforeEnv = "UPDATE_LAST_ATTEMPTED_BEFORE"
   }
 }

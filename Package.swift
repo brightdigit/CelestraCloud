@@ -77,55 +77,55 @@ let swiftSettings: [SwiftSetting] = [
 ]
 
 let package = Package(
-    name: "CelestraCloud",
-    platforms: [
-        .macOS(.v26),
-        .iOS(.v26),
-        .tvOS(.v26),
-        .watchOS(.v26),
-        .visionOS(.v26)
-    ],
-    products: [
-        .executable(name: "celestra-cloud", targets: ["CelestraCloud"]),
-        .library(name: "CelestraCloudKit", targets: ["CelestraCloudKit"])
-    ],
-    dependencies: [
-        .package(url: "https://github.com/brightdigit/MistKit.git", from: "1.0.0-alpha.3"),
-        .package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1"),
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
-        .package(
-            url: "https://github.com/apple/swift-configuration.git",
-            from: "1.0.0",
-            traits: ["CommandLineArguments"]
-        )
-    ],
-    targets: [
-        .target(
-            name: "CelestraCloudKit",
-            dependencies: [
-                .product(name: "MistKit", package: "MistKit"),
-                .product(name: "CelestraKit", package: "CelestraKit"),
-                .product(name: "Logging", package: "swift-log"),
-                .product(name: "Configuration", package: "swift-configuration")
-            ],
-            swiftSettings: swiftSettings
-        ),
-        .executableTarget(
-            name: "CelestraCloud",
-            dependencies: [
-                .target(name: "CelestraCloudKit")
-            ],
-            swiftSettings: swiftSettings
-        ),
-        .testTarget(
-            name: "CelestraCloudTests",
-            dependencies: [
-                .target(name: "CelestraCloudKit"),
-                .product(name: "MistKit", package: "MistKit"),
-                .product(name: "CelestraKit", package: "CelestraKit")
-            ],
-            swiftSettings: swiftSettings
-        )
-    ]
+  name: "CelestraCloud",
+  platforms: [
+    .macOS(.v26),
+    .iOS(.v26),
+    .tvOS(.v26),
+    .watchOS(.v26),
+    .visionOS(.v26)
+  ],
+  products: [
+    .executable(name: "celestra-cloud", targets: ["CelestraCloud"]),
+    .library(name: "CelestraCloudKit", targets: ["CelestraCloudKit"])
+  ],
+  dependencies: [
+    .package(url: "https://github.com/brightdigit/MistKit.git", from: "1.0.0-alpha.3"),
+    .package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1"),
+    .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
+    .package(
+      url: "https://github.com/apple/swift-configuration.git",
+      from: "1.0.0",
+      traits: ["CommandLineArguments"]
+    )
+  ],
+  targets: [
+    .target(
+      name: "CelestraCloudKit",
+      dependencies: [
+        .product(name: "MistKit", package: "MistKit"),
+        .product(name: "CelestraKit", package: "CelestraKit"),
+        .product(name: "Logging", package: "swift-log"),
+        .product(name: "Configuration", package: "swift-configuration")
+      ],
+      swiftSettings: swiftSettings
+    ),
+    .executableTarget(
+      name: "CelestraCloud",
+      dependencies: [
+        .target(name: "CelestraCloudKit")
+      ],
+      swiftSettings: swiftSettings
+    ),
+    .testTarget(
+      name: "CelestraCloudTests",
+      dependencies: [
+        .target(name: "CelestraCloudKit"),
+        .product(name: "MistKit", package: "MistKit"),
+        .product(name: "CelestraKit", package: "CelestraKit")
+      ],
+      swiftSettings: swiftSettings
+    )
+  ]
 )
 // swiftlint:enable explicit_acl explicit_top_level_acl

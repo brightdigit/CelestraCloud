@@ -32,9 +32,15 @@ import CelestraKit
 import Foundation
 import MistKit
 
-enum AddFeedCommand {
+// MARK: - Supporting Types
+
+internal struct ExitError: Error {}
+
+// MARK: - Main Type
+
+internal enum AddFeedCommand {
   @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-  static func run(args: [String]) async throws {
+  internal static func run(args: [String]) async throws {
     guard let feedURL = args.first else {
       print("Error: Missing feed URL")
       print("Usage: celestra-cloud add-feed <url>")
@@ -82,5 +88,3 @@ enum AddFeedCommand {
     print("   Record Name: \(record.recordName)")
   }
 }
-
-struct ExitError: Error {}

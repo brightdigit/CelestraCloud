@@ -33,9 +33,9 @@ import Foundation
 import Logging
 import MistKit
 
-enum UpdateCommand {
+internal enum UpdateCommand {
   @available(macOS 13.0, *)
-  static func run(args: [String]) async throws {
+  internal static func run(args: [String]) async throws {
     // CommandLineArgumentsProvider automatically parses all arguments
     let loader = ConfigurationLoader()
     let config = try await loader.loadConfiguration()

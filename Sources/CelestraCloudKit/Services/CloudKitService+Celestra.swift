@@ -153,7 +153,8 @@ extension CloudKitService {
           allArticles.append(article)
         } catch {
           CelestraLogger.errors.warning(
-            "Skipping invalid article record \(record.recordName): \(error)")
+            "Skipping invalid article record \(record.recordName): \(error)"
+          )
           // Continue processing other articles
         }
       }
@@ -178,7 +179,8 @@ extension CloudKitService {
 
     for (index, batch) in batches.enumerated() {
       CelestraLogger.operations.info(
-        "   Batch \(index + 1)/\(batches.count): \(batch.count) article(s)")
+        "   Batch \(index + 1)/\(batches.count): \(batch.count) article(s)"
+      )
 
       do {
         let operations = batch.map { article in
@@ -193,7 +195,8 @@ extension CloudKitService {
 
         result.appendSuccesses(recordInfos)
         CelestraLogger.cloudkit.info(
-          "   ✅ Batch \(index + 1) complete: \(recordInfos.count) created")
+          "   ✅ Batch \(index + 1) complete: \(recordInfos.count) created"
+        )
       } catch {
         CelestraLogger.errors.error("   ❌ Batch \(index + 1) failed: \(error.localizedDescription)")
 
@@ -204,9 +207,10 @@ extension CloudKitService {
       }
     }
 
+    let successRateFormatted = String(format: "%.1f", result.successRate)
+    let batchSummary = "\(result.successCount)/\(result.totalProcessed) succeeded"
     CelestraLogger.cloudkit.info(
-      "📊 Batch operation complete: \(result.successCount)/\(result.totalProcessed) succeeded (\(String(format: "%.1f", result.successRate))%)"
-    )
+      "📊 Batch operation complete: \(batchSummary) (\(successRateFormatted)%)")
 
     return result
   }
@@ -239,11 +243,14 @@ extension CloudKitService {
 
     for (index, batch) in batches.enumerated() {
       CelestraLogger.operations.info(
-        "   Batch \(index + 1)/\(batches.count): \(batch.count) article(s)")
+        "   Batch \(index + 1)/\(batches.count): \(batch.count) article(s)"
+      )
 
       do {
         let operations = batch.compactMap { article -> RecordOperation? in
-          guard let recordName = article.recordName else { return nil }
+          guard let recordName = article.recordName else {
+            return nil
+          }
 
           return RecordOperation.update(
             recordType: "Article",
@@ -257,7 +264,8 @@ extension CloudKitService {
 
         result.appendSuccesses(recordInfos)
         CelestraLogger.cloudkit.info(
-          "   ✅ Batch \(index + 1) complete: \(recordInfos.count) updated")
+          "   ✅ Batch \(index + 1) complete: \(recordInfos.count) updated"
+        )
       } catch {
         CelestraLogger.errors.error("   ❌ Batch \(index + 1) failed: \(error.localizedDescription)")
 
@@ -268,9 +276,9 @@ extension CloudKitService {
       }
     }
 
-    CelestraLogger.cloudkit.info(
-      "📊 Update complete: \(result.successCount)/\(result.totalProcessed) succeeded (\(String(format: "%.1f", result.successRate))%)"
-    )
+    let updateRateFormatted = String(format: "%.1f", result.successRate)
+    let updateSummary = "\(result.successCount)/\(result.totalProcessed) succeeded"
+    CelestraLogger.cloudkit.info("📊 Update complete: \(updateSummary) (\(updateRateFormatted)%)")
 
     return result
   }

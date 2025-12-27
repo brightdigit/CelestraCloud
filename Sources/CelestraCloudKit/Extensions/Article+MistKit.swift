@@ -32,199 +32,51 @@ public import Foundation
 public import MistKit
 
 extension Article: CloudKitConvertible {
-  /// Convert to CloudKit record fields dictionary using MistKit's FieldValue
-  public func toFieldsDict() -> [String: FieldValue] {
-    var fields: [String: FieldValue] = [
-      "feedRecordName": .string(feedRecordName),
-      "guid": .string(guid),
-      "title": .string(title),
-      "url": .string(url),
-      "fetchedTimestamp": .date(fetchedAt),
-      "expiresTimestamp": .date(expiresAt),
-      "contentHash": .string(contentHash),
-    ]
+  // MARK: - Type Methods
 
-    // Optional string fields
-    if let excerpt = excerpt {
-      fields["excerpt"] = .string(excerpt)
+  private static func calculateTTLDays(fetchedAt: Date, expiresAt: Date?) -> Int {
+    guard let expiresAt = expiresAt else {
+      return 30  // Default TTL
     }
-    if let content = content {
-      fields["content"] = .string(content)
-    }
-    if let contentText = contentText {
-      fields["contentText"] = .string(contentText)
-    }
-    if let author = author {
-      fields["author"] = .string(author)
-    }
-    if let imageURL = imageURL {
-      fields["imageURL"] = .string(imageURL)
-    }
-    if let language = language {
-      fields["language"] = .string(language)
-    }
-
-    // Optional date field
-    if let publishedDate = publishedDate {
-      fields["publishedTimestamp"] = .date(publishedDate)
-    }
-
-    // Optional int fields
-    if let wordCount = wordCount {
-      fields["wordCount"] = .int64(wordCount)
-    }
-    if let estimatedReadingTime = estimatedReadingTime {
-      fields["estimatedReadingTime"] = .int64(estimatedReadingTime)
-    }
-
-    // Array fields
-    if !tags.isEmpty {
-      fields["tags"] = .list(tags.map { .string($0) })
-    }
-
-    return fields
+    let interval = expiresAt.timeIntervalSince(fetchedAt)
+    return max(1, Int(interval / (24 * 60 * 60)))
   }
 
-  /// Create Article from MistKit RecordInfo
+  // MARK: - Initializers
+
+  /// Create Article from MistKit RecordInfo using shared parsing helpers.
+  ///
+  /// - Parameter record: The CloudKit RecordInfo containing field data.
+  /// - Throws: `CloudKitConversionError.missingRequiredField` if required fields are missing.
   public init(from record: RecordInfo) throws {
-    // Required string fields with validation
-    guard case .string(let feedRecordName) = record.fields["feedRecordName"],
-      !feedRecordName.isEmpty
-    else {
-      throw CloudKitConversionError.missingRequiredField(
-        fieldName: "feedRecordName",
-        recordType: "Article"
-      )
-    }
-
-    guard case .string(let guid) = record.fields["guid"],
-      !guid.isEmpty
-    else {
-      throw CloudKitConversionError.missingRequiredField(
-        fieldName: "guid",
-        recordType: "Article"
-      )
-    }
-
-    guard case .string(let title) = record.fields["title"],
-      !title.isEmpty
-    else {
-      throw CloudKitConversionError.missingRequiredField(
-        fieldName: "title",
-        recordType: "Article"
-      )
-    }
-
-    guard case .string(let url) = record.fields["url"],
-      !url.isEmpty
-    else {
-      throw CloudKitConversionError.missingRequiredField(
-        fieldName: "url",
-        recordType: "Article"
-      )
-    }
+    // Required string fields
+    let feedRecordName = try record.requiredString(forKey: "feedRecordName", recordType: "Article")
+    let guid = try record.requiredString(forKey: "guid", recordType: "Article")
+    let title = try record.requiredString(forKey: "title", recordType: "Article")
+    let url = try record.requiredString(forKey: "url", recordType: "Article")
 
     // Optional string fields
-    let excerpt: String?
-    if case .string(let value) = record.fields["excerpt"] {
-      excerpt = value
-    } else {
-      excerpt = nil
-    }
-
-    let content: String?
-    if case .string(let value) = record.fields["content"] {
-      content = value
-    } else {
-      content = nil
-    }
-
-    let contentText: String?
-    if case .string(let value) = record.fields["contentText"] {
-      contentText = value
-    } else {
-      contentText = nil
-    }
-
-    let author: String?
-    if case .string(let value) = record.fields["author"] {
-      author = value
-    } else {
-      author = nil
-    }
-
-    let imageURL: String?
-    if case .string(let value) = record.fields["imageURL"] {
-      imageURL = value
-    } else {
-      imageURL = nil
-    }
-
-    let language: String?
-    if case .string(let value) = record.fields["language"] {
-      language = value
-    } else {
-      language = nil
-    }
+    let excerpt = record.optionalString(forKey: "excerpt")
+    let content = record.optionalString(forKey: "content")
+    let contentText = record.optionalString(forKey: "contentText")
+    let author = record.optionalString(forKey: "author")
+    let imageURL = record.optionalString(forKey: "imageURL")
+    let language = record.optionalString(forKey: "language")
 
     // Date fields
-    let publishedDate: Date?
-    if case .date(let value) = record.fields["publishedTimestamp"] {
-      publishedDate = value
-    } else {
-      publishedDate = nil
-    }
-
-    let fetchedAt: Date
-    if case .date(let value) = record.fields["fetchedTimestamp"] {
-      fetchedAt = value
-    } else {
-      fetchedAt = Date()
-    }
-
-    let expiresAt: Date?
-    if case .date(let value) = record.fields["expiresTimestamp"] {
-      expiresAt = value
-    } else {
-      expiresAt = nil
-    }
+    let publishedDate = record.optionalDate(forKey: "publishedTimestamp")
+    let fetchedAt = record.date(forKey: "fetchedTimestamp", default: Date())
+    let expiresAt = record.optionalDate(forKey: "expiresTimestamp")
 
     // Calculate ttlDays from fetchedAt and expiresAt if available
-    let ttlDays: Int
-    if let expiresAt = expiresAt {
-      let interval = expiresAt.timeIntervalSince(fetchedAt)
-      ttlDays = max(1, Int(interval / (24 * 60 * 60)))
-    } else {
-      ttlDays = 30  // Default TTL
-    }
+    let ttlDays = Self.calculateTTLDays(fetchedAt: fetchedAt, expiresAt: expiresAt)
 
     // Optional int fields
-    let wordCount: Int?
-    if case .int64(let value) = record.fields["wordCount"] {
-      wordCount = Int(value)
-    } else {
-      wordCount = nil
-    }
-
-    let estimatedReadingTime: Int?
-    if case .int64(let value) = record.fields["estimatedReadingTime"] {
-      estimatedReadingTime = Int(value)
-    } else {
-      estimatedReadingTime = nil
-    }
+    let wordCount = record.optionalInt(forKey: "wordCount")
+    let estimatedReadingTime = record.optionalInt(forKey: "estimatedReadingTime")
 
     // Array fields
-    let tags: [String]
-    if case .list(let values) = record.fields["tags"] {
-      tags = values.compactMap {
-        if case .string(let str) = $0 {
-          return str
-        }
-        return nil
-      }
-    } else {
-      tags = []
-    }
+    let tags = record.stringArray(forKey: "tags")
 
     self.init(
       recordName: record.recordName,
@@ -246,5 +98,76 @@ extension Article: CloudKitConvertible {
       language: language,
       tags: tags
     )
+  }
+
+  // MARK: - Instance Methods
+
+  /// Convert to CloudKit record fields dictionary using MistKit's FieldValue.
+  ///
+  /// - Returns: Dictionary mapping field names to FieldValue instances.
+  public func toFieldsDict() -> [String: FieldValue] {
+    var fields: [String: FieldValue] = [
+      "feedRecordName": .string(feedRecordName),
+      "guid": .string(guid),
+      "title": .string(title),
+      "url": .string(url),
+      "fetchedTimestamp": .date(fetchedAt),
+      "expiresTimestamp": .date(expiresAt),
+      "contentHash": .string(contentHash),
+    ]
+
+    // Optional string fields
+    addOptionalString(&fields, key: "excerpt", value: excerpt)
+    addOptionalString(&fields, key: "content", value: content)
+    addOptionalString(&fields, key: "contentText", value: contentText)
+    addOptionalString(&fields, key: "author", value: author)
+    addOptionalString(&fields, key: "imageURL", value: imageURL)
+    addOptionalString(&fields, key: "language", value: language)
+
+    // Optional date field
+    addOptionalDate(&fields, key: "publishedTimestamp", value: publishedDate)
+
+    // Optional int fields
+    addOptionalInt(&fields, key: "wordCount", value: wordCount)
+    addOptionalInt(&fields, key: "estimatedReadingTime", value: estimatedReadingTime)
+
+    // Array fields
+    if !tags.isEmpty {
+      fields["tags"] = .list(tags.map { .string($0) })
+    }
+
+    return fields
+  }
+
+  // MARK: - Private Helpers
+
+  private func addOptionalString(
+    _ fields: inout [String: FieldValue],
+    key: String,
+    value: String?
+  ) {
+    if let value = value {
+      fields[key] = .string(value)
+    }
+  }
+
+  private func addOptionalDate(
+    _ fields: inout [String: FieldValue],
+    key: String,
+    value: Date?
+  ) {
+    if let value = value {
+      fields[key] = .date(value)
+    }
+  }
+
+  private func addOptionalInt(
+    _ fields: inout [String: FieldValue],
+    key: String,
+    value: Int?
+  ) {
+    if let value = value {
+      fields[key] = .int64(value)
+    }
   }
 }

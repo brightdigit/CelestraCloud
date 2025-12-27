@@ -31,8 +31,8 @@ import CelestraCloudKit
 import Foundation
 
 @main
-enum Celestra {
-  static func main() async {
+internal enum Celestra {
+  internal static func main() async {
     let args = Array(CommandLine.arguments.dropFirst())
 
     guard let command = args.first else {
@@ -41,27 +41,31 @@ enum Celestra {
     }
 
     do {
-      switch command {
-      case "add-feed":
-        try await AddFeedCommand.run(args: Array(args.dropFirst()))
-      case "update":
-        try await UpdateCommand.run(args: Array(args.dropFirst()))
-      case "clear":
-        try await ClearCommand.run(args: Array(args.dropFirst()))
-      case "help", "--help", "-h":
-        printUsage()
-      default:
-        print("Unknown command: \(command)")
-        printUsage()
-        exit(1)
-      }
+      try await runCommand(command, args: Array(args.dropFirst()))
     } catch {
       print("Error: \(error)")
       exit(1)
     }
   }
 
-  static func printUsage() {
+  private static func runCommand(_ command: String, args: [String]) async throws {
+    switch command {
+    case "add-feed":
+      try await AddFeedCommand.run(args: args)
+    case "update":
+      try await UpdateCommand.run(args: args)
+    case "clear":
+      try await ClearCommand.run(args: args)
+    case "help", "--help", "-h":
+      printUsage()
+    default:
+      print("Unknown command: \(command)")
+      printUsage()
+      exit(1)
+    }
+  }
+
+  internal static func printUsage() {
     print(
       """
       celestra-cloud - RSS reader that syncs to CloudKit public database
@@ -91,6 +95,7 @@ enum Celestra {
         celestra-cloud add-feed https://example.com/feed.xml
         celestra-cloud update --update-delay 3.0
         celestra-cloud clear --confirm
-      """)
+      """
+    )
   }
 }

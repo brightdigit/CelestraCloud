@@ -36,17 +36,21 @@ internal import MistKit
 public actor ConfigurationLoader {
   private let configReader: ConfigReader
 
+  /// Creates a new configuration loader with default providers.
   public init() {
     var providers: [any ConfigProvider] = []
 
     // Priority 1: Command-line arguments (highest)
     providers.append(
       CommandLineArgumentsProvider(
-        secretsSpecifier: .specific([
-          "--cloudkit-key-id",
-          "--cloudkit-private-key-path",
-        ])
-      ))
+        secretsSpecifier: .specific(
+          [
+            "--cloudkit-key-id",
+            "--cloudkit-private-key-path",
+          ]
+        )
+      )
+    )
 
     // Priority 2: Environment variables
     providers.append(EnvironmentVariablesProvider())
@@ -71,17 +75,30 @@ public actor ConfigurationLoader {
     )
 
     // Update command configuration
+    let delay =
+      readDouble(forKey: ConfigurationKeys.Update.delay)
+      ?? readDouble(forKey: ConfigurationKeys.Update.delayEnv)
+      ?? 2.0
+    let skipRobotsCheck =
+      readBool(forKey: ConfigurationKeys.Update.skipRobotsCheck)
+      ?? readBool(forKey: ConfigurationKeys.Update.skipRobotsCheckEnv)
+      ?? false
+    let maxFailures =
+      readInt(forKey: ConfigurationKeys.Update.maxFailures)
+      ?? readInt(forKey: ConfigurationKeys.Update.maxFailuresEnv)
+    let minPopularity =
+      readInt(forKey: ConfigurationKeys.Update.minPopularity)
+      ?? readInt(forKey: ConfigurationKeys.Update.minPopularityEnv)
+    let lastAttemptedBefore =
+      readDate(forKey: ConfigurationKeys.Update.lastAttemptedBefore)
+      ?? readDate(forKey: ConfigurationKeys.Update.lastAttemptedBeforeEnv)
+
     let update = UpdateCommandConfiguration(
-      delay: readDouble(forKey: ConfigurationKeys.Update.delay) ?? readDouble(
-        forKey: ConfigurationKeys.Update.delayEnv) ?? 2.0,
-      skipRobotsCheck: readBool(forKey: ConfigurationKeys.Update.skipRobotsCheck) ?? readBool(
-        forKey: ConfigurationKeys.Update.skipRobotsCheckEnv) ?? false,
-      maxFailures: readInt(forKey: ConfigurationKeys.Update.maxFailures)
-        ?? readInt(forKey: ConfigurationKeys.Update.maxFailuresEnv),
-      minPopularity: readInt(forKey: ConfigurationKeys.Update.minPopularity)
-        ?? readInt(forKey: ConfigurationKeys.Update.minPopularityEnv),
-      lastAttemptedBefore: readDate(forKey: ConfigurationKeys.Update.lastAttemptedBefore)
-        ?? readDate(forKey: ConfigurationKeys.Update.lastAttemptedBeforeEnv)
+      delay: delay,
+      skipRobotsCheck: skipRobotsCheck,
+      maxFailures: maxFailures,
+      minPopularity: minPopularity,
+      lastAttemptedBefore: lastAttemptedBefore
     )
 
     return CelestraConfiguration(
@@ -100,6 +117,7 @@ public actor ConfigurationLoader {
     configReader.double(forKey: ConfigKey(key))
   }
 
+  // swiftlint:disable:next discouraged_optional_boolean
   private func readBool(forKey key: String) -> Bool? {
     configReader.bool(forKey: ConfigKey(key))
   }
@@ -109,7 +127,9 @@ public actor ConfigurationLoader {
   }
 
   private func parseEnvironment(_ value: String?) -> MistKit.Environment {
-    guard let value = value?.lowercased() else { return .development }
+    guard let value = value?.lowercased() else {
+      return .development
+    }
     return value == "production" ? .production : .development
   }
 

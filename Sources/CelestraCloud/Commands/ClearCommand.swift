@@ -32,9 +32,9 @@ import CelestraKit
 import Foundation
 import MistKit
 
-enum ClearCommand {
+internal enum ClearCommand {
   @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-  static func run(args: [String]) async throws {
+  internal static func run(args: [String]) async throws {
     // Require confirmation
     let hasConfirm = args.contains("--confirm")
 

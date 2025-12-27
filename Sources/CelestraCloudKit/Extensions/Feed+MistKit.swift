@@ -32,258 +32,48 @@ public import Foundation
 public import MistKit
 
 extension Feed: CloudKitConvertible {
-  /// Convert to CloudKit record fields dictionary using MistKit's FieldValue
-  public func toFieldsDict() -> [String: FieldValue] {
-    var fields: [String: FieldValue] = [
-      "feedURL": .string(feedURL),
-      "title": .string(title),
-      "isFeatured": .int64(isFeatured ? 1 : 0),
-      "isVerified": .int64(isVerified ? 1 : 0),
-      "qualityScore": .int64(qualityScore),
-      "subscriberCount": .int64(Int(subscriberCount)),
-      // Note: addedAt removed - use CloudKit's built-in createdTimestamp
-      "totalAttempts": .int64(Int(totalAttempts)),
-      "successfulAttempts": .int64(Int(successfulAttempts)),
-      "isActive": .int64(isActive ? 1 : 0),
-      "failureCount": .int64(Int(failureCount)),
-    ]
-
-    // Optional string fields
-    if let description = description {
-      fields["description"] = .string(description)
-    }
-    if let category = category {
-      fields["category"] = .string(category)
-    }
-    if let imageURL = imageURL {
-      fields["imageURL"] = .string(imageURL)
-    }
-    if let siteURL = siteURL {
-      fields["siteURL"] = .string(siteURL)
-    }
-    if let language = language {
-      fields["language"] = .string(language)
-    }
-    if let etag = etag {
-      fields["etag"] = .string(etag)
-    }
-    if let lastModified = lastModified {
-      fields["lastModified"] = .string(lastModified)
-    }
-    if let lastFailureReason = lastFailureReason {
-      fields["lastFailureReason"] = .string(lastFailureReason)
-    }
-
-    // Optional date fields
-    if let lastVerified = lastVerified {
-      fields["verifiedTimestamp"] = .date(lastVerified)
-    }
-    if let lastAttempted = lastAttempted {
-      fields["attemptedTimestamp"] = .date(lastAttempted)
-    }
-
-    // Optional numeric fields
-    if let updateFrequency = updateFrequency {
-      fields["updateFrequency"] = .double(updateFrequency)
-    }
-    if let minUpdateInterval = minUpdateInterval {
-      fields["minUpdateInterval"] = .double(minUpdateInterval)
-    }
-
-    // Array fields
-    if !tags.isEmpty {
-      fields["tags"] = .list(tags.map { .string($0) })
-    }
-
-    return fields
-  }
-
-  /// Create Feed from MistKit RecordInfo
+  /// Create Feed from MistKit RecordInfo using shared parsing helpers.
+  ///
+  /// - Parameter record: The CloudKit RecordInfo containing field data.
+  /// - Throws: `CloudKitConversionError.missingRequiredField` if feedURL or title is missing.
   public init(from record: RecordInfo) throws {
-    // Required string fields with validation
-    guard case .string(let feedURL) = record.fields["feedURL"],
-      !feedURL.isEmpty
-    else {
-      throw CloudKitConversionError.missingRequiredField(
-        fieldName: "feedURL",
-        recordType: "Feed"
-      )
-    }
-
-    guard case .string(let title) = record.fields["title"],
-      !title.isEmpty
-    else {
-      throw CloudKitConversionError.missingRequiredField(
-        fieldName: "title",
-        recordType: "Feed"
-      )
-    }
+    // Required fields
+    let feedURL = try record.requiredString(forKey: "feedURL", recordType: "Feed")
+    let title = try record.requiredString(forKey: "title", recordType: "Feed")
 
     // Optional string fields
-    let description: String?
-    if case .string(let value) = record.fields["description"] {
-      description = value
-    } else {
-      description = nil
-    }
-
-    let category: String?
-    if case .string(let value) = record.fields["category"] {
-      category = value
-    } else {
-      category = nil
-    }
-
-    let imageURL: String?
-    if case .string(let value) = record.fields["imageURL"] {
-      imageURL = value
-    } else {
-      imageURL = nil
-    }
-
-    let siteURL: String?
-    if case .string(let value) = record.fields["siteURL"] {
-      siteURL = value
-    } else {
-      siteURL = nil
-    }
-
-    let language: String?
-    if case .string(let value) = record.fields["language"] {
-      language = value
-    } else {
-      language = nil
-    }
-
-    let etag: String?
-    if case .string(let value) = record.fields["etag"] {
-      etag = value
-    } else {
-      etag = nil
-    }
-
-    let lastModified: String?
-    if case .string(let value) = record.fields["lastModified"] {
-      lastModified = value
-    } else {
-      lastModified = nil
-    }
-
-    let lastFailureReason: String?
-    if case .string(let value) = record.fields["lastFailureReason"] {
-      lastFailureReason = value
-    } else {
-      lastFailureReason = nil
-    }
+    let description = record.optionalString(forKey: "description")
+    let category = record.optionalString(forKey: "category")
+    let imageURL = record.optionalString(forKey: "imageURL")
+    let siteURL = record.optionalString(forKey: "siteURL")
+    let language = record.optionalString(forKey: "language")
+    let etag = record.optionalString(forKey: "etag")
+    let lastModified = record.optionalString(forKey: "lastModified")
+    let lastFailureReason = record.optionalString(forKey: "lastFailureReason")
 
     // Boolean fields (stored as Int64)
-    let isFeatured: Bool
-    if case .int64(let value) = record.fields["isFeatured"] {
-      isFeatured = value != 0
-    } else {
-      isFeatured = false
-    }
-
-    let isVerified: Bool
-    if case .int64(let value) = record.fields["isVerified"] {
-      isVerified = value != 0
-    } else {
-      isVerified = false
-    }
-
-    let isActive: Bool
-    if case .int64(let value) = record.fields["isActive"] {
-      isActive = value != 0
-    } else {
-      isActive = true
-    }
+    let isFeatured = record.bool(forKey: "isFeatured")
+    let isVerified = record.bool(forKey: "isVerified")
+    let isActive = record.bool(forKey: "isActive", default: true)
 
     // Int64 fields
-    let qualityScore: Int
-    if case .int64(let value) = record.fields["qualityScore"] {
-      qualityScore = Int(value)
-    } else {
-      qualityScore = 50
-    }
+    let qualityScore = record.int(forKey: "qualityScore", default: 50)
+    let subscriberCount = record.int64(forKey: "subscriberCount")
+    let totalAttempts = record.int64(forKey: "totalAttempts")
+    let successfulAttempts = record.int64(forKey: "successfulAttempts")
+    let failureCount = record.int64(forKey: "failureCount")
 
-    let subscriberCount: Int64
-    if case .int64(let value) = record.fields["subscriberCount"] {
-      subscriberCount = Int64(value)
-    } else {
-      subscriberCount = 0
-    }
-
-    let totalAttempts: Int64
-    if case .int64(let value) = record.fields["totalAttempts"] {
-      totalAttempts = Int64(value)
-    } else {
-      totalAttempts = 0
-    }
-
-    let successfulAttempts: Int64
-    if case .int64(let value) = record.fields["successfulAttempts"] {
-      successfulAttempts = Int64(value)
-    } else {
-      successfulAttempts = 0
-    }
-
-    let failureCount: Int64
-    if case .int64(let value) = record.fields["failureCount"] {
-      failureCount = Int64(value)
-    } else {
-      failureCount = 0
-    }
-
-    // Date fields
-    // Note: addedAt now uses CloudKit's createdTimestamp system field
-    let addedAt: Date
-    if case .date(let value) = record.fields["createdTimestamp"] {
-      addedAt = value
-    } else {
-      addedAt = Date()
-    }
-
-    let lastVerified: Date?
-    if case .date(let value) = record.fields["verifiedTimestamp"] {
-      lastVerified = value
-    } else {
-      lastVerified = nil
-    }
-
-    let lastAttempted: Date?
-    if case .date(let value) = record.fields["attemptedTimestamp"] {
-      lastAttempted = value
-    } else {
-      lastAttempted = nil
-    }
+    // Date fields (addedAt uses CloudKit's createdTimestamp)
+    let addedAt = record.date(forKey: "createdTimestamp", default: Date())
+    let lastVerified = record.optionalDate(forKey: "verifiedTimestamp")
+    let lastAttempted = record.optionalDate(forKey: "attemptedTimestamp")
 
     // TimeInterval fields
-    let updateFrequency: TimeInterval?
-    if case .double(let value) = record.fields["updateFrequency"] {
-      updateFrequency = value
-    } else {
-      updateFrequency = nil
-    }
-
-    let minUpdateInterval: TimeInterval?
-    if case .double(let value) = record.fields["minUpdateInterval"] {
-      minUpdateInterval = value
-    } else {
-      minUpdateInterval = nil
-    }
+    let updateFrequency = record.optionalDouble(forKey: "updateFrequency")
+    let minUpdateInterval = record.optionalDouble(forKey: "minUpdateInterval")
 
     // Array fields
-    let tags: [String]
-    if case .list(let values) = record.fields["tags"] {
-      tags = values.compactMap {
-        if case .string(let str) = $0 {
-          return str
-        }
-        return nil
-      }
-    } else {
-      tags = []
-    }
+    let tags = record.stringArray(forKey: "tags")
 
     self.init(
       recordName: record.recordName,
@@ -313,5 +103,80 @@ extension Feed: CloudKitConvertible {
       lastFailureReason: lastFailureReason,
       minUpdateInterval: minUpdateInterval
     )
+  }
+
+  /// Convert to CloudKit record fields dictionary using MistKit's FieldValue.
+  ///
+  /// - Returns: Dictionary mapping field names to FieldValue instances.
+  public func toFieldsDict() -> [String: FieldValue] {
+    var fields: [String: FieldValue] = [
+      "feedURL": .string(feedURL),
+      "title": .string(title),
+      "isFeatured": .int64(isFeatured ? 1 : 0),
+      "isVerified": .int64(isVerified ? 1 : 0),
+      "qualityScore": .int64(qualityScore),
+      "subscriberCount": .int64(Int(subscriberCount)),
+      "totalAttempts": .int64(Int(totalAttempts)),
+      "successfulAttempts": .int64(Int(successfulAttempts)),
+      "isActive": .int64(isActive ? 1 : 0),
+      "failureCount": .int64(Int(failureCount)),
+    ]
+
+    // Optional string fields
+    addOptionalString(&fields, key: "description", value: description)
+    addOptionalString(&fields, key: "category", value: category)
+    addOptionalString(&fields, key: "imageURL", value: imageURL)
+    addOptionalString(&fields, key: "siteURL", value: siteURL)
+    addOptionalString(&fields, key: "language", value: language)
+    addOptionalString(&fields, key: "etag", value: etag)
+    addOptionalString(&fields, key: "lastModified", value: lastModified)
+    addOptionalString(&fields, key: "lastFailureReason", value: lastFailureReason)
+
+    // Optional date fields
+    addOptionalDate(&fields, key: "verifiedTimestamp", value: lastVerified)
+    addOptionalDate(&fields, key: "attemptedTimestamp", value: lastAttempted)
+
+    // Optional numeric fields
+    addOptionalDouble(&fields, key: "updateFrequency", value: updateFrequency)
+    addOptionalDouble(&fields, key: "minUpdateInterval", value: minUpdateInterval)
+
+    // Array fields
+    if !tags.isEmpty {
+      fields["tags"] = .list(tags.map { .string($0) })
+    }
+
+    return fields
+  }
+
+  // MARK: - Private Helpers
+
+  private func addOptionalString(
+    _ fields: inout [String: FieldValue],
+    key: String,
+    value: String?
+  ) {
+    if let value = value {
+      fields[key] = .string(value)
+    }
+  }
+
+  private func addOptionalDate(
+    _ fields: inout [String: FieldValue],
+    key: String,
+    value: Date?
+  ) {
+    if let value = value {
+      fields[key] = .date(value)
+    }
+  }
+
+  private func addOptionalDouble(
+    _ fields: inout [String: FieldValue],
+    key: String,
+    value: Double?
+  ) {
+    if let value = value {
+      fields[key] = .double(value)
+    }
   }
 }
