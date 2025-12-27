@@ -111,6 +111,7 @@ extension CloudKitService {
   ///   - guids: Array of article GUIDs to check
   ///   - feedRecordName: Optional feed record name filter to scope the query
   /// - Returns: Array of existing Article records matching the GUIDs
+  /// - Throws: CloudKitError if the query fails
   public func queryArticlesByGUIDs(
     _ guids: [String],
     feedRecordName: String? = nil
@@ -166,6 +167,7 @@ extension CloudKitService {
   /// Create multiple Article records in batches with retry logic
   /// - Parameter articles: Articles to create
   /// - Returns: Batch operation result with success/failure tracking
+  /// - Throws: CloudKitError if batch creation fails
   public func createArticles(_ articles: [Article]) async throws -> BatchOperationResult {
     guard !articles.isEmpty else {
       return BatchOperationResult()
@@ -209,7 +211,8 @@ extension CloudKitService {
 
     let rate = String(format: "%.1f", result.successRate)
     CelestraLogger.cloudkit.info(
-      "📊 Batch complete: \(result.successCount)/\(result.totalProcessed) (\(rate)%)")
+      "📊 Batch complete: \(result.successCount)/\(result.totalProcessed) (\(rate)%)"
+    )
     return result
   }
 

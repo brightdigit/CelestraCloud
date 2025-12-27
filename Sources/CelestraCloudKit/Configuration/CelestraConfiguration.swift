@@ -31,9 +31,16 @@ public import Foundation
 
 /// Root configuration for Celestra application
 public struct CelestraConfiguration: Sendable {
+  /// CloudKit service configuration
   public var cloudkit: CloudKitConfiguration
+
+  /// Update command configuration
   public var update: UpdateCommandConfiguration
 
+  /// Initialize Celestra configuration
+  /// - Parameters:
+  ///   - cloudkit: CloudKit service configuration
+  ///   - update: Update command configuration
   public init(
     cloudkit: CloudKitConfiguration = .init(),
     update: UpdateCommandConfiguration = .init()

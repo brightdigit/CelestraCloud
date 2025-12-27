@@ -31,15 +31,40 @@ public import Foundation
 
 /// Metadata for updating a feed record
 public struct FeedMetadataUpdate: Sendable, Equatable {
+  /// Feed title from RSS/Atom data
   public let title: String
+
+  /// Feed description from RSS/Atom data
   public let description: String?
+
+  /// HTTP ETag header for conditional requests
   public let etag: String?
+
+  /// HTTP Last-Modified header for conditional requests
   public let lastModified: String?
+
+  /// Minimum interval between updates from feed's TTL
   public let minUpdateInterval: TimeInterval?
+
+  /// Total number of update attempts
   public let totalAttempts: Int64
+
+  /// Number of successful update attempts
   public let successfulAttempts: Int64
+
+  /// Number of consecutive failures
   public let failureCount: Int64
 
+  /// Initialize feed metadata update
+  /// - Parameters:
+  ///   - title: Feed title from RSS/Atom data
+  ///   - description: Feed description from RSS/Atom data
+  ///   - etag: HTTP ETag header for conditional requests
+  ///   - lastModified: HTTP Last-Modified header
+  ///   - minUpdateInterval: Minimum interval between updates
+  ///   - totalAttempts: Total number of update attempts
+  ///   - successfulAttempts: Number of successful attempts
+  ///   - failureCount: Number of consecutive failures
   public init(
     title: String,
     description: String?,

@@ -32,11 +32,24 @@ public import MistKit
 
 /// CloudKit credentials and environment settings
 public struct CloudKitConfiguration: Sendable {
+  /// CloudKit container identifier (e.g., iCloud.com.example.App)
   public var containerID: String?
+
+  /// Server-to-Server authentication key ID from Apple Developer Console
   public var keyID: String?
+
+  /// Absolute path to PEM-encoded private key file
   public var privateKeyPath: String?
+
+  /// CloudKit environment (development or production, default: development)
   public var environment: MistKit.Environment
 
+  /// Initialize CloudKit configuration
+  /// - Parameters:
+  ///   - containerID: CloudKit container identifier
+  ///   - keyID: Server-to-Server authentication key ID
+  ///   - privateKeyPath: Absolute path to PEM-encoded private key file
+  ///   - environment: CloudKit environment
   public init(
     containerID: String? = nil,
     keyID: String? = nil,

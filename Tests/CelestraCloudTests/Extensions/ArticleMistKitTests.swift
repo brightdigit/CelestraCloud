@@ -6,9 +6,9 @@ import Testing
 @testable import CelestraCloudKit
 
 @Suite("Article+MistKit Tests")
-struct ArticleMistKitTests {
+internal struct ArticleMistKitTests {
   @Test("toFieldsDict converts required fields correctly")
-  func testToFieldsDictRequiredFields() {
+  internal func testToFieldsDictRequiredFields() {
     let article = Article(
       feedRecordName: "feed-123",
       guid: "article-guid-456",
@@ -32,7 +32,7 @@ struct ArticleMistKitTests {
   }
 
   @Test("toFieldsDict handles optional fields correctly")
-  func testToFieldsDictOptionalFields() {
+  internal func testToFieldsDictOptionalFields() {
     let article = Article(
       feedRecordName: "feed-123",
       guid: "article-guid-456",
@@ -80,7 +80,7 @@ struct ArticleMistKitTests {
   }
 
   @Test("toFieldsDict omits nil optional fields")
-  func testToFieldsDictOmitsNilFields() {
+  internal func testToFieldsDictOmitsNilFields() {
     let article = Article(
       feedRecordName: "feed-123",
       guid: "guid-789",
@@ -106,7 +106,7 @@ struct ArticleMistKitTests {
   }
 
   @Test("init(from:) parses all fields correctly")
-  func testInitFromRecordAllFields() throws {
+  internal func testInitFromRecordAllFields() throws {
     let fetchedDate = Date(timeIntervalSince1970: 1_000_000)
     let expiresDate = Date(timeIntervalSince1970: 3_000_000)
 
@@ -158,7 +158,7 @@ struct ArticleMistKitTests {
   }
 
   @Test("init(from:) handles missing optional fields with defaults")
-  func testInitFromRecordMissingFields() throws {
+  internal func testInitFromRecordMissingFields() throws {
     let fetchedDate = Date(timeIntervalSince1970: 1_000_000)
     let expiresDate = Date(timeIntervalSince1970: 2_000_000)
 
@@ -202,7 +202,7 @@ struct ArticleMistKitTests {
   }
 
   @Test("Round-trip conversion preserves data")
-  func testRoundTripConversion() throws {
+  internal func testRoundTripConversion() throws {
     let originalArticle = Article(
       recordName: "roundtrip-article",
       recordChangeTag: "rt-tag",

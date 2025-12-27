@@ -35,6 +35,7 @@ public enum CloudKitConversionError: LocalizedError {
   case invalidFieldType(fieldName: String, expected: String, actual: String)
   case invalidFieldValue(fieldName: String, reason: String)
 
+  /// Localized error description
   public var errorDescription: String? {
     switch self {
     case .missingRequiredField(let field, let type):

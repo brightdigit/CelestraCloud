@@ -50,6 +50,7 @@ public struct ArticleCloudKitService: Sendable {
   ///   - guids: Array of article GUIDs to check
   ///   - feedRecordName: Optional feed record name filter to scope the query
   /// - Returns: Array of existing Article records matching the GUIDs
+  /// - Throws: CloudKitError if the query fails
   public func queryArticlesByGUIDs(
     _ guids: [String],
     feedRecordName: String? = nil
@@ -102,6 +103,7 @@ public struct ArticleCloudKitService: Sendable {
   /// Create multiple Article records in batches
   /// - Parameter articles: Articles to create
   /// - Returns: Batch operation result with success/failure tracking
+  /// - Throws: CloudKitError if batch creation fails
   public func createArticles(_ articles: [Article]) async throws(CloudKitError)
     -> BatchOperationResult
   {
@@ -155,6 +157,7 @@ public struct ArticleCloudKitService: Sendable {
   /// Update multiple Article records in batches
   /// - Parameter articles: Articles to update (must have recordName set)
   /// - Returns: Batch operation result with success/failure tracking
+  /// - Throws: CloudKitError if batch update fails
   public func updateArticles(_ articles: [Article]) async throws(CloudKitError)
     -> BatchOperationResult
   {

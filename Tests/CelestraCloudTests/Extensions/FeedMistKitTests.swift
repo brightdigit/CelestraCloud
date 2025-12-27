@@ -6,9 +6,9 @@ import Testing
 @testable import CelestraCloudKit
 
 @Suite("Feed+MistKit Tests")
-struct FeedMistKitTests {
+internal struct FeedMistKitTests {
   @Test("toFieldsDict converts required fields correctly")
-  func testToFieldsDictRequiredFields() {
+  internal func testToFieldsDictRequiredFields() {
     let feed = Feed(
       recordName: "test-feed",
       recordChangeTag: nil,
@@ -60,7 +60,7 @@ struct FeedMistKitTests {
   }
 
   @Test("toFieldsDict handles optional fields correctly")
-  func testToFieldsDictOptionalFields() {
+  internal func testToFieldsDictOptionalFields() {
     let feed = Feed(
       recordName: "test-feed",
       recordChangeTag: nil,
@@ -121,7 +121,7 @@ struct FeedMistKitTests {
   }
 
   @Test("toFieldsDict omits nil optional fields")
-  func testToFieldsDictOmitsNilFields() {
+  internal func testToFieldsDictOmitsNilFields() {
     let feed = Feed(
       recordName: "test-feed",
       recordChangeTag: nil,
@@ -170,7 +170,7 @@ struct FeedMistKitTests {
   }
 
   @Test("init(from:) parses all fields correctly")
-  func testInitFromRecordAllFields() throws {
+  internal func testInitFromRecordAllFields() throws {
     let fields: [String: FieldValue] = [
       "feedURL": .string("https://example.com/feed.xml"),
       "title": .string("Test Feed"),
@@ -235,7 +235,7 @@ struct FeedMistKitTests {
   }
 
   @Test("init(from:) handles missing optional fields with defaults")
-  func testInitFromRecordMissingFields() throws {
+  internal func testInitFromRecordMissingFields() throws {
     let fields: [String: FieldValue] = [
       "feedURL": .string("https://example.com/feed.xml"),
       "title": .string("Minimal Feed"),
@@ -279,7 +279,7 @@ struct FeedMistKitTests {
   }
 
   @Test("Round-trip conversion preserves data")
-  func testRoundTripConversion() throws {
+  internal func testRoundTripConversion() throws {
     let originalFeed = Feed(
       recordName: "round-trip",
       recordChangeTag: "tag1",
@@ -348,7 +348,7 @@ struct FeedMistKitTests {
   }
 
   @Test("Boolean fields correctly convert between Bool and Int64")
-  func testBooleanFieldConversion() throws {
+  internal func testBooleanFieldConversion() throws {
     let feed = Feed(
       recordName: "bool-test",
       recordChangeTag: nil,

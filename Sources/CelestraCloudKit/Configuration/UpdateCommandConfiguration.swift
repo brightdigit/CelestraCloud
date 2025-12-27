@@ -31,12 +31,28 @@ public import Foundation
 
 /// Configuration for the update command
 public struct UpdateCommandConfiguration: Sendable {
+  /// Delay between feed updates in seconds (default: 2.0)
   public var delay: Double
+
+  /// Skip robots.txt validation (default: false)
   public var skipRobotsCheck: Bool
+
+  /// Maximum failure count threshold for filtering feeds
   public var maxFailures: Int?
+
+  /// Minimum subscriber count for filtering feeds
   public var minPopularity: Int?
+
+  /// Only update feeds last attempted before this date
   public var lastAttemptedBefore: Date?
 
+  /// Initialize update command configuration
+  /// - Parameters:
+  ///   - delay: Delay between feed updates in seconds
+  ///   - skipRobotsCheck: Skip robots.txt validation
+  ///   - maxFailures: Maximum failure count threshold
+  ///   - minPopularity: Minimum subscriber count
+  ///   - lastAttemptedBefore: Only update feeds attempted before this date
   public init(
     delay: Double = 2.0,
     skipRobotsCheck: Bool = false,

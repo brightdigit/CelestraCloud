@@ -32,6 +32,7 @@ public import Foundation
 
 /// Pure function type for building feed metadata updates
 public struct FeedMetadataBuilder: Sendable {
+  /// Initialize feed metadata builder
   public init() {}
 
   /// Build metadata for successful feed fetch

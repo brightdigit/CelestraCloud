@@ -41,12 +41,17 @@ public struct ArticleCategorizer: Sendable {
     /// Modified articles (GUID found, contentHash differs)
     public let modified: [Article]
 
+    /// Initialize categorization result
+    /// - Parameters:
+    ///   - new: New articles not found in existing articles
+    ///   - modified: Modified articles with matching GUID but different content
     public init(new: [Article], modified: [Article]) {
       self.new = new
       self.modified = modified
     }
   }
 
+  /// Initialize article categorizer
   public init() {}
 
   /// Categorize feed items into new and modified articles

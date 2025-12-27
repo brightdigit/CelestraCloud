@@ -39,6 +39,7 @@ public protocol CloudKitRecordOperating: Sendable {
   ///   - limit: Maximum number of records to return (optional)
   ///   - desiredKeys: Optional list of field keys to fetch
   /// - Returns: Array of matching record info
+  /// - Throws: CloudKitError if the query fails
   func queryRecords(
     recordType: String,
     filters: [QueryFilter]?,
@@ -50,6 +51,7 @@ public protocol CloudKitRecordOperating: Sendable {
   /// Modify records in CloudKit (create, update, delete)
   /// - Parameter operations: Array of record operations to perform
   /// - Returns: Array of modified record info
+  /// - Throws: CloudKitError if the modification fails
   func modifyRecords(_ operations: [RecordOperation]) async throws(CloudKitError) -> [RecordInfo]
 }
 

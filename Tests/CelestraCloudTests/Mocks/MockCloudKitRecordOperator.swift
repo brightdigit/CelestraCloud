@@ -37,15 +37,15 @@ internal final class MockCloudKitRecordOperator: CloudKitRecordOperating, @unche
   // MARK: - Recorded Calls
 
   internal struct QueryCall {
-    let recordType: String
-    let filters: [QueryFilter]?
-    let sortBy: [QuerySort]?
-    let limit: Int?
-    let desiredKeys: [String]?
+    internal let recordType: String
+    internal let filters: [QueryFilter]?
+    internal let sortBy: [QuerySort]?
+    internal let limit: Int?
+    internal let desiredKeys: [String]?
   }
 
   internal struct ModifyCall {
-    let operations: [RecordOperation]
+    internal let operations: [RecordOperation]
   }
 
   internal private(set) var queryCalls: [QueryCall] = []

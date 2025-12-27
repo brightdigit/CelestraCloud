@@ -32,11 +32,24 @@ public import MistKit
 
 /// Validated CloudKit configuration with all required fields
 public struct ValidatedCloudKitConfiguration: Sendable {
+  /// CloudKit container identifier (validated non-empty)
   public let containerID: String
+
+  /// Server-to-Server authentication key ID (validated non-empty)
   public let keyID: String
+
+  /// Absolute path to PEM-encoded private key file (validated non-empty)
   public let privateKeyPath: String
+
+  /// CloudKit environment (development or production)
   public let environment: MistKit.Environment
 
+  /// Initialize validated CloudKit configuration
+  /// - Parameters:
+  ///   - containerID: CloudKit container identifier
+  ///   - keyID: Server-to-Server authentication key ID
+  ///   - privateKeyPath: Absolute path to PEM-encoded private key file
+  ///   - environment: CloudKit environment
   public init(
     containerID: String,
     keyID: String,
