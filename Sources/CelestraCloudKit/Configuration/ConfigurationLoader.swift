@@ -7,7 +7,7 @@
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation
-//  files (the "Software"), to deal in the Software without
+//  files (the “Software”), to deal in the Software without
 //  restriction, including without limitation the rights to use,
 //  copy, modify, merge, publish, distribute, sublicense, and/or
 //  sell copies of the Software, and to permit persons to whom the
@@ -17,7 +17,7 @@
 //  The above copyright notice and this permission notice shall be
 //  included in all copies or substantial portions of the Software.
 //
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+//  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 //  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 //  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
@@ -40,12 +40,13 @@ public actor ConfigurationLoader {
     var providers: [any ConfigProvider] = []
 
     // Priority 1: Command-line arguments (highest)
-    providers.append(CommandLineArgumentsProvider(
-      secretsSpecifier: .specific([
-        "--cloudkit-key-id",
-        "--cloudkit-private-key-path"
-      ])
-    ))
+    providers.append(
+      CommandLineArgumentsProvider(
+        secretsSpecifier: .specific([
+          "--cloudkit-key-id",
+          "--cloudkit-private-key-path",
+        ])
+      ))
 
     // Priority 2: Environment variables
     providers.append(EnvironmentVariablesProvider())
@@ -57,30 +58,30 @@ public actor ConfigurationLoader {
   public func loadConfiguration() async throws -> CelestraConfiguration {
     // CloudKit configuration
     let cloudkit = CloudKitConfiguration(
-      containerID: readString(forKey: ConfigurationKeys.CloudKit.containerID) ??
-        readString(forKey: ConfigurationKeys.CloudKit.containerIDEnv),
-      keyID: readString(forKey: ConfigurationKeys.CloudKit.keyID) ??
-        readString(forKey: ConfigurationKeys.CloudKit.keyIDEnv),
-      privateKeyPath: readString(forKey: ConfigurationKeys.CloudKit.privateKeyPath) ??
-        readString(forKey: ConfigurationKeys.CloudKit.privateKeyPathEnv),
+      containerID: readString(forKey: ConfigurationKeys.CloudKit.containerID)
+        ?? readString(forKey: ConfigurationKeys.CloudKit.containerIDEnv),
+      keyID: readString(forKey: ConfigurationKeys.CloudKit.keyID)
+        ?? readString(forKey: ConfigurationKeys.CloudKit.keyIDEnv),
+      privateKeyPath: readString(forKey: ConfigurationKeys.CloudKit.privateKeyPath)
+        ?? readString(forKey: ConfigurationKeys.CloudKit.privateKeyPathEnv),
       environment: parseEnvironment(
-        readString(forKey: ConfigurationKeys.CloudKit.environment) ??
-        readString(forKey: ConfigurationKeys.CloudKit.environmentEnv)
+        readString(forKey: ConfigurationKeys.CloudKit.environment)
+          ?? readString(forKey: ConfigurationKeys.CloudKit.environmentEnv)
       )
     )
 
     // Update command configuration
     let update = UpdateCommandConfiguration(
-      delay: readDouble(forKey: ConfigurationKeys.Update.delay) ??
-        readDouble(forKey: ConfigurationKeys.Update.delayEnv) ?? 2.0,
-      skipRobotsCheck: readBool(forKey: ConfigurationKeys.Update.skipRobotsCheck) ??
-        readBool(forKey: ConfigurationKeys.Update.skipRobotsCheckEnv) ?? false,
-      maxFailures: readInt(forKey: ConfigurationKeys.Update.maxFailures) ??
-        readInt(forKey: ConfigurationKeys.Update.maxFailuresEnv),
-      minPopularity: readInt(forKey: ConfigurationKeys.Update.minPopularity) ??
-        readInt(forKey: ConfigurationKeys.Update.minPopularityEnv),
-      lastAttemptedBefore: readDate(forKey: ConfigurationKeys.Update.lastAttemptedBefore) ??
-        readDate(forKey: ConfigurationKeys.Update.lastAttemptedBeforeEnv)
+      delay: readDouble(forKey: ConfigurationKeys.Update.delay) ?? readDouble(
+        forKey: ConfigurationKeys.Update.delayEnv) ?? 2.0,
+      skipRobotsCheck: readBool(forKey: ConfigurationKeys.Update.skipRobotsCheck) ?? readBool(
+        forKey: ConfigurationKeys.Update.skipRobotsCheckEnv) ?? false,
+      maxFailures: readInt(forKey: ConfigurationKeys.Update.maxFailures)
+        ?? readInt(forKey: ConfigurationKeys.Update.maxFailuresEnv),
+      minPopularity: readInt(forKey: ConfigurationKeys.Update.minPopularity)
+        ?? readInt(forKey: ConfigurationKeys.Update.minPopularityEnv),
+      lastAttemptedBefore: readDate(forKey: ConfigurationKeys.Update.lastAttemptedBefore)
+        ?? readDate(forKey: ConfigurationKeys.Update.lastAttemptedBeforeEnv)
     )
 
     return CelestraConfiguration(

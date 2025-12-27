@@ -51,7 +51,9 @@ public struct ConfigurationError: LocalizedError {
 public enum CelestraConfig {
   /// Create CloudKit service from validated configuration
   @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-  public static func createCloudKitService(from config: ValidatedCloudKitConfiguration) throws -> CloudKitService {
+  public static func createCloudKitService(from config: ValidatedCloudKitConfiguration) throws
+    -> CloudKitService
+  {
     // Read private key from file
     let privateKeyPEM = try String(contentsOfFile: config.privateKeyPath, encoding: .utf8)
 
@@ -72,7 +74,9 @@ public enum CelestraConfig {
 
   /// Create CloudKit service from environment variables
   @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-  @available(*, deprecated, message: "Use ConfigurationLoader with createCloudKitService(from:) instead")
+  @available(
+    *, deprecated, message: "Use ConfigurationLoader with createCloudKitService(from:) instead"
+  )
   public static func createCloudKitService() throws -> CloudKitService {
     // Validate required environment variables
     guard let containerID = ProcessInfo.processInfo.environment["CLOUDKIT_CONTAINER_ID"] else {

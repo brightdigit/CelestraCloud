@@ -7,7 +7,7 @@
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation
-//  files (the "Software"), to deal in the Software without
+//  files (the “Software”), to deal in the Software without
 //  restriction, including without limitation the rights to use,
 //  copy, modify, merge, publish, distribute, sublicense, and/or
 //  sell copies of the Software, and to permit persons to whom the
@@ -17,7 +17,7 @@
 //  The above copyright notice and this permission notice shall be
 //  included in all copies or substantial portions of the Software.
 //
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+//  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 //  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 //  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
@@ -147,12 +147,12 @@ enum UpdateCommand {
             isVerified: feed.isVerified,
             subscriberCount: feed.subscriberCount,
             totalAttempts: totalAttempts,
-            successfulAttempts: successfulAttempts + 1, // 304 counts as success
+            successfulAttempts: successfulAttempts + 1,  // 304 counts as success
             lastAttempted: Date(),
             isActive: feed.isActive,
             etag: newEtag,
             lastModified: newLastModified,
-            failureCount: 0, // Reset failure count on successful fetch
+            failureCount: 0,  // Reset failure count on successful fetch
             minUpdateInterval: feed.minUpdateInterval
           )
           _ = try await service.updateFeed(recordName: feed.recordName!, feed: updatedFeed)
@@ -169,8 +169,10 @@ enum UpdateCommand {
 
         // Process articles (create new, update modified)
         let guids = feedData.items.map { $0.guid }
-        let existingArticles = try await service.queryArticlesByGUIDs(guids, feedRecordName: feed.recordName)
-        let existingMap: [String: Article] = Dictionary(uniqueKeysWithValues: existingArticles.map { ($0.guid, $0) })
+        let existingArticles = try await service.queryArticlesByGUIDs(
+          guids, feedRecordName: feed.recordName)
+        let existingMap: [String: Article] = Dictionary(
+          uniqueKeysWithValues: existingArticles.map { ($0.guid, $0) })
 
         var newArticles: [Article] = []
         var modifiedArticles: [Article] = []
@@ -233,8 +235,8 @@ enum UpdateCommand {
         let updatedFeed = Feed(
           recordName: feed.recordName,
           feedURL: feed.feedURL,
-          title: feedData.title, // Update title from feed
-          description: feedData.description, // Update description
+          title: feedData.title,  // Update title from feed
+          description: feedData.description,  // Update description
           isFeatured: feed.isFeatured,
           isVerified: feed.isVerified,
           subscriberCount: feed.subscriberCount,
@@ -244,7 +246,7 @@ enum UpdateCommand {
           isActive: feed.isActive,
           etag: newEtag,
           lastModified: newLastModified,
-          failureCount: 0, // Reset on success
+          failureCount: 0,  // Reset on success
           minUpdateInterval: feedData.minUpdateInterval
         )
         _ = try await service.updateFeed(recordName: feed.recordName!, feed: updatedFeed)
