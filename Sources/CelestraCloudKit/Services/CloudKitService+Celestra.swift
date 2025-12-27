@@ -207,17 +207,16 @@ extension CloudKitService {
       }
     }
 
-    let successRateFormatted = String(format: "%.1f", result.successRate)
-    let batchSummary = "\(result.successCount)/\(result.totalProcessed) succeeded"
+    let rate = String(format: "%.1f", result.successRate)
     CelestraLogger.cloudkit.info(
-      "📊 Batch operation complete: \(batchSummary) (\(successRateFormatted)%)")
-
+      "📊 Batch complete: \(result.successCount)/\(result.totalProcessed) (\(rate)%)")
     return result
   }
 
   /// Update multiple Article records in batches with retry logic
   /// - Parameter articles: Articles to update (must have recordName set)
   /// - Returns: Batch operation result with success/failure tracking
+  /// - Throws: CloudKit errors for batch operations
   public func updateArticles(_ articles: [Article]) async throws -> BatchOperationResult {
     guard !articles.isEmpty else {
       return BatchOperationResult()

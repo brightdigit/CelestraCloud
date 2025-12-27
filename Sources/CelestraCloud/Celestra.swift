@@ -53,7 +53,7 @@ internal enum Celestra {
     case "add-feed":
       try await AddFeedCommand.run(args: args)
     case "update":
-      try await UpdateCommand.run(args: args)
+      try await UpdateCommand.run()
     case "clear":
       try await ClearCommand.run(args: args)
     case "help", "--help", "-h":

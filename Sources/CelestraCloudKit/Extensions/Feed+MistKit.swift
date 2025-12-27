@@ -32,16 +32,14 @@ public import Foundation
 public import MistKit
 
 extension Feed: CloudKitConvertible {
+  // swiftlint:disable function_body_length
   /// Create Feed from MistKit RecordInfo using shared parsing helpers.
   ///
   /// - Parameter record: The CloudKit RecordInfo containing field data.
   /// - Throws: `CloudKitConversionError.missingRequiredField` if feedURL or title is missing.
   public init(from record: RecordInfo) throws {
-    // Required fields
     let feedURL = try record.requiredString(forKey: "feedURL", recordType: "Feed")
     let title = try record.requiredString(forKey: "title", recordType: "Feed")
-
-    // Optional string fields
     let description = record.optionalString(forKey: "description")
     let category = record.optionalString(forKey: "category")
     let imageURL = record.optionalString(forKey: "imageURL")
@@ -50,29 +48,19 @@ extension Feed: CloudKitConvertible {
     let etag = record.optionalString(forKey: "etag")
     let lastModified = record.optionalString(forKey: "lastModified")
     let lastFailureReason = record.optionalString(forKey: "lastFailureReason")
-
-    // Boolean fields (stored as Int64)
     let isFeatured = record.bool(forKey: "isFeatured")
     let isVerified = record.bool(forKey: "isVerified")
     let isActive = record.bool(forKey: "isActive", default: true)
-
-    // Int64 fields
     let qualityScore = record.int(forKey: "qualityScore", default: 50)
     let subscriberCount = record.int64(forKey: "subscriberCount")
     let totalAttempts = record.int64(forKey: "totalAttempts")
     let successfulAttempts = record.int64(forKey: "successfulAttempts")
     let failureCount = record.int64(forKey: "failureCount")
-
-    // Date fields (addedAt uses CloudKit's createdTimestamp)
     let addedAt = record.date(forKey: "createdTimestamp", default: Date())
     let lastVerified = record.optionalDate(forKey: "verifiedTimestamp")
     let lastAttempted = record.optionalDate(forKey: "attemptedTimestamp")
-
-    // TimeInterval fields
     let updateFrequency = record.optionalDouble(forKey: "updateFrequency")
     let minUpdateInterval = record.optionalDouble(forKey: "minUpdateInterval")
-
-    // Array fields
     let tags = record.stringArray(forKey: "tags")
 
     self.init(
@@ -104,6 +92,7 @@ extension Feed: CloudKitConvertible {
       minUpdateInterval: minUpdateInterval
     )
   }
+  // swiftlint:enable function_body_length
 
   /// Convert to CloudKit record fields dictionary using MistKit's FieldValue.
   ///

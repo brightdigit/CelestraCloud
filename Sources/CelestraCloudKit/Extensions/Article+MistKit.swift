@@ -32,16 +32,6 @@ public import Foundation
 public import MistKit
 
 extension Article: CloudKitConvertible {
-  // MARK: - Type Methods
-
-  private static func calculateTTLDays(fetchedAt: Date, expiresAt: Date?) -> Int {
-    guard let expiresAt = expiresAt else {
-      return 30  // Default TTL
-    }
-    let interval = expiresAt.timeIntervalSince(fetchedAt)
-    return max(1, Int(interval / (24 * 60 * 60)))
-  }
-
   // MARK: - Initializers
 
   /// Create Article from MistKit RecordInfo using shared parsing helpers.
@@ -49,33 +39,22 @@ extension Article: CloudKitConvertible {
   /// - Parameter record: The CloudKit RecordInfo containing field data.
   /// - Throws: `CloudKitConversionError.missingRequiredField` if required fields are missing.
   public init(from record: RecordInfo) throws {
-    // Required string fields
     let feedRecordName = try record.requiredString(forKey: "feedRecordName", recordType: "Article")
     let guid = try record.requiredString(forKey: "guid", recordType: "Article")
     let title = try record.requiredString(forKey: "title", recordType: "Article")
     let url = try record.requiredString(forKey: "url", recordType: "Article")
-
-    // Optional string fields
     let excerpt = record.optionalString(forKey: "excerpt")
     let content = record.optionalString(forKey: "content")
     let contentText = record.optionalString(forKey: "contentText")
     let author = record.optionalString(forKey: "author")
     let imageURL = record.optionalString(forKey: "imageURL")
     let language = record.optionalString(forKey: "language")
-
-    // Date fields
     let publishedDate = record.optionalDate(forKey: "publishedTimestamp")
     let fetchedAt = record.date(forKey: "fetchedTimestamp", default: Date())
     let expiresAt = record.optionalDate(forKey: "expiresTimestamp")
-
-    // Calculate ttlDays from fetchedAt and expiresAt if available
     let ttlDays = Self.calculateTTLDays(fetchedAt: fetchedAt, expiresAt: expiresAt)
-
-    // Optional int fields
     let wordCount = record.optionalInt(forKey: "wordCount")
     let estimatedReadingTime = record.optionalInt(forKey: "estimatedReadingTime")
-
-    // Array fields
     let tags = record.stringArray(forKey: "tags")
 
     self.init(
@@ -100,6 +79,16 @@ extension Article: CloudKitConvertible {
     )
   }
 
+  // MARK: - Type Methods
+
+  private static func calculateTTLDays(fetchedAt: Date, expiresAt: Date?) -> Int {
+    guard let expiresAt = expiresAt else {
+      return 30
+    }
+    let interval = expiresAt.timeIntervalSince(fetchedAt)
+    return max(1, Int(interval / (24 * 60 * 60)))
+  }
+
   // MARK: - Instance Methods
 
   /// Convert to CloudKit record fields dictionary using MistKit's FieldValue.
@@ -116,22 +105,16 @@ extension Article: CloudKitConvertible {
       "contentHash": .string(contentHash),
     ]
 
-    // Optional string fields
     addOptionalString(&fields, key: "excerpt", value: excerpt)
     addOptionalString(&fields, key: "content", value: content)
     addOptionalString(&fields, key: "contentText", value: contentText)
     addOptionalString(&fields, key: "author", value: author)
     addOptionalString(&fields, key: "imageURL", value: imageURL)
     addOptionalString(&fields, key: "language", value: language)
-
-    // Optional date field
     addOptionalDate(&fields, key: "publishedTimestamp", value: publishedDate)
-
-    // Optional int fields
     addOptionalInt(&fields, key: "wordCount", value: wordCount)
     addOptionalInt(&fields, key: "estimatedReadingTime", value: estimatedReadingTime)
 
-    // Array fields
     if !tags.isEmpty {
       fields["tags"] = .list(tags.map { .string($0) })
     }
