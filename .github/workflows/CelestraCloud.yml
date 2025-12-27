@@ -16,9 +16,7 @@ jobs:
       matrix:
         os: [noble, jammy]
         swift:
-          - version: "6.2"
-          - version: "6.2"
-            nightly: true
+          - version: "6.2"      # Uses Swift 6.2.3 release - works fine
           - version: "6.3"
             nightly: true
 
@@ -48,8 +46,6 @@ jobs:
       matrix:
         runs-on: [windows-2022, windows-2025]
         swift:
-          - version: swift-6.2-release
-            build: 6.2-RELEASE
           - version: swift-6.3-branch
             build: 6.3-DEVELOPMENT-SNAPSHOT-2025-12-21-a
     steps:
