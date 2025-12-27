@@ -41,7 +41,6 @@ internal struct FeedUpdateProcessor {
   private let rateLimiter: RateLimiter
   private let skipRobotsCheck: Bool
   private let articleSync: ArticleSyncService
-  private let categorizer: ArticleCategorizer
   private let metadataBuilder: FeedMetadataBuilder
 
   internal init(
@@ -51,7 +50,6 @@ internal struct FeedUpdateProcessor {
     rateLimiter: RateLimiter,
     skipRobotsCheck: Bool,
     articleSync: ArticleSyncService,
-    categorizer: ArticleCategorizer = ArticleCategorizer(),
     metadataBuilder: FeedMetadataBuilder = FeedMetadataBuilder()
   ) {
     self.service = service
@@ -60,7 +58,6 @@ internal struct FeedUpdateProcessor {
     self.rateLimiter = rateLimiter
     self.skipRobotsCheck = skipRobotsCheck
     self.articleSync = articleSync
-    self.categorizer = categorizer
     self.metadataBuilder = metadataBuilder
   }
 

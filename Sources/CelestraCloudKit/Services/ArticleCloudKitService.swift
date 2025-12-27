@@ -32,6 +32,8 @@ public import Foundation
 import Logging
 public import MistKit
 
+// swiftlint:disable file_length
+
 /// Service for Article-related CloudKit operations with dependency injection support
 @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 public struct ArticleCloudKitService: Sendable {
@@ -42,6 +44,12 @@ public struct ArticleCloudKitService: Sendable {
   private let recordOperator: any CloudKitRecordOperating
   private let operationBuilder: ArticleOperationBuilder
 
+  /// Creates a new Article CloudKit service with dependency injection.
+  ///
+  /// - Parameters:
+  ///   - recordOperator: The CloudKit record operator for performing database operations
+  ///   - operationBuilder: Builder for creating article record operations
+  ///     (defaults to ArticleOperationBuilder())
   public init(
     recordOperator: any CloudKitRecordOperating,
     operationBuilder: ArticleOperationBuilder = ArticleOperationBuilder()
@@ -51,6 +59,16 @@ public struct ArticleCloudKitService: Sendable {
   }
 
   // MARK: - Query Operations
+  /// Queries articles from CloudKit by their GUIDs with optional feed filtering.
+  ///
+  /// Automatically batches large queries into groups of 150 GUIDs to stay within CloudKit limits.
+  /// Invalid article records are logged and skipped rather than failing the entire query.
+  ///
+  /// - Parameters:
+  ///   - guids: Array of article GUIDs to query
+  ///   - feedRecordName: Optional feed record name to filter results to a specific feed
+  /// - Returns: Array of successfully parsed Article objects
+  /// - Throws: CloudKitError if the query operation fails
   public func queryArticlesByGUIDs(
     _ guids: [String],
     feedRecordName: String? = nil
@@ -96,6 +114,15 @@ public struct ArticleCloudKitService: Sendable {
   }
 
   // MARK: - Create Operations
+  /// Creates new articles in CloudKit with batch processing.
+  ///
+  /// Articles are processed in batches of 10 to manage payload size.
+  /// Non-atomic operations allow partial success - some articles may succeed while others fail.
+  /// All successes and failures are tracked in the returned BatchOperationResult.
+  ///
+  /// - Parameter articles: Array of Article objects to create in CloudKit
+  /// - Returns: BatchOperationResult containing success/failure counts and detailed tracking
+  /// - Throws: CloudKitError if a batch operation fails
   public func createArticles(_ articles: [Article]) async throws(CloudKitError)
     -> BatchOperationResult
   {
@@ -122,6 +149,15 @@ public struct ArticleCloudKitService: Sendable {
   }
 
   // MARK: - Update Operations
+  /// Updates existing articles in CloudKit with batch processing.
+  ///
+  /// Articles without a recordName are automatically skipped with a warning.
+  /// Remaining articles are processed in batches of 10 to manage payload size.
+  /// Non-atomic operations allow partial success - some updates may succeed while others fail.
+  ///
+  /// - Parameter articles: Array of Article objects to update (must have recordName set)
+  /// - Returns: BatchOperationResult containing success/failure counts and detailed tracking
+  /// - Throws: CloudKitError if a batch operation fails
   public func updateArticles(_ articles: [Article]) async throws(CloudKitError)
     -> BatchOperationResult
   {
@@ -188,6 +224,13 @@ public struct ArticleCloudKitService: Sendable {
   }
 
   // MARK: - Delete Operations
+  /// Deletes all articles from CloudKit in batches.
+  ///
+  /// Queries and deletes articles in batches of 200 until no more articles remain.
+  /// This prevents CloudKit query limits and manages memory usage for large datasets.
+  /// Progress is logged after each batch deletion.
+  ///
+  /// - Throws: CloudKitError if a query or delete operation fails
   public func deleteAllArticles() async throws(CloudKitError) {
     var totalDeleted = 0
     while true {

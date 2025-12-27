@@ -83,13 +83,4 @@ internal final class MockCloudKitRecordOperator: CloudKitRecordOperating, @unche
     modifyCalls.append(ModifyCall(operations: operations))
     return try modifyRecordsResult.get()
   }
-
-  // MARK: - Test Helpers
-
-  internal func reset() {
-    queryCalls = []
-    modifyCalls = []
-    queryRecordsResult = .success([])
-    modifyRecordsResult = .success([])
-  }
 }
