@@ -56,7 +56,8 @@ internal enum ClearCommand {
 
     // Delete articles first (to avoid orphans)
     print("📋 Deleting articles...")
-    try await service.deleteAllArticles()
+    let articleService = ArticleCloudKitService(recordOperator: service)
+    try await articleService.deleteAllArticles()
     print("✅ Articles deleted")
 
     // Delete feeds

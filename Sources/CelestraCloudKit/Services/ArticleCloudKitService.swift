@@ -35,22 +35,22 @@ public import MistKit
 /// Service for Article-related CloudKit operations with dependency injection support
 @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 public struct ArticleCloudKitService: Sendable {
+  private enum BatchOperation {
+    case create
+    case update
+  }
   private let recordOperator: any CloudKitRecordOperating
+  private let operationBuilder: ArticleOperationBuilder
 
-  /// Initialize with a CloudKit record operator
-  /// - Parameter recordOperator: The record operator to use for CloudKit operations
-  public init(recordOperator: any CloudKitRecordOperating) {
+  public init(
+    recordOperator: any CloudKitRecordOperating,
+    operationBuilder: ArticleOperationBuilder = ArticleOperationBuilder()
+  ) {
     self.recordOperator = recordOperator
+    self.operationBuilder = operationBuilder
   }
 
   // MARK: - Query Operations
-
-  /// Query existing articles by GUIDs for duplicate detection
-  /// - Parameters:
-  ///   - guids: Array of article GUIDs to check
-  ///   - feedRecordName: Optional feed record name filter to scope the query
-  /// - Returns: Array of existing Article records matching the GUIDs
-  /// - Throws: CloudKitError if the query fails
   public func queryArticlesByGUIDs(
     _ guids: [String],
     feedRecordName: String? = nil
@@ -58,93 +58,62 @@ public struct ArticleCloudKitService: Sendable {
     guard !guids.isEmpty else {
       return []
     }
-
-    // Batch size: 150 (safe margin below CloudKit's 200 limit)
-    let batchSize = 150
     var allArticles: [Article] = []
-
-    let guidBatches = guids.chunked(into: batchSize)
-
+    let guidBatches = guids.chunked(into: 150)
     for batch in guidBatches {
-      var filters: [QueryFilter] = []
-
-      if let feedName = feedRecordName {
-        filters.append(.equals("feedRecordName", .string(feedName)))
-      }
-
-      let guidValues = batch.map { FieldValue.string($0) }
-      filters.append(.in("guid", guidValues))
-
-      let records = try await recordOperator.queryRecords(
-        recordType: "Article",
-        filters: filters,
-        sortBy: nil,
-        limit: 200,
-        desiredKeys: nil
-      )
-
-      for record in records {
-        do {
-          let article = try Article(from: record)
-          allArticles.append(article)
-        } catch {
-          CelestraLogger.errors.warning(
-            "Skipping invalid article record \(record.recordName): \(error)"
-          )
-        }
-      }
+      let batchArticles = try await queryArticleBatch(batch, feedRecordName: feedRecordName)
+      allArticles.append(contentsOf: batchArticles)
     }
-
     return allArticles
   }
 
-  // MARK: - Create Operations
+  private func queryArticleBatch(
+    _ guids: [String],
+    feedRecordName: String?
+  ) async throws(CloudKitError) -> [Article] {
+    var filters: [QueryFilter] = []
+    if let feedName = feedRecordName {
+      filters.append(.equals("feedRecordName", .string(feedName)))
+    }
+    filters.append(.in("guid", guids.map { FieldValue.string($0) }))
+    let records = try await recordOperator.queryRecords(
+      recordType: "Article",
+      filters: filters,
+      sortBy: nil,
+      limit: 200,
+      desiredKeys: nil
+    )
+    return records.compactMap { record in
+      do {
+        return try Article(from: record)
+      } catch {
+        CelestraLogger.errors.warning(
+          "Skipping invalid article record \(record.recordName): \(error)"
+        )
+        return nil
+      }
+    }
+  }
 
-  /// Create multiple Article records in batches
-  /// - Parameter articles: Articles to create
-  /// - Returns: Batch operation result with success/failure tracking
-  /// - Throws: CloudKitError if batch creation fails
+  // MARK: - Create Operations
   public func createArticles(_ articles: [Article]) async throws(CloudKitError)
     -> BatchOperationResult
   {
     guard !articles.isEmpty else {
       return BatchOperationResult()
     }
-
     CelestraLogger.cloudkit.info("Creating \(articles.count) article(s)...")
-
-    let batches = articles.chunked(into: 10)
+    let articleBatches = articles.chunked(into: 10)
     var result = BatchOperationResult()
-
-    for (index, batch) in batches.enumerated() {
-      CelestraLogger.operations.info(
-        "   Batch \(index + 1)/\(batches.count): \(batch.count) article(s)"
+    for (index, batch) in articleBatches.enumerated() {
+      try await processBatch(
+        batch,
+        index: index,
+        total: articleBatches.count,
+        result: &result,
+        operation: .create
       )
-
-      do {
-        let operations = batch.map { article in
-          RecordOperation.create(
-            recordType: "Article",
-            recordName: UUID().uuidString,
-            fields: article.toFieldsDict()
-          )
-        }
-
-        let recordInfos = try await recordOperator.modifyRecords(operations)
-
-        result.appendSuccesses(recordInfos)
-        CelestraLogger.cloudkit.info(
-          "   Batch \(index + 1) complete: \(recordInfos.count) created"
-        )
-      } catch {
-        CelestraLogger.errors.error("   Batch \(index + 1) failed: \(error.localizedDescription)")
-
-        for article in batch {
-          result.appendFailure(article: article, error: error)
-        }
-      }
     }
-
     let rate = String(format: "%.1f", result.successRate)
     CelestraLogger.cloudkit.info(
       "Batch complete: \(result.successCount)/\(result.totalProcessed) (\(rate)%)"
@@ -153,112 +122,101 @@ public struct ArticleCloudKitService: Sendable {
   }
 
   // MARK: - Update Operations
-
-  /// Update multiple Article records in batches
-  /// - Parameter articles: Articles to update (must have recordName set)
-  /// - Returns: Batch operation result with success/failure tracking
-  /// - Throws: CloudKitError if batch update fails
   public func updateArticles(_ articles: [Article]) async throws(CloudKitError)
     -> BatchOperationResult
   {
     guard !articles.isEmpty else {
       return BatchOperationResult()
     }
-
     CelestraLogger.cloudkit.info("Updating \(articles.count) article(s)...")
-
     let validArticles = articles.filter { $0.recordName != nil }
     if validArticles.count != articles.count {
       CelestraLogger.errors.warning(
         "Skipping \(articles.count - validArticles.count) article(s) without recordName"
       )
     }
-
     guard !validArticles.isEmpty else {
       return BatchOperationResult()
     }
-
     let batches = validArticles.chunked(into: 10)
     var result = BatchOperationResult()
-
     for (index, batch) in batches.enumerated() {
-      CelestraLogger.operations.info(
-        "   Batch \(index + 1)/\(batches.count): \(batch.count) article(s)"
+      try await processBatch(
+        batch,
+        index: index,
+        total: batches.count,
+        result: &result,
+        operation: .update
       )
-
-      do {
-        let operations = batch.compactMap { article -> RecordOperation? in
-          guard let recordName = article.recordName else {
-            return nil
-          }
-
-          return RecordOperation.update(
-            recordType: "Article",
-            recordName: recordName,
-            fields: article.toFieldsDict(),
-            recordChangeTag: nil
-          )
-        }
-
-        let recordInfos = try await recordOperator.modifyRecords(operations)
-
-        result.appendSuccesses(recordInfos)
-        CelestraLogger.cloudkit.info(
-          "   Batch \(index + 1) complete: \(recordInfos.count) updated"
-        )
-      } catch {
-        CelestraLogger.errors.error("   Batch \(index + 1) failed: \(error.localizedDescription)")
-
-        for article in batch {
-          result.appendFailure(article: article, error: error)
-        }
-      }
     }
-
     let updateRateFormatted = String(format: "%.1f", result.successRate)
     let updateSummary = "\(result.successCount)/\(result.totalProcessed) succeeded"
     CelestraLogger.cloudkit.info("Update complete: \(updateSummary) (\(updateRateFormatted)%)")
-
     return result
   }
 
-  // MARK: - Delete Operations
+  private func processBatch(
+    _ batch: [Article],
+    index: Int,
+    total: Int,
+    result: inout BatchOperationResult,
+    operation: BatchOperation
+  ) async throws(CloudKitError) {
+    CelestraLogger.operations.info(
+      "   Batch \(index + 1)/\(total): \(batch.count) article(s)"
+    )
+    do {
+      let operations: [RecordOperation] =
+        switch operation {
+        case .create:
+          operationBuilder.buildCreateOperations(batch)
+        case .update:
+          operationBuilder.buildUpdateOperations(batch).operations
+        }
+      let recordInfos = try await recordOperator.modifyRecords(operations)
+      result.appendSuccesses(recordInfos)
+      let verb = operation == .create ? "created" : "updated"
+      CelestraLogger.cloudkit.info(
+        "   Batch \(index + 1) complete: \(recordInfos.count) \(verb)"
+      )
+    } catch {
+      CelestraLogger.errors.error("   Batch \(index + 1) failed: \(error.localizedDescription)")
+      for article in batch {
+        result.appendFailure(article: article, error: error)
+      }
+    }
+  }
 
-  /// Delete all Article records (paginated)
+  // MARK: - Delete Operations
   public func deleteAllArticles() async throws(CloudKitError) {
     var totalDeleted = 0
-
     while true {
-      let articles = try await recordOperator.queryRecords(
-        recordType: "Article",
-        filters: nil,
-        sortBy: nil,
-        limit: 200,
-        desiredKeys: ["___recordID"]
-      )
-
-      guard !articles.isEmpty else {
+      let deletedCount = try await deleteArticleBatch()
+      guard deletedCount > 0 else {
         break
       }
-
-      let operations = articles.map { record in
-        RecordOperation.delete(
-          recordType: "Article",
-          recordName: record.recordName,
-          recordChangeTag: record.recordChangeTag
-        )
-      }
-
-      _ = try await recordOperator.modifyRecords(operations)
-      totalDeleted += articles.count
-
-      CelestraLogger.operations.info("Deleted \(articles.count) articles (total: \(totalDeleted))")
-
-      if articles.count < 200 {
+      totalDeleted += deletedCount
+      CelestraLogger.operations.info("Deleted \(deletedCount) articles (total: \(totalDeleted))")
+      if deletedCount < 200 {
         break
       }
     }
-
     CelestraLogger.cloudkit.info("Deleted \(totalDeleted) total articles")
+  }
+
+  private func deleteArticleBatch() async throws(CloudKitError) -> Int {
+    let articles = try await recordOperator.queryRecords(
+      recordType: "Article",
+      filters: nil,
+      sortBy: nil,
+      limit: 200,
+      desiredKeys: ["___recordID"]
+    )
+    guard !articles.isEmpty else {
+      return 0
+    }
+    let operations = operationBuilder.buildDeleteOperations(articles)
+    _ = try await recordOperator.modifyRecords(operations)
+    return articles.count
   }
 }
