@@ -40,6 +40,7 @@ internal struct FeedUpdateProcessor {
   private let robotsService: RobotsTxtService
   private let rateLimiter: RateLimiter
   private let skipRobotsCheck: Bool
+  private let articleSync: ArticleSyncService
   private let categorizer: ArticleCategorizer
   private let metadataBuilder: FeedMetadataBuilder
 
@@ -49,6 +50,7 @@ internal struct FeedUpdateProcessor {
     robotsService: RobotsTxtService,
     rateLimiter: RateLimiter,
     skipRobotsCheck: Bool,
+    articleSync: ArticleSyncService,
     categorizer: ArticleCategorizer = ArticleCategorizer(),
     metadataBuilder: FeedMetadataBuilder = FeedMetadataBuilder()
   ) {
@@ -57,6 +59,7 @@ internal struct FeedUpdateProcessor {
     self.robotsService = robotsService
     self.rateLimiter = rateLimiter
     self.skipRobotsCheck = skipRobotsCheck
+    self.articleSync = articleSync
     self.categorizer = categorizer
     self.metadataBuilder = metadataBuilder
   }
@@ -110,31 +113,19 @@ internal struct FeedUpdateProcessor {
 
       print("   ✅ Fetched: \(feedData.items.count) articles")
 
-      let existingArticles = try await service.queryArticlesByGUIDs(
-        feedData.items.map(\.guid),
-        feedRecordName: recordName
-      )
-
-      let categorization = categorizer.categorize(
+      // Sync articles via ArticleSyncService
+      let syncResult = try await articleSync.syncArticles(
         items: feedData.items,
-        existingArticles: existingArticles,
         feedRecordName: recordName
       )
 
-      print("   📝 New: \(categorization.new.count), Modified: \(categorization.modified.count)")
-      if !categorization.new.isEmpty {
-        let result = try await service.createArticles(categorization.new)
-        print("   ✅ Created \(result.successCount) articles")
-        if result.failureCount > 0 {
-          print("   ⚠️  Failed to create \(result.failureCount) articles")
-        }
+      // Print results for user feedback
+      print("   📝 New: \(syncResult.newCount), Modified: \(syncResult.modifiedCount)")
+      if syncResult.created.failureCount > 0 {
+        print("   ⚠️  Failed to create \(syncResult.created.failureCount) articles")
       }
-      if !categorization.modified.isEmpty {
-        let result = try await service.updateArticles(categorization.modified)
-        print("   ✅ Updated \(result.successCount) articles")
-        if result.failureCount > 0 {
-          print("   ⚠️  Failed to update \(result.failureCount) articles")
-        }
+      if syncResult.updated.failureCount > 0 {
+        print("   ⚠️  Failed to update \(syncResult.updated.failureCount) articles")
       }
 
       let metadata = metadataBuilder.buildSuccessMetadata(

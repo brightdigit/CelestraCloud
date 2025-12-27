@@ -196,7 +196,7 @@ internal struct ArticleMistKitTests {
     #expect(article.author == nil)
     #expect(article.imageURL == nil)
     #expect(article.language == nil)
-    #expect(article.tags == [])
+    #expect(article.tags.isEmpty)
     #expect(article.wordCount == nil)
     #expect(article.estimatedReadingTime == nil)
   }

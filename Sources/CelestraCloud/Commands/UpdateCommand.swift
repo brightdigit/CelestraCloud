@@ -98,12 +98,17 @@ internal enum UpdateCommand {
     let robotsService = RobotsTxtService(userAgent: .cloud(build: 1))
     let rateLimiter = RateLimiter(defaultDelay: config.update.delay)
 
+    // Create ArticleSyncService
+    let articleService = ArticleCloudKitService(recordOperator: service)
+    let articleSync = ArticleSyncService(articleService: articleService)
+
     return FeedUpdateProcessor(
       service: service,
       fetcher: fetcher,
       robotsService: robotsService,
       rateLimiter: rateLimiter,
-      skipRobotsCheck: config.update.skipRobotsCheck
+      skipRobotsCheck: config.update.skipRobotsCheck,
+      articleSync: articleSync
     )
   }
 

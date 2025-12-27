@@ -32,7 +32,7 @@ public import Foundation
 public import MistKit
 
 /// Result of a batch CloudKit operation
-public struct BatchOperationResult {
+public struct BatchOperationResult: @unchecked Sendable {
   /// Successfully created/updated records
   public var successfulRecords: [RecordInfo] = []
 
