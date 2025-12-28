@@ -27,32 +27,32 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import ArgumentParser
 import CelestraCloudKit
 import CelestraKit
 import Foundation
 import MistKit
 
-struct AddFeedCommand: AsyncParsableCommand {
-  static let configuration = CommandConfiguration(
-    commandName: "add-feed",
-    abstract: "Add a new RSS feed to CloudKit",
-    discussion: """
-      Fetches the RSS feed to validate it and extract metadata, then creates a \
-      Feed record in CloudKit's public database.
-      """
-  )
+// MARK: - Supporting Types
 
-  @Argument(help: "RSS feed URL")
-  var feedURL: String
+internal struct ExitError: Error {}
 
+// MARK: - Main Type
+
+internal enum AddFeedCommand {
   @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-  func run() async throws {
+  internal static func run(args: [String]) async throws {
+    guard let feedURL = args.first else {
+      print("Error: Missing feed URL")
+      print("Usage: celestra-cloud add-feed <url>")
+      throw ExitError()
+    }
+
     print("🌐 Fetching RSS feed: \(feedURL)")
 
     // 1. Validate URL
     guard let url = URL(string: feedURL) else {
-      throw ValidationError("Invalid feed URL")
+      print("Error: Invalid feed URL")
+      throw ExitError()
     }
 
     // 2. Fetch RSS content to validate and extract title
@@ -60,14 +60,18 @@ struct AddFeedCommand: AsyncParsableCommand {
     let response = try await fetcher.fetchFeed(from: url)
 
     guard let feedData = response.feedData else {
-      throw ValidationError("Feed was not modified (unexpected)")
+      print("Error: Feed was not modified (unexpected)")
+      throw ExitError()
     }
 
     print("✅ Found feed: \(feedData.title)")
     print("   Articles: \(feedData.items.count)")
 
-    // 3. Create CloudKit service
-    let service = try CelestraConfig.createCloudKitService()
+    // 3. Load configuration and create CloudKit service
+    let loader = ConfigurationLoader()
+    let config = try await loader.loadConfiguration()
+    let validatedCloudKit = try config.cloudkit.validated()
+    let service = try CelestraConfig.createCloudKitService(from: validatedCloudKit)
 
     // 4. Create Feed record with initial metadata
     let feed = Feed(

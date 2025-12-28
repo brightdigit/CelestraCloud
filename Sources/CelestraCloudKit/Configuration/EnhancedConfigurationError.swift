@@ -1,5 +1,5 @@
 //
-//  CloudKitConvertible.swift
+//  EnhancedConfigurationError.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -28,25 +28,39 @@
 //
 
 public import Foundation
-public import MistKit
 
-/// Protocol for types that can be converted to/from CloudKit records using MistKit
-///
-/// Types conforming to this protocol can be:
-/// - Converted to CloudKit field dictionaries for creating/updating records
-/// - Initialized from CloudKit RecordInfo for reading records
-///
-/// This protocol standardizes the conversion pattern used throughout the codebase
-/// and enables generic CloudKit operations.
-public protocol CloudKitConvertible {
-  /// Create an instance from a CloudKit record
-  ///
-  /// - Parameter record: The CloudKit RecordInfo containing field data
-  /// - Throws: CloudKitConversionError if required fields are missing or invalid
-  init(from record: RecordInfo) throws
+/// Enhanced configuration error with detailed context
+public struct EnhancedConfigurationError: LocalizedError {
+  /// The error message describing what went wrong.
+  public let message: String
 
-  /// Convert the instance to a CloudKit fields dictionary
+  /// The configuration key that caused the error, if applicable.
+  public let key: String?
+
+  /// The source of the configuration value, if applicable.
+  public let source: ConfigSource?
+
+  /// A localized description of the error.
+  public var errorDescription: String? {
+    var parts = [message]
+    if let key = key {
+      parts.append("(key: \(key))")
+    }
+    if let source = source {
+      parts.append("(source: \(source.rawValue))")
+    }
+    return parts.joined(separator: " ")
+  }
+
+  /// Creates a new enhanced configuration error.
   ///
-  /// - Returns: Dictionary mapping field names to FieldValue instances
-  func toFieldsDict() -> [String: FieldValue]
+  /// - Parameters:
+  ///   - message: The error message describing what went wrong.
+  ///   - key: The configuration key that caused the error, if applicable.
+  ///   - source: The source of the configuration value, if applicable.
+  public init(_ message: String, key: String? = nil, source: ConfigSource? = nil) {
+    self.message = message
+    self.key = key
+    self.source = source
+  }
 }

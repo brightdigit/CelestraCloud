@@ -6,9 +6,9 @@ import Testing
 @testable import CelestraCloudKit
 
 @Suite("BatchOperationResult Tests")
-struct BatchOperationResultTests {
+internal struct BatchOperationResultTests {
   @Test("Success rate with all successes")
-  func testSuccessRateAllSuccess() {
+  internal func testSuccessRateAllSuccess() {
     var result = BatchOperationResult()
 
     // Add 5 successful records
@@ -24,7 +24,7 @@ struct BatchOperationResultTests {
   }
 
   @Test("Success rate with all failures")
-  func testSuccessRateAllFailure() {
+  internal func testSuccessRateAllFailure() {
     var result = BatchOperationResult()
 
     // Add 3 failed records
@@ -44,7 +44,7 @@ struct BatchOperationResultTests {
   }
 
   @Test("Success rate with mixed results")
-  func testSuccessRateMixed() {
+  internal func testSuccessRateMixed() {
     var result = BatchOperationResult()
 
     // Add 6 successes
@@ -65,7 +65,7 @@ struct BatchOperationResultTests {
   }
 
   @Test("Success rate with empty result")
-  func testSuccessRateEmpty() {
+  internal func testSuccessRateEmpty() {
     let result = BatchOperationResult()
 
     #expect(result.successCount == 0)
@@ -77,7 +77,7 @@ struct BatchOperationResultTests {
   }
 
   @Test("Append combines two results")
-  func testAppendCombinesResults() {
+  internal func testAppendCombinesResults() {
     var result1 = BatchOperationResult()
     result1.appendSuccesses(createTestRecords(count: 3))
 
@@ -98,7 +98,7 @@ struct BatchOperationResultTests {
   }
 
   @Test("IsFullSuccess only true when all succeed")
-  func testIsFullSuccess() {
+  internal func testIsFullSuccess() {
     var result = BatchOperationResult()
 
     // Empty result - not full success
@@ -115,7 +115,7 @@ struct BatchOperationResultTests {
   }
 
   @Test("IsFullFailure only true when all fail")
-  func testIsFullFailure() {
+  internal func testIsFullFailure() {
     var result = BatchOperationResult()
     let testError = NSError(domain: "Test", code: 1, userInfo: nil)
 
@@ -134,7 +134,7 @@ struct BatchOperationResultTests {
   }
 
   @Test("AppendSuccesses adds multiple records")
-  func testAppendSuccesses() {
+  internal func testAppendSuccesses() {
     var result = BatchOperationResult()
 
     let records = createTestRecords(count: 5)
@@ -145,7 +145,7 @@ struct BatchOperationResultTests {
   }
 
   @Test("AppendFailure adds single failure")
-  func testAppendFailure() {
+  internal func testAppendFailure() {
     var result = BatchOperationResult()
 
     let article = createTestArticles(count: 1)[0]

@@ -154,30 +154,86 @@ Example output:
 
 ### Update Feeds
 
-Fetch and update all feeds:
+Fetch and update all active RSS feeds from CloudKit.
+
+#### Basic Usage
 
 ```bash
+# Update all feeds with default settings
 swift run celestra-cloud update
+
+# With custom rate limiting
+swift run celestra-cloud update --update-delay 3.0
+
+# Skip robots.txt checks (not recommended)
+swift run celestra-cloud update --update-skip-robots-check
 ```
 
-Update with filters (demonstrates QueryFilter API):
+#### Filtering Options
 
+Use filters to selectively update feeds based on various criteria:
+
+**By Date:**
 ```bash
-# Update feeds last attempted before a specific date
-swift run celestra-cloud update --last-attempted-before 2025-01-01T00:00:00Z
-
-# Update only popular feeds (minimum 10 usage count)
-swift run celestra-cloud update --min-popularity 10
-
-# Combine filters
-swift run celestra-cloud update \
-  --last-attempted-before 2025-01-01T00:00:00Z \
-  --min-popularity 5
+# Update only feeds last attempted before a specific date
+swift run celestra-cloud update --update-last-attempted-before 2025-01-01T00:00:00Z
 ```
 
-Example output:
+**By Popularity:**
+```bash
+# Update only popular feeds (minimum 10 subscribers)
+swift run celestra-cloud update --update-min-popularity 10
+```
+
+**By Failure Count:**
+```bash
+# Skip feeds with more than 5 consecutive failures
+swift run celestra-cloud update --update-max-failures 5
+```
+
+**Combined Filters:**
+```bash
+# Update popular feeds that haven't been updated recently
+swift run celestra-cloud update \
+  --update-last-attempted-before 2025-01-01T00:00:00Z \
+  --update-min-popularity 5 \
+  --update-delay 1.5
+```
+
+#### Configuration Options
+
+All update options can be configured via environment variables or CLI arguments:
+
+| Option | Environment Variable | CLI Argument | Default |
+|--------|---------------------|--------------|---------|
+| Rate Limit | `UPDATE_DELAY=3.0` | `--update-delay 3.0` | `2.0` seconds |
+| Skip Robots | `UPDATE_SKIP_ROBOTS_CHECK=true` | `--update-skip-robots-check` | `false` |
+| Max Failures | `UPDATE_MAX_FAILURES=5` | `--update-max-failures 5` | None |
+| Min Popularity | `UPDATE_MIN_POPULARITY=10` | `--update-min-popularity 10` | None |
+| Date Filter | `UPDATE_LAST_ATTEMPTED_BEFORE=2025-01-01T00:00:00Z` | `--update-last-attempted-before 2025-01-01T00:00:00Z` | None |
+
+**Priority**: CLI arguments override environment variables.
+
+**Example with environment variables:**
+```bash
+# Set defaults in .env file
+echo "UPDATE_DELAY=3.0" >> .env
+echo "UPDATE_MAX_FAILURES=5" >> .env
+
+# Source and run
+source .env
+swift run celestra-cloud update
+
+# Or use mixed configuration
+UPDATE_DELAY=2.0 swift run celestra-cloud update --update-delay 5.0
+# Uses 5.0 (CLI wins over ENV)
+```
+
+#### Example Output
+
 ```
 🔄 Starting feed update...
+   ⏱️  Rate limit: 2.0 seconds between feeds
    Filter: last attempted before 2025-01-01T00:00:00Z
    Filter: minimum popularity 5
 📋 Querying feeds...
