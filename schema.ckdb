@@ -46,7 +46,8 @@ RECORD TYPE Feed (
     // _icloud: Server-to-server auth can create and modify feeds (CLI/backend)
     // Note: Users cannot modify feeds after creation - server manages all metadata updates
     GRANT READ TO "_world",
-    GRANT CREATE TO "_creator", "_icloud",
+    GRANT CREATE TO "_creator",
+    GRANT CREATE TO "_icloud",
     GRANT WRITE TO "_icloud"
 );
 
@@ -89,7 +90,8 @@ RECORD TYPE Article (
     // Note: iOS app creates articles on first feed add for immediate display
     //       Server handles all subsequent updates via scheduled jobs
     GRANT READ TO "_world",
-    GRANT CREATE TO "_creator", "_icloud",
+    GRANT CREATE TO "_creator",
+    GRANT CREATE TO "_icloud",
     GRANT WRITE TO "_icloud"
 );
 
