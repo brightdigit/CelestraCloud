@@ -32,6 +32,9 @@ public import MistKit
 
 /// CloudKit credentials and environment settings
 public struct CloudKitConfiguration: Sendable {
+  /// Default CloudKit container identifier for Celestra
+  public static let defaultContainerID = "iCloud.com.brightdigit.Celestra"
+
   /// CloudKit container identifier (e.g., iCloud.com.example.App)
   public var containerID: String?
 

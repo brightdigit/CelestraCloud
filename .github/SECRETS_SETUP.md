@@ -4,7 +4,7 @@ This document describes the GitHub secrets required for the automated RSS feed u
 
 ## Required Secrets
 
-The workflow needs **3 repository secrets** to authenticate with CloudKit using Server-to-Server authentication.
+The workflow needs **2 repository secrets** to authenticate with CloudKit using Server-to-Server authentication. A third secret (`CLOUDKIT_CONTAINER_ID`) is optional since the default value is configured in the code.
 
 ### Where to Add Secrets
 
@@ -16,16 +16,18 @@ Direct link: https://github.com/brightdigit/CelestraCloud/settings/secrets/actio
 
 ---
 
-## 1. CLOUDKIT_CONTAINER_ID
+## 1. CLOUDKIT_CONTAINER_ID (Optional)
 
 **Name:** `CLOUDKIT_CONTAINER_ID`
 
-**Value:**
+**Status:** **Optional** - The default value `iCloud.com.brightdigit.Celestra` is configured in the code.
+
+**Value (if overriding default):**
 ```
 iCloud.com.brightdigit.Celestra
 ```
 
-**Description:** The CloudKit container identifier for the Celestra app. This is the same for both development and production environments.
+**Description:** The CloudKit container identifier for the Celestra app. This is the same for both development and production environments. Only set this secret if you need to use a different container.
 
 ---
 
@@ -116,7 +118,7 @@ The same key works for both environments. The environment is selected at runtime
 
 ## Verification
 
-After adding all three secrets, you can verify the setup by running the workflow manually:
+After adding the required secrets (at minimum `CLOUDKIT_KEY_ID` and `CLOUDKIT_PRIVATE_KEY`), you can verify the setup by running the workflow manually:
 
 ```bash
 # Trigger a test run using development environment
