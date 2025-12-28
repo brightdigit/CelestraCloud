@@ -1,5 +1,5 @@
 //
-//  CloudKitConvertible.swift
+//  ValidatedCloudKitConfiguration.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -30,23 +30,35 @@
 public import Foundation
 public import MistKit
 
-/// Protocol for types that can be converted to/from CloudKit records using MistKit
-///
-/// Types conforming to this protocol can be:
-/// - Converted to CloudKit field dictionaries for creating/updating records
-/// - Initialized from CloudKit RecordInfo for reading records
-///
-/// This protocol standardizes the conversion pattern used throughout the codebase
-/// and enables generic CloudKit operations.
-public protocol CloudKitConvertible {
-  /// Create an instance from a CloudKit record
-  ///
-  /// - Parameter record: The CloudKit RecordInfo containing field data
-  /// - Throws: CloudKitConversionError if required fields are missing or invalid
-  init(from record: RecordInfo) throws
+/// Validated CloudKit configuration with all required fields
+public struct ValidatedCloudKitConfiguration: Sendable {
+  /// CloudKit container identifier (validated non-empty)
+  public let containerID: String
 
-  /// Convert the instance to a CloudKit fields dictionary
-  ///
-  /// - Returns: Dictionary mapping field names to FieldValue instances
-  func toFieldsDict() -> [String: FieldValue]
+  /// Server-to-Server authentication key ID (validated non-empty)
+  public let keyID: String
+
+  /// Absolute path to PEM-encoded private key file (validated non-empty)
+  public let privateKeyPath: String
+
+  /// CloudKit environment (development or production)
+  public let environment: MistKit.Environment
+
+  /// Initialize validated CloudKit configuration
+  /// - Parameters:
+  ///   - containerID: CloudKit container identifier
+  ///   - keyID: Server-to-Server authentication key ID
+  ///   - privateKeyPath: Absolute path to PEM-encoded private key file
+  ///   - environment: CloudKit environment
+  public init(
+    containerID: String,
+    keyID: String,
+    privateKeyPath: String,
+    environment: MistKit.Environment
+  ) {
+    self.containerID = containerID
+    self.keyID = keyID
+    self.privateKeyPath = privateKeyPath
+    self.environment = environment
+  }
 }

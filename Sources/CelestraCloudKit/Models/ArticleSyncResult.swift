@@ -1,5 +1,5 @@
 //
-//  CloudKitConversionError.swift
+//  ArticleSyncResult.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -27,23 +27,41 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-public import Foundation
+/// Result of article synchronization including creation and update statistics
+public struct ArticleSyncResult: Sendable {
+  /// Result of creating new articles
+  public let created: BatchOperationResult
 
-/// Errors thrown during CloudKit record conversion
-public enum CloudKitConversionError: LocalizedError {
-  case missingRequiredField(fieldName: String, recordType: String)
-  case invalidFieldType(fieldName: String, expected: String, actual: String)
-  case invalidFieldValue(fieldName: String, reason: String)
+  /// Result of updating modified articles
+  public let updated: BatchOperationResult
 
-  /// Localized error description
-  public var errorDescription: String? {
-    switch self {
-    case .missingRequiredField(let field, let type):
-      return "Required field '\(field)' missing in \(type) record"
-    case .invalidFieldType(let field, let expected, let actual):
-      return "Invalid type for '\(field)': expected \(expected), got \(actual)"
-    case .invalidFieldValue(let field, let reason):
-      return "Invalid value for '\(field)': \(reason)"
-    }
+  /// Number of successfully created articles
+  public var newCount: Int { created.successCount }
+
+  /// Number of successfully updated articles
+  public var modifiedCount: Int { updated.successCount }
+
+  /// Total articles processed (created + updated)
+  public var totalProcessed: Int {
+    created.totalProcessed + updated.totalProcessed
+  }
+
+  /// Total successful operations (created + updated)
+  public var successCount: Int {
+    created.successCount + updated.successCount
+  }
+
+  /// Total failed operations
+  public var failureCount: Int {
+    created.failureCount + updated.failureCount
+  }
+
+  /// Initialize article sync result
+  /// - Parameters:
+  ///   - created: Creation operation result
+  ///   - updated: Update operation result
+  public init(created: BatchOperationResult, updated: BatchOperationResult) {
+    self.created = created
+    self.updated = updated
   }
 }

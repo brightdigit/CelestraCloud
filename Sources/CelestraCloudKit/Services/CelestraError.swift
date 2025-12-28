@@ -79,6 +79,7 @@ public enum CelestraError: LocalizedError {
 
   // MARK: - LocalizedError Conformance
 
+  /// Localized error description
   public var errorDescription: String? {
     switch self {
     case .cloudKitError(let error):
@@ -104,6 +105,7 @@ public enum CelestraError: LocalizedError {
     }
   }
 
+  /// Suggested recovery action for the error
   public var recoverySuggestion: String? {
     switch self {
     case .quotaExceeded:

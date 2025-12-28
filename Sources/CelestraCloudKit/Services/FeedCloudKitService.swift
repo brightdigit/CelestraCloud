@@ -1,5 +1,5 @@
 //
-//  CloudKitService+Celestra.swift
+//  FeedCloudKitService.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -29,24 +29,35 @@
 
 public import CelestraKit
 public import Foundation
-public import Logging
+import Logging
 public import MistKit
 
-/// CloudKit service extensions for Celestra operations
+/// Service for Feed-related CloudKit operations with dependency injection support
 @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-extension CloudKitService {
+public struct FeedCloudKitService: Sendable {
+  private let recordOperator: any CloudKitRecordOperating
+
+  /// Initialize with a CloudKit record operator
+  /// - Parameter recordOperator: The record operator to use for CloudKit operations
+  public init(recordOperator: any CloudKitRecordOperating) {
+    self.recordOperator = recordOperator
+  }
+
   // MARK: - Feed Operations
 
   /// Create a new Feed record
-  public func createFeed(_ feed: Feed) async throws -> RecordInfo {
-    CelestraLogger.cloudkit.info("📝 Creating feed: \(feed.feedURL)")
+  /// - Parameter feed: The feed to create
+  /// - Returns: The created record info
+  /// - Throws: CloudKitError if the operation fails
+  public func createFeed(_ feed: Feed) async throws(CloudKitError) -> RecordInfo {
+    CelestraLogger.cloudkit.info("Creating feed: \(feed.feedURL)")
 
     let operation = RecordOperation.create(
       recordType: "Feed",
       recordName: UUID().uuidString,
       fields: feed.toFieldsDict()
     )
-    let results = try await self.modifyRecords([operation])
+    let results = try await recordOperator.modifyRecords([operation])
     guard let record = results.first else {
       throw CloudKitError.invalidResponse
     }
@@ -54,8 +65,13 @@ extension CloudKitService {
   }
 
   /// Update an existing Feed record
-  public func updateFeed(recordName: String, feed: Feed) async throws -> RecordInfo {
-    CelestraLogger.cloudkit.info("🔄 Updating feed: \(feed.feedURL)")
+  /// - Parameters:
+  ///   - recordName: The record name to update
+  ///   - feed: The feed data to update
+  /// - Returns: The updated record info
+  /// - Throws: CloudKitError if the operation fails
+  public func updateFeed(recordName: String, feed: Feed) async throws(CloudKitError) -> RecordInfo {
+    CelestraLogger.cloudkit.info("Updating feed: \(feed.feedURL)")
 
     let operation = RecordOperation.update(
       recordType: "Feed",
@@ -63,62 +79,67 @@ extension CloudKitService {
       fields: feed.toFieldsDict(),
       recordChangeTag: feed.recordChangeTag
     )
-    let results = try await self.modifyRecords([operation])
+    let results = try await recordOperator.modifyRecords([operation])
     guard let record = results.first else {
       throw CloudKitError.invalidResponse
     }
     return record
   }
 
-  /// Query feeds with optional filters (demonstrates QueryFilter and QuerySort)
+  /// Query feeds with optional filters
+  /// - Parameters:
+  ///   - lastAttemptedBefore: Optional date to filter feeds attempted before
+  ///   - minPopularity: Optional minimum subscriber count filter
+  ///   - limit: Maximum number of feeds to return (default 100)
+  /// - Returns: Array of Feed objects
+  /// - Throws: CloudKitError if the query fails
   public func queryFeeds(
     lastAttemptedBefore: Date? = nil,
     minPopularity: Int? = nil,
     limit: Int = 100
-  ) async throws -> [Feed] {
+  ) async throws(CloudKitError) -> [Feed] {
     var filters: [QueryFilter] = []
 
-    // Filter by last attempted date if provided
     if let cutoff = lastAttemptedBefore {
       filters.append(.lessThan("attemptedTimestamp", .date(cutoff)))
     }
 
-    // Filter by minimum popularity if provided
     if let minPop = minPopularity {
       filters.append(.greaterThanOrEquals("subscriberCount", .int64(minPop)))
     }
 
-    // Query with filters and sort by feedURL (always queryable+sortable)
-    let records = try await queryRecords(
+    let records = try await recordOperator.queryRecords(
       recordType: "Feed",
       filters: filters.isEmpty ? nil : filters,
-      sortBy: [.ascending("feedURL")],  // Use feedURL since usageCount might have issues
-      limit: limit
+      sortBy: [.ascending("feedURL")],
+      limit: limit,
+      desiredKeys: nil
     )
 
     do {
       return try records.map { try Feed(from: $0) }
     } catch {
       CelestraLogger.errors.error("Failed to convert Feed records: \(error)")
-      throw error
+      throw CloudKitError.invalidResponse
     }
   }
 
-  // MARK: - Cleanup Operations
-
   /// Delete all Feed records (paginated)
-  public func deleteAllFeeds() async throws {
+  /// - Throws: CloudKitError if the operation fails
+  public func deleteAllFeeds() async throws(CloudKitError) {
     var totalDeleted = 0
 
     while true {
-      let feeds = try await queryRecords(
+      let feeds = try await recordOperator.queryRecords(
         recordType: "Feed",
+        filters: nil,
+        sortBy: nil,
         limit: 200,
         desiredKeys: ["___recordID"]
       )
 
       guard !feeds.isEmpty else {
-        break  // No more feeds to delete
+        break
       }
 
       let operations = feeds.map { record in
@@ -129,17 +150,16 @@ extension CloudKitService {
         )
       }
 
-      _ = try await modifyRecords(operations)
+      _ = try await recordOperator.modifyRecords(operations)
       totalDeleted += feeds.count
 
       CelestraLogger.operations.info("Deleted \(feeds.count) feeds (total: \(totalDeleted))")
 
-      // If we got fewer than the limit, we're done
       if feeds.count < 200 {
         break
       }
     }
 
-    CelestraLogger.cloudkit.info("✅ Deleted \(totalDeleted) total feeds")
+    CelestraLogger.cloudkit.info("Deleted \(totalDeleted) total feeds")
   }
 }

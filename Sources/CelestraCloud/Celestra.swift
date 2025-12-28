@@ -27,24 +27,74 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import ArgumentParser
-import CelestraCloudKit
 import Foundation
-import MistKit
 
 @main
-struct Celestra: AsyncParsableCommand {
-  static let configuration = CommandConfiguration(
-    commandName: "celestra-cloud",
-    abstract: "RSS reader that syncs to CloudKit public database",
-    discussion: """
-      Celestra demonstrates MistKit's query filtering and sorting features by managing \
-      RSS feeds in CloudKit's public database.
-      """,
-    subcommands: [
-      AddFeedCommand.self,
-      UpdateCommand.self,
-      ClearCommand.self,
-    ]
-  )
+internal enum Celestra {
+  internal static func main() async {
+    let args = Array(CommandLine.arguments.dropFirst())
+
+    guard let command = args.first else {
+      printUsage()
+      exit(1)
+    }
+
+    do {
+      try await runCommand(command, args: Array(args.dropFirst()))
+    } catch {
+      print("Error: \(error)")
+      exit(1)
+    }
+  }
+
+  private static func runCommand(_ command: String, args: [String]) async throws {
+    switch command {
+    case "add-feed":
+      try await AddFeedCommand.run(args: args)
+    case "update":
+      try await UpdateCommand.run()
+    case "clear":
+      try await ClearCommand.run(args: args)
+    case "help", "--help", "-h":
+      printUsage()
+    default:
+      print("Unknown command: \(command)")
+      printUsage()
+      exit(1)
+    }
+  }
+
+  internal static func printUsage() {
+    print(
+      """
+      celestra-cloud - RSS reader that syncs to CloudKit public database
+
+      USAGE:
+        celestra-cloud <command> [options]
+
+      COMMANDS:
+        add-feed <url>              Add a new RSS feed to CloudKit
+        update [options]            Fetch and update RSS feeds
+        clear --confirm             Delete all feeds and articles
+
+      UPDATE OPTIONS:
+        --update-delay <seconds>                    Delay between feeds (default: 2.0)
+        --update-skip-robots-check                  Skip robots.txt checking
+        --update-max-failures <count>               Skip feeds above failure threshold
+        --update-min-popularity <count>             Only update popular feeds
+        --update-last-attempted-before <iso8601>    Only update feeds before date
+
+      CLOUDKIT OPTIONS (via environment variables):
+        CLOUDKIT_CONTAINER_ID       CloudKit container identifier
+        CLOUDKIT_KEY_ID             Server-to-Server key ID
+        CLOUDKIT_PRIVATE_KEY_PATH   Path to .pem private key file
+        CLOUDKIT_ENVIRONMENT        Either 'development' or 'production'
+
+      EXAMPLES:
+        celestra-cloud add-feed https://example.com/feed.xml
+        celestra-cloud update --update-delay 3.0
+        celestra-cloud clear --confirm
+      """
+    )
+  }
 }

@@ -1,5 +1,5 @@
 //
-//  CloudKitConvertible.swift
+//  CelestraConfiguration.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -28,25 +28,24 @@
 //
 
 public import Foundation
-public import MistKit
 
-/// Protocol for types that can be converted to/from CloudKit records using MistKit
-///
-/// Types conforming to this protocol can be:
-/// - Converted to CloudKit field dictionaries for creating/updating records
-/// - Initialized from CloudKit RecordInfo for reading records
-///
-/// This protocol standardizes the conversion pattern used throughout the codebase
-/// and enables generic CloudKit operations.
-public protocol CloudKitConvertible {
-  /// Create an instance from a CloudKit record
-  ///
-  /// - Parameter record: The CloudKit RecordInfo containing field data
-  /// - Throws: CloudKitConversionError if required fields are missing or invalid
-  init(from record: RecordInfo) throws
+/// Root configuration for Celestra application
+public struct CelestraConfiguration: Sendable {
+  /// CloudKit service configuration
+  public var cloudkit: CloudKitConfiguration
 
-  /// Convert the instance to a CloudKit fields dictionary
-  ///
-  /// - Returns: Dictionary mapping field names to FieldValue instances
-  func toFieldsDict() -> [String: FieldValue]
+  /// Update command configuration
+  public var update: UpdateCommandConfiguration
+
+  /// Initialize Celestra configuration
+  /// - Parameters:
+  ///   - cloudkit: CloudKit service configuration
+  ///   - update: Update command configuration
+  public init(
+    cloudkit: CloudKitConfiguration = .init(),
+    update: UpdateCommandConfiguration = .init()
+  ) {
+    self.cloudkit = cloudkit
+    self.update = update
+  }
 }

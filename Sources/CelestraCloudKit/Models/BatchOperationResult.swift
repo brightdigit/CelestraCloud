@@ -32,14 +32,12 @@ public import Foundation
 public import MistKit
 
 /// Result of a batch CloudKit operation
-public struct BatchOperationResult {
+public struct BatchOperationResult: @unchecked Sendable {
   /// Successfully created/updated records
   public var successfulRecords: [RecordInfo] = []
 
   /// Records that failed to process
   public var failedRecords: [(article: Article, error: any Error)] = []
-
-  public init() {}
 
   /// Total number of records processed (success + failure)
   public var totalProcessed: Int {
@@ -58,7 +56,9 @@ public struct BatchOperationResult {
 
   /// Success rate as a percentage (0-100)
   public var successRate: Double {
-    guard totalProcessed > 0 else { return 0 }
+    guard totalProcessed > 0 else {
+      return 0
+    }
     return Double(successCount) / Double(totalProcessed) * 100
   }
 
@@ -71,6 +71,11 @@ public struct BatchOperationResult {
   public var isFullFailure: Bool {
     successCount == 0 && failureCount > 0
   }
+
+  // MARK: - Initializers
+
+  /// Creates an empty batch operation result.
+  public init() {}
 
   // MARK: - Mutation
 

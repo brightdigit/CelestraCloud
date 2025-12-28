@@ -27,29 +27,18 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import ArgumentParser
 import CelestraCloudKit
 import CelestraKit
 import Foundation
 import MistKit
 
-struct ClearCommand: AsyncParsableCommand {
-  static let configuration = CommandConfiguration(
-    commandName: "clear",
-    abstract: "Delete all feeds and articles from CloudKit",
-    discussion: """
-      Removes all Feed and Article records from the CloudKit public database. \
-      Use with caution as this operation cannot be undone.
-      """
-  )
-
-  @Flag(name: .long, help: "Skip confirmation prompt")
-  var confirm: Bool = false
-
+internal enum ClearCommand {
   @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-  func run() async throws {
+  internal static func run(args: [String]) async throws {
     // Require confirmation
-    if !confirm {
+    let hasConfirm = args.contains("--confirm")
+
+    if !hasConfirm {
       print("⚠️  This will DELETE ALL feeds and articles from CloudKit!")
       print("   Run with --confirm to proceed")
       print("")
@@ -59,11 +48,16 @@ struct ClearCommand: AsyncParsableCommand {
 
     print("🗑️  Clearing all data from CloudKit...")
 
-    let service = try CelestraConfig.createCloudKitService()
+    // Load configuration and create CloudKit service
+    let loader = ConfigurationLoader()
+    let config = try await loader.loadConfiguration()
+    let validatedCloudKit = try config.cloudkit.validated()
+    let service = try CelestraConfig.createCloudKitService(from: validatedCloudKit)
 
     // Delete articles first (to avoid orphans)
     print("📋 Deleting articles...")
-    try await service.deleteAllArticles()
+    let articleService = ArticleCloudKitService(recordOperator: service)
+    try await articleService.deleteAllArticles()
     print("✅ Articles deleted")
 
     // Delete feeds
