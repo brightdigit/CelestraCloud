@@ -38,10 +38,12 @@ UPDATE_DELAY=2.0 swift run celestra-cloud update --update-delay 3.0
 ### Environment Setup
 
 Required environment variables (see `.env.example`):
-- `CLOUDKIT_CONTAINER_ID` - CloudKit container identifier
 - `CLOUDKIT_KEY_ID` - Server-to-Server key ID from Apple Developer Console
 - `CLOUDKIT_PRIVATE_KEY_PATH` - Path to `.pem` private key file
-- `CLOUDKIT_ENVIRONMENT` - Either `development` or `production`
+
+Optional environment variables:
+- `CLOUDKIT_CONTAINER_ID` - CloudKit container identifier (default: `iCloud.com.brightdigit.Celestra`)
+- `CLOUDKIT_ENVIRONMENT` - Either `development` or `production` (default: `development`)
 
 ### CloudKit Schema Management
 
@@ -216,18 +218,18 @@ let config = await loader.loadConfiguration()
 
 ### Configuration Reference
 
-#### CloudKit Configuration (Required)
+#### CloudKit Configuration
 
-All CloudKit settings are **required** and must be provided via environment variables:
+CloudKit authentication credentials must be provided via environment variables:
 
-| Environment Variable | Type | Default | Description |
-|---------------------|------|---------|-------------|
-| `CLOUDKIT_CONTAINER_ID` | String | None | CloudKit container identifier (e.g., `iCloud.com.brightdigit.Celestra`) |
-| `CLOUDKIT_KEY_ID` | String | None | Server-to-Server key ID from Apple Developer Console |
-| `CLOUDKIT_PRIVATE_KEY_PATH` | String | None | Absolute path to `.pem` private key file |
-| `CLOUDKIT_ENVIRONMENT` | String | `development` | CloudKit environment: `development` or `production` |
+| Environment Variable | Type | Default | Required | Description |
+|---------------------|------|---------|----------|-------------|
+| `CLOUDKIT_CONTAINER_ID` | String | `iCloud.com.brightdigit.Celestra` | No | CloudKit container identifier |
+| `CLOUDKIT_KEY_ID` | String | None | **Yes** | Server-to-Server key ID from Apple Developer Console |
+| `CLOUDKIT_PRIVATE_KEY_PATH` | String | None | **Yes** | Absolute path to `.pem` private key file |
+| `CLOUDKIT_ENVIRONMENT` | String | `development` | No | CloudKit environment: `development` or `production` |
 
-**Note**: CloudKit credentials are marked as secrets and automatically redacted from logs.
+**Note**: CloudKit credentials (`CLOUDKIT_KEY_ID` and `CLOUDKIT_PRIVATE_KEY_PATH`) are marked as secrets and automatically redacted from logs.
 
 #### Update Command Configuration (Optional)
 
@@ -357,6 +359,30 @@ Code must be concurrency-safe with proper actor isolation.
 - `.claude/IMPLEMENTATION_NOTES.md` - Design decisions, patterns, and technical context
 - `.claude/AI_SCHEMA_WORKFLOW.md` - CloudKit schema design guide for AI agents
 - `.claude/CLOUDKIT_SCHEMA_SETUP.md` - Schema deployment instructions
+
+## Pull Request Testing
+
+Integration tests automatically validate the update-feeds workflow on all pull requests to `main`:
+
+**Test Scope:**
+- Runs against CloudKit **development environment** only (production never touched)
+- Limited smoke test: Very popular feeds only (min 10,000 subscribers, zero failures allowed)
+- Completes in ~2-5 minutes (vs. production's 60-120 minute runs)
+- Uses same binary caching as production workflow
+
+**Behavior:**
+- **Repository branch PRs**: Full integration test runs automatically
+- **Fork PRs**: Tests skipped gracefully (GitHub security prevents secret access)
+- Fails fast on errors (unlike production which continues on error)
+
+**Workflow Details:**
+- Workflow: `.github/workflows/update-feeds.yml` (shared with scheduled production runs)
+- Tier: `pr-test` (alongside `high`, `standard`, `stale` tiers)
+- Filter: `--update-min-popularity 10000 --update-max-failures 0 --update-delay 1.0`
+- Timeout: 10 minutes maximum
+
+**External Contributors:**
+Fork PRs cannot run integration tests due to GitHub's security model (secrets unavailable). Maintainers can create repository branches for contributors to run tests before merge, or tests will validate after merge.
 
 ## Important Patterns
 

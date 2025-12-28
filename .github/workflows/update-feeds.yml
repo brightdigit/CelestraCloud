@@ -12,6 +12,10 @@ on:
     # Tier 3: Stale feeds (daily at 2 AM UTC)
     - cron: '0 2 * * *'
 
+  # Pull request testing
+  pull_request:
+    branches: [main]
+
   # Manual trigger for testing
   workflow_dispatch:
     inputs:
@@ -39,9 +43,9 @@ on:
         default: '2.0'
 
 env:
-  CLOUDKIT_CONTAINER_ID: ${{ secrets.CLOUDKIT_CONTAINER_ID }}
+  CLOUDKIT_CONTAINER_ID: ${{ secrets.CLOUDKIT_CONTAINER_ID || 'iCloud.com.brightdigit.Celestra' }}
   CLOUDKIT_KEY_ID: ${{ secrets.CLOUDKIT_KEY_ID }}
-  CLOUDKIT_ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
+  CLOUDKIT_ENVIRONMENT: ${{ github.event_name == 'pull_request' && 'development' || github.event.inputs.environment || 'production' }}
   CLOUDKIT_PRIVATE_KEY_PATH: /tmp/cloudkit_key.pem
 
 jobs:
@@ -53,14 +57,29 @@ jobs:
       runs_high: ${{ steps.set-tier.outputs.runs_high }}
       runs_standard: ${{ steps.set-tier.outputs.runs_standard }}
       runs_stale: ${{ steps.set-tier.outputs.runs_stale }}
+      runs_pr_test: ${{ steps.set-tier.outputs.runs_pr_test }}
+      is_fork_pr: ${{ steps.set-tier.outputs.is_fork_pr }}
 
     steps:
       - id: set-tier
         run: |
+          # Check if pull request
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # Check if fork PR (secrets not available)
+            if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+              echo "::notice::Fork PR detected - integration tests will be skipped (secrets not available)"
+              TIER="pr-test"
+              IS_FORK_PR="true"
+            else
+              echo "PR from repository branch - running integration tests"
+              TIER="pr-test"
+              IS_FORK_PR="false"
+            fi
           # Check if manual dispatch
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             TIER="${{ github.event.inputs.tier }}"
             echo "Manual dispatch: tier=$TIER"
+            IS_FORK_PR="false"
           else
             # Determine tier based on current time
             HOUR=$(date -u +%H)
@@ -78,19 +97,29 @@ jobs:
               TIER="high"
               echo "Scheduled run (hourly): tier=$TIER"
             fi
+            IS_FORK_PR="false"
           fi
 
           echo "tier=$TIER" >> $GITHUB_OUTPUT
+          echo "is_fork_pr=$IS_FORK_PR" >> $GITHUB_OUTPUT
 
           # Set run flags for each tier
           if [ "$TIER" = "all" ]; then
             echo "runs_high=true" >> $GITHUB_OUTPUT
             echo "runs_standard=true" >> $GITHUB_OUTPUT
             echo "runs_stale=true" >> $GITHUB_OUTPUT
+            echo "runs_pr_test=false" >> $GITHUB_OUTPUT
+          elif [ "$TIER" = "pr-test" ]; then
+            echo "runs_high=false" >> $GITHUB_OUTPUT
+            echo "runs_standard=false" >> $GITHUB_OUTPUT
+            echo "runs_stale=false" >> $GITHUB_OUTPUT
+            # Only run PR test if not a fork PR
+            echo "runs_pr_test=$( [ "$IS_FORK_PR" = "false" ] && echo true || echo false )" >> $GITHUB_OUTPUT
           else
             echo "runs_high=$( [ "$TIER" = "high" ] && echo true || echo false )" >> $GITHUB_OUTPUT
             echo "runs_standard=$( [ "$TIER" = "standard" ] && echo true || echo false )" >> $GITHUB_OUTPUT
             echo "runs_stale=$( [ "$TIER" = "stale" ] && echo true || echo false )" >> $GITHUB_OUTPUT
+            echo "runs_pr_test=false" >> $GITHUB_OUTPUT
           fi
 
   # Build the binary (cached based on code changes)
@@ -244,9 +273,48 @@ jobs:
         if: always()
         run: rm -f $CLOUDKIT_PRIVATE_KEY_PATH
 
+  # PR integration test (limited scope)
+  update-pr-test:
+    needs: [determine-tier, build]
+    if: needs.determine-tier.outputs.runs_pr_test == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: celestra-cloud-binary
+          path: ./bin
+
+      - name: Make binary executable
+        run: chmod +x ./bin/celestra-cloud
+
+      - name: Create CloudKit private key file
+        run: |
+          echo "${{ secrets.CLOUDKIT_PRIVATE_KEY }}" > $CLOUDKIT_PRIVATE_KEY_PATH
+          chmod 600 $CLOUDKIT_PRIVATE_KEY_PATH
+
+      - name: Run PR integration test
+        run: |
+          echo "::group::PR Integration Test"
+          echo "Environment: $CLOUDKIT_ENVIRONMENT (development)"
+          echo "Testing with highly popular feeds only (smoke test)"
+          echo ""
+          ./bin/celestra-cloud update \
+            --update-min-popularity 10000 \
+            --update-max-failures 0 \
+            --update-delay 1.0
+          echo "::endgroup::"
+        continue-on-error: false
+
+      - name: Cleanup private key
+        if: always()
+        run: rm -f $CLOUDKIT_PRIVATE_KEY_PATH
+
   # Summary report
   summary:
-    needs: [determine-tier, build, update-high-priority, update-standard, update-stale]
+    needs: [determine-tier, build, update-high-priority, update-standard, update-stale, update-pr-test]
     if: always()
     runs-on: ubuntu-latest
 
@@ -256,17 +324,26 @@ jobs:
           echo "## RSS Feed Update Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Tier:** ${{ needs.determine-tier.outputs.tier }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ env.CLOUDKIT_ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
           echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Binary Cache:** ${{ needs.build.outputs.cache-hit == 'true' && '✅ Hit (reused)' || '🔨 Miss (rebuilt)' }}" >> $GITHUB_STEP_SUMMARY
+
+          # Show fork PR notice if applicable
+          if [ "${{ needs.determine-tier.outputs.is_fork_pr }}" = "true" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ **Fork PR**: Integration tests skipped (secrets not available for security)" >> $GITHUB_STEP_SUMMARY
+          fi
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Job Results" >> $GITHUB_STEP_SUMMARY
           echo "- Build: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- High Priority: ${{ needs.update-high-priority.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
           echo "- Standard: ${{ needs.update-standard.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
           echo "- Stale: ${{ needs.update-stale.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- PR Test: ${{ needs.update-pr-test.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Smart Scheduling Strategy" >> $GITHUB_STEP_SUMMARY
           echo "- **High Priority (Hourly)**: Popular feeds (min 10-100 subscribers), max 5 failures" >> $GITHUB_STEP_SUMMARY
           echo "- **Standard (Every 6h)**: Medium popularity feeds (min 10 subscribers), max 5 failures" >> $GITHUB_STEP_SUMMARY
           echo "- **Stale (Daily)**: Feeds not updated in 7+ days, max 10 failures" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR Test**: Very popular feeds only (min 10000 subscribers), max 0 failures (smoke test)" >> $GITHUB_STEP_SUMMARY
