@@ -197,8 +197,6 @@ Two record types in public database:
 
 CelestraCloud uses Apple's Swift Configuration library for unified configuration management across environment variables and command-line arguments.
 
-**Migration Note**: CelestraCloud migrated from ArgumentParser to Swift Configuration in December 2024. See `.claude/MIGRATION_SWIFT_CONFIGURATION.md` for the complete migration guide, including code comparisons and lessons learned.
-
 ### Configuration Architecture
 
 **Priority Order**: CLI arguments > Environment variables > Defaults
@@ -359,7 +357,6 @@ Code must be concurrency-safe with proper actor isolation.
 - `.claude/IMPLEMENTATION_NOTES.md` - Design decisions, patterns, and technical context
 - `.claude/AI_SCHEMA_WORKFLOW.md` - CloudKit schema design guide for AI agents
 - `.claude/CLOUDKIT_SCHEMA_SETUP.md` - Schema deployment instructions
-- `.claude/PRD.md` - v1.0.0 release Product Requirements Document
 
 ## Important Patterns
 
