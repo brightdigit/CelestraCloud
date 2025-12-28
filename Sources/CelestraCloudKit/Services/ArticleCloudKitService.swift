@@ -34,6 +34,26 @@ public import MistKit
 
 // swiftlint:disable file_length
 
+// MARK: - CloudKit Batch Size Constants
+
+/// Maximum number of GUIDs per CloudKit query operation.
+///
+/// CloudKit supports up to 200 records per batch, but GUID queries using the IN operator
+/// benefit from smaller batches to avoid query complexity limits. 150 GUIDs provides
+/// optimal balance between query efficiency and avoiding CloudKit rate limits.
+private let guidQueryBatchSize = 150
+
+/// Maximum number of articles per CloudKit create/update operation.
+///
+/// While CloudKit supports up to 200 records per batch, articles contain full HTML content
+/// which creates large payloads. Conservative batching at 10 articles prevents:
+/// - Payload size limits (CloudKit max request: ~10MB)
+/// - Timeout issues with slow network connections
+/// - All-or-nothing failure affecting too many records
+///
+/// Non-atomic operations allow partial success within each batch.
+private let articleMutationBatchSize = 10
+
 /// Service for Article-related CloudKit operations with dependency injection support
 @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 public struct ArticleCloudKitService: Sendable {
@@ -61,7 +81,8 @@ public struct ArticleCloudKitService: Sendable {
   // MARK: - Query Operations
   /// Queries articles from CloudKit by their GUIDs with optional feed filtering.
   ///
-  /// Automatically batches large queries into groups of 150 GUIDs to stay within CloudKit limits.
+  /// Automatically batches large queries into optimal groups to stay within CloudKit limits.
+  /// See `guidQueryBatchSize` constant for batch sizing rationale.
   /// Invalid article records are logged and skipped rather than failing the entire query.
   ///
   /// - Parameters:
@@ -77,7 +98,7 @@ public struct ArticleCloudKitService: Sendable {
       return []
     }
     var allArticles: [Article] = []
-    let guidBatches = guids.chunked(into: 150)
+    let guidBatches = guids.chunked(into: guidQueryBatchSize)
     for batch in guidBatches {
       let batchArticles = try await queryArticleBatch(batch, feedRecordName: feedRecordName)
       allArticles.append(contentsOf: batchArticles)
@@ -116,7 +137,8 @@ public struct ArticleCloudKitService: Sendable {
   // MARK: - Create Operations
   /// Creates new articles in CloudKit with batch processing.
   ///
-  /// Articles are processed in batches of 10 to manage payload size.
+  /// Articles are processed in conservative batches to manage payload size and prevent timeouts.
+  /// See `articleMutationBatchSize` constant for batch sizing rationale.
   /// Non-atomic operations allow partial success - some articles may succeed while others fail.
   /// All successes and failures are tracked in the returned BatchOperationResult.
   ///
@@ -130,7 +152,7 @@ public struct ArticleCloudKitService: Sendable {
       return BatchOperationResult()
     }
     CelestraLogger.cloudkit.info("Creating \(articles.count) article(s)...")
-    let articleBatches = articles.chunked(into: 10)
+    let articleBatches = articles.chunked(into: articleMutationBatchSize)
     var result = BatchOperationResult()
     for (index, batch) in articleBatches.enumerated() {
       try await processBatch(
@@ -152,7 +174,8 @@ public struct ArticleCloudKitService: Sendable {
   /// Updates existing articles in CloudKit with batch processing.
   ///
   /// Articles without a recordName are automatically skipped with a warning.
-  /// Remaining articles are processed in batches of 10 to manage payload size.
+  /// Remaining articles are processed in conservative batches to manage payload size and prevent timeouts.
+  /// See `articleMutationBatchSize` constant for batch sizing rationale.
   /// Non-atomic operations allow partial success - some updates may succeed while others fail.
   ///
   /// - Parameter articles: Array of Article objects to update (must have recordName set)
@@ -174,7 +197,7 @@ public struct ArticleCloudKitService: Sendable {
     guard !validArticles.isEmpty else {
       return BatchOperationResult()
     }
-    let batches = validArticles.chunked(into: 10)
+    let batches = validArticles.chunked(into: articleMutationBatchSize)
     var result = BatchOperationResult()
     for (index, batch) in batches.enumerated() {
       try await processBatch(
@@ -191,6 +214,35 @@ public struct ArticleCloudKitService: Sendable {
     return result
   }
 
+  /// Processes a single batch of articles with comprehensive error tracking.
+  ///
+  /// ## Batch Failure Behavior
+  ///
+  /// When `modifyRecords` fails, all articles in the batch are marked as failed with the
+  /// same error. This is a conservative approach that simplifies error handling.
+  ///
+  /// CloudKit batch operations can fail completely (network errors, authentication issues,
+  /// rate limits) or partially (some records succeed, others fail). The current implementation
+  /// treats all batch failures as complete failures.
+  ///
+  /// ## Future Enhancement Opportunity
+  ///
+  /// CloudKit's error responses can contain per-record errors via `CKErrorPartialFailure`.
+  /// Parsing these would enable finer-grained failure tracking for partial successes.
+  ///
+  /// ## Impact on Users
+  ///
+  /// - Failed batches are logged with batch number for debugging
+  /// - `BatchOperationResult` provides success rate and detailed failure list
+  /// - Users can retry failed articles by filtering `result.failedRecords`
+  ///
+  /// - Parameters:
+  ///   - batch: Articles to process in this batch
+  ///   - index: Zero-based batch index for logging
+  ///   - total: Total number of batches for progress reporting
+  ///   - result: Mutable result accumulator for success/failure tracking
+  ///   - operation: Type of operation (create or update)
+  /// - Throws: CloudKitError if the batch operation fails
   private func processBatch(
     _ batch: [Article],
     index: Int,
@@ -216,6 +268,8 @@ public struct ArticleCloudKitService: Sendable {
         "   Batch \(index + 1) complete: \(recordInfos.count) \(verb)"
       )
     } catch {
+      // Batch-level failure: All articles marked as failed (conservative approach)
+      // CloudKit partial failures could allow some successes - see method documentation
       CelestraLogger.errors.error("   Batch \(index + 1) failed: \(error.localizedDescription)")
       for article in batch {
         result.appendFailure(article: article, error: error)

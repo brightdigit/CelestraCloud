@@ -61,7 +61,23 @@ internal struct FeedUpdateProcessor {
     self.metadataBuilder = metadataBuilder
   }
 
-  /// Process a single feed update
+  /// Process a single feed update with comprehensive web etiquette and error handling.
+  ///
+  /// ## Thread Safety
+  ///
+  /// This method processes feeds sequentially with no race conditions:
+  /// - All `await` operations are chained sequentially (no concurrent execution)
+  /// - GUID-based deduplication prevents duplicate article creation
+  /// - Each feed operates on isolated data with no shared mutable state
+  /// - Rate limiting is managed by the thread-safe `RateLimiter` actor
+  ///
+  /// Multiple feeds can be processed concurrently by calling this method in parallel,
+  /// but each individual feed update is internally sequential and safe.
+  ///
+  /// - Parameters:
+  ///   - feed: The feed to update
+  ///   - url: The RSS feed URL to fetch
+  /// - Returns: Result indicating success, error, or skipped status
   internal func processFeed(_ feed: Feed, url: URL) async -> FeedUpdateResult {
     guard let recordName = feed.recordName else {
       print("   ❌ Feed missing recordName")

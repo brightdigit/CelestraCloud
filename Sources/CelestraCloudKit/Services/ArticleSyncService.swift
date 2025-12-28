@@ -48,7 +48,20 @@ public struct ArticleSyncService: Sendable {
     self.categorizer = categorizer
   }
 
-  /// Synchronize articles: query existing, categorize, create/update
+  /// Synchronize articles with CloudKit using GUID-based deduplication.
+  ///
+  /// ## Deduplication Strategy
+  ///
+  /// This method prevents duplicate articles through a sequential 4-step process:
+  /// 1. **Query existing**: Fetch all articles with matching GUIDs from CloudKit
+  /// 2. **Categorize**: Pure function separates new vs modified articles
+  /// 3. **Create new**: Upload articles not found in CloudKit
+  /// 4. **Update modified**: Update articles with changed content (contentHash comparison)
+  ///
+  /// GUID-based querying happens *before* any mutations, ensuring duplicate detection
+  /// is safe even when multiple feed updates run concurrently. Each feed's articles
+  /// use unique GUIDs scoped to that feed.
+  ///
   /// - Parameters:
   ///   - items: Fetched RSS feed items to process
   ///   - feedRecordName: Feed record identifier for scoping queries
