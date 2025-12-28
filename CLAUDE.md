@@ -27,6 +27,7 @@ swift run celestra-cloud add-feed https://example.com/feed.xml
 swift run celestra-cloud update
 swift run celestra-cloud update --update-last-attempted-before 2025-01-01T00:00:00Z
 swift run celestra-cloud update --update-min-popularity 10 --update-delay 3.0
+swift run celestra-cloud update --update-limit 5 --update-max-failures 0
 
 # Clear all data
 swift run celestra-cloud clear --confirm
@@ -239,9 +240,10 @@ All update command settings are **optional** and can be provided via environment
 |--------|--------------|--------------|------|---------|-------------|
 | Delay | `UPDATE_DELAY` | `--update-delay <seconds>` | Double | `2.0` | Delay between feed updates in seconds |
 | Skip Robots | `UPDATE_SKIP_ROBOTS_CHECK` | `--update-skip-robots-check` | Bool | `false` | Skip robots.txt validation (flag) |
-| Max Failures | `UPDATE_MAX_FAILURES` | `--update-max-failures <count>` | Int64 | None | Skip feeds above this failure threshold |
-| Min Popularity | `UPDATE_MIN_POPULARITY` | `--update-min-popularity <count>` | Int64 | None | Only update feeds with minimum subscribers |
+| Max Failures | `UPDATE_MAX_FAILURES` | `--update-max-failures <count>` | Int | None | Skip feeds above this failure threshold |
+| Min Popularity | `UPDATE_MIN_POPULARITY` | `--update-min-popularity <count>` | Int | None | Only update feeds with minimum subscribers |
 | Last Attempted Before | `UPDATE_LAST_ATTEMPTED_BEFORE` | `--update-last-attempted-before <iso8601>` | Date | None | Only update feeds attempted before this date |
+| Limit | `UPDATE_LIMIT` | `--update-limit <count>` | Int | None | Maximum number of feeds to query and update |
 
 **Date Format**: ISO8601 (e.g., `2025-01-01T00:00:00Z`)
 
@@ -366,7 +368,7 @@ Integration tests automatically validate the update-feeds workflow on all pull r
 
 **Test Scope:**
 - Runs against CloudKit **development environment** only (production never touched)
-- Limited smoke test: Very popular feeds only (min 10,000 subscribers, zero failures allowed)
+- Limited smoke test: Maximum 5 feeds, zero failures allowed
 - Completes in ~2-5 minutes (vs. production's 60-120 minute runs)
 - Uses same binary caching as production workflow
 
@@ -378,7 +380,7 @@ Integration tests automatically validate the update-feeds workflow on all pull r
 **Workflow Details:**
 - Workflow: `.github/workflows/update-feeds.yml` (shared with scheduled production runs)
 - Tier: `pr-test` (alongside `high`, `standard`, `stale` tiers)
-- Filter: `--update-min-popularity 10000 --update-max-failures 0 --update-delay 1.0`
+- Filter: `--update-limit 5 --update-max-failures 0 --update-delay 1.0`
 - Timeout: 10 minutes maximum
 
 **External Contributors:**

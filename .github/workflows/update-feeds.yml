@@ -299,10 +299,10 @@ jobs:
         run: |
           echo "::group::PR Integration Test"
           echo "Environment: $CLOUDKIT_ENVIRONMENT (development)"
-          echo "Testing with highly popular feeds only (smoke test)"
+          echo "Testing with limited feeds (smoke test)"
           echo ""
           ./bin/celestra-cloud update \
-            --update-min-popularity 10000 \
+            --update-limit 5 \
             --update-max-failures 0 \
             --update-delay 1.0
           echo "::endgroup::"
@@ -346,4 +346,4 @@ jobs:
           echo "- **High Priority (Hourly)**: Popular feeds (min 10-100 subscribers), max 5 failures" >> $GITHUB_STEP_SUMMARY
           echo "- **Standard (Every 6h)**: Medium popularity feeds (min 10 subscribers), max 5 failures" >> $GITHUB_STEP_SUMMARY
           echo "- **Stale (Daily)**: Feeds not updated in 7+ days, max 10 failures" >> $GITHUB_STEP_SUMMARY
-          echo "- **PR Test**: Very popular feeds only (min 10000 subscribers), max 0 failures (smoke test)" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR Test**: Limited to 5 feeds, max 0 failures (smoke test)" >> $GITHUB_STEP_SUMMARY

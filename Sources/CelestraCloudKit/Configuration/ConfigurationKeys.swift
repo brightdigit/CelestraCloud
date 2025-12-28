@@ -51,5 +51,7 @@ internal enum ConfigurationKeys {
     internal static let minPopularityEnv = "UPDATE_MIN_POPULARITY"
     internal static let lastAttemptedBefore = "update.last_attempted_before"
     internal static let lastAttemptedBeforeEnv = "UPDATE_LAST_ATTEMPTED_BEFORE"
+    internal static let limit = "update.limit"
+    internal static let limitEnv = "UPDATE_LIMIT"
   }
 }

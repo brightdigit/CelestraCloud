@@ -86,6 +86,9 @@ internal enum UpdateCommand {
     if let maxFail = config.update.maxFailures {
       print("   Filter: maximum failures \(maxFail)")
     }
+    if let limit = config.update.limit {
+      print("   Limit: maximum \(limit) feeds")
+    }
   }
 
   @available(macOS 13.0, *)
@@ -126,6 +129,10 @@ internal enum UpdateCommand {
 
     if let maxFail = config.update.maxFailures {
       feeds = feeds.filter { $0.failureCount <= maxFail }
+    }
+
+    if let limit = config.update.limit {
+      feeds = Array(feeds.prefix(limit))
     }
 
     return feeds
