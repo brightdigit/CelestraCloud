@@ -1,16 +1,16 @@
 name: Update RSS Feeds
 
 on:
-  # Multiple schedules for different tiers
-  schedule:
-    # Tier 1: High-priority feeds (hourly)
-    - cron: '0 * * * *'
-
-    # Tier 2: Standard feeds (every 6 hours)
-    - cron: '0 */6 * * *'
-
-    # Tier 3: Stale feeds (daily at 2 AM UTC)
-    - cron: '0 2 * * *'
+  # Multiple schedules for different tiers (disabled until workflow is stable)
+  # schedule:
+  #   # Tier 1: High-priority feeds (hourly)
+  #   - cron: '0 * * * *'
+  #
+  #   # Tier 2: Standard feeds (every 6 hours)
+  #   - cron: '0 */6 * * *'
+  #
+  #   # Tier 3: Stale feeds (daily at 2 AM UTC)
+  #   - cron: '0 2 * * *'
 
   # Pull request testing
   pull_request:
@@ -142,7 +142,7 @@ jobs:
 
       - name: Build CelestraCloud
         if: steps.cache-binary.outputs.cache-hit != 'true'
-        run: swift build -c release
+        run: swift build -c release -Xswiftc -static-executable
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
@@ -162,9 +162,9 @@ jobs:
       matrix:
         include:
           - name: "Pass 1: Very popular feeds"
-            args: "--min-popularity 100 --max-failures 2 --delay 2.0"
+            args: "--update-min-popularity 100 --update-max-failures 2 --update-delay 2.0 --update-limit 100"
           - name: "Pass 2: Popular feeds"
-            args: "--min-popularity 10 --max-failures 5 --delay 2.5"
+            args: "--update-min-popularity 10 --update-max-failures 5 --update-delay 2.5 --update-limit 100"
 
       fail-fast: false
 
@@ -187,7 +187,7 @@ jobs:
         run: |
           echo "::group::${{ matrix.name }}"
           echo "Running: ./bin/celestra-cloud update ${{ matrix.args }}"
-          ./bin/celestra-cloud update ${{ matrix.args }} || echo "::warning::Pass completed with errors"
+          ./bin/celestra-cloud update ${{ matrix.args }}
           echo "::endgroup::"
         continue-on-error: true
 
@@ -222,10 +222,10 @@ jobs:
           echo "::group::Standard Feeds Update"
           echo "Running feeds with minimum popularity of 10, max failures 5"
           ./bin/celestra-cloud update \
-            --min-popularity 10 \
-            --max-failures 5 \
-            --delay 2.5 \
-          || echo "::warning::Standard feeds update had errors"
+            --update-min-popularity 10 \
+            --update-max-failures 5 \
+            --update-delay 2.5 \
+            --update-limit 200
           echo "::endgroup::"
         continue-on-error: true
 
@@ -262,10 +262,10 @@ jobs:
           WEEK_AGO=$(date -u -d '7 days ago' '+%Y-%m-%dT%H:%M:%SZ')
           echo "Updating feeds not attempted since: $WEEK_AGO"
           ./bin/celestra-cloud update \
-            --last-attempted-before "$WEEK_AGO" \
-            --max-failures 10 \
-            --delay 3.0 \
-          || echo "::warning::Stale feeds update had errors"
+            --update-last-attempted-before "$WEEK_AGO" \
+            --update-max-failures 10 \
+            --update-delay 3.0 \
+            --update-limit 300
           echo "::endgroup::"
         continue-on-error: true
 
