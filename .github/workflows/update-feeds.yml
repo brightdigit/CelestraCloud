@@ -16,6 +16,11 @@ on:
   pull_request:
     branches: [main]
 
+  # Push to feature branch for testing
+  push:
+    branches:
+      - '19-scheduled-job'
+
   # Manual trigger for testing
   workflow_dispatch:
     inputs:
@@ -75,6 +80,11 @@ jobs:
               TIER="pr-test"
               IS_FORK_PR="false"
             fi
+          # Check if push to branch
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            echo "Push to branch ${{ github.ref_name }} - running integration tests"
+            TIER="pr-test"
+            IS_FORK_PR="false"
           # Check if manual dispatch
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             TIER="${{ github.event.inputs.tier }}"
