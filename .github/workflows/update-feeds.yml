@@ -2,15 +2,15 @@ name: Update RSS Feeds
 
 on:
   # Multiple schedules for different tiers
-  schedule:
-    # Tier 1: High-priority feeds (hourly)
-    - cron: '0 * * * *'
+  # schedule:
+  #   # Tier 1: High-priority feeds (hourly)
+  #   - cron: '0 * * * *'
 
-    # Tier 2: Standard feeds (every 6 hours)
-    - cron: '0 */6 * * *'
+  #   # Tier 2: Standard feeds (every 6 hours)
+  #   - cron: '0 */6 * * *'
 
-    # Tier 3: Stale feeds (daily at 2 AM UTC)
-    - cron: '0 2 * * *'
+  #   # Tier 3: Stale feeds (daily at 2 AM UTC)
+  #   - cron: '0 2 * * *'
 
   # Pull request testing
   pull_request:
