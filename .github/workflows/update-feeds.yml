@@ -46,6 +46,11 @@ on:
         description: 'Rate limit delay in seconds'
         required: false
         default: '2.0'
+      force_rebuild:
+        description: 'Force rebuild binary (ignore cache)'
+        required: false
+        default: false
+        type: boolean
 
 env:
   CLOUDKIT_CONTAINER_ID: ${{ secrets.CLOUDKIT_CONTAINER_ID || 'iCloud.com.brightdigit.Celestra' }}
@@ -148,7 +153,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .build/release/celestra-cloud
-          key: celestra-cloud-${{ runner.os }}-${{ hashFiles('Sources/**/*.swift', 'Package.swift', 'Package.resolved') }}
+          key: celestra-cloud-${{ runner.os }}-${{ hashFiles('Sources/**/*.swift', 'Package.swift', 'Package.resolved') }}-${{ github.event.inputs.force_rebuild || 'false' }}
 
       - name: Build CelestraCloud
         if: steps.cache-binary.outputs.cache-hit != 'true'
