@@ -110,11 +110,9 @@ public struct ArticleCloudKitService: Sendable {
     _ guids: [String],
     feedRecordName: String?
   ) async throws(CloudKitError) -> [Article] {
-    var filters: [QueryFilter] = []
-    if let feedName = feedRecordName {
-      filters.append(.equals("feedRecordName", .string(feedName)))
-    }
-    filters.append(.in("guid", guids.map { FieldValue.string($0) }))
+    // CloudKit Web Services has issues with combining .in() with other filters
+    // Query only by GUID and filter by feed in-memory if needed
+    let filters: [QueryFilter] = [.in("guid", guids.map { FieldValue.string($0) })]
     let records = try await recordOperator.queryRecords(
       recordType: "Article",
       filters: filters,
@@ -122,7 +120,7 @@ public struct ArticleCloudKitService: Sendable {
       limit: 200,
       desiredKeys: nil
     )
-    return records.compactMap { record in
+    let articles = records.compactMap { record in
       do {
         return try Article(from: record)
       } catch {
@@ -132,6 +130,12 @@ public struct ArticleCloudKitService: Sendable {
         return nil
       }
     }
+
+    // Filter by feedRecordName in-memory if specified
+    if let feedName = feedRecordName {
+      return articles.filter { $0.feedRecordName == feedName }
+    }
+    return articles
   }
 
   // MARK: - Create Operations
