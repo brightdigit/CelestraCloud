@@ -55,7 +55,7 @@ on:
 env:
   CLOUDKIT_CONTAINER_ID: ${{ secrets.CLOUDKIT_CONTAINER_ID || 'iCloud.com.brightdigit.Celestra' }}
   CLOUDKIT_KEY_ID: ${{ secrets.CLOUDKIT_KEY_ID }}
-  CLOUDKIT_ENVIRONMENT: ${{ github.event_name == 'pull_request' && 'development' || github.event.inputs.environment || 'production' }}
+  CLOUDKIT_ENVIRONMENT: ${{ (github.event_name == 'pull_request' || github.event_name == 'push') && 'development' || github.event.inputs.environment || 'production' }}
   CLOUDKIT_PRIVATE_KEY_PATH: /tmp/cloudkit_key.pem
 
 jobs:
