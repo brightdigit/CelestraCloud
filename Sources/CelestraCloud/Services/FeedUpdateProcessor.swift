@@ -166,6 +166,7 @@ internal struct FeedUpdateProcessor {
   ) async -> FeedUpdateResult {
     let updatedFeed = Feed(
       recordName: feed.recordName,
+      recordChangeTag: feed.recordChangeTag,
       feedURL: feed.feedURL,
       title: metadata.title,
       description: metadata.description,

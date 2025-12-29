@@ -67,6 +67,11 @@ internal enum UpdateCommand {
 
     let summary = await processFeeds(feeds, processor: processor)
     printSummary(feeds: feeds, summary: summary)
+
+    // Fail if any errors occurred
+    if summary.errorCount > 0 {
+      throw UpdateCommandError(errorCount: summary.errorCount)
+    }
   }
 
   private static func printStartupInfo(config: CelestraConfiguration) {
