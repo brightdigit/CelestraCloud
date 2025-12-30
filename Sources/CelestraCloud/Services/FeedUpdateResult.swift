@@ -29,8 +29,29 @@
 
 /// Result of processing a single feed update
 internal enum FeedUpdateResult: Sendable, Equatable {
-  case success
+  case success(articlesCreated: Int, articlesUpdated: Int)
   case notModified
-  case skipped
-  case error
+  case skipped(reason: String)
+  case error(message: String)
+
+  /// Simple status for backward compatibility
+  internal var simpleStatus: SimpleStatus {
+    switch self {
+    case .success:
+      return .success
+    case .notModified:
+      return .notModified
+    case .skipped:
+      return .skipped
+    case .error:
+      return .error
+    }
+  }
+
+  internal enum SimpleStatus {
+    case success
+    case notModified
+    case skipped
+    case error
+  }
 }

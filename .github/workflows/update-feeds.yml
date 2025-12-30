@@ -195,7 +195,9 @@ jobs:
 
       - name: Create CloudKit private key file
         run: |
-          echo "${{ secrets.CLOUDKIT_PRIVATE_KEY }}" > $CLOUDKIT_PRIVATE_KEY_PATH
+          cat <<'EOF' > $CLOUDKIT_PRIVATE_KEY_PATH
+          ${{ secrets.CLOUDKIT_PRIVATE_KEY }}
+          EOF
           chmod 600 $CLOUDKIT_PRIVATE_KEY_PATH
 
       - name: ${{ matrix.name }}
@@ -229,7 +231,9 @@ jobs:
 
       - name: Create CloudKit private key file
         run: |
-          echo "${{ secrets.CLOUDKIT_PRIVATE_KEY }}" > $CLOUDKIT_PRIVATE_KEY_PATH
+          cat <<'EOF' > $CLOUDKIT_PRIVATE_KEY_PATH
+          ${{ secrets.CLOUDKIT_PRIVATE_KEY }}
+          EOF
           chmod 600 $CLOUDKIT_PRIVATE_KEY_PATH
 
       - name: Update standard popularity feeds
@@ -267,7 +271,9 @@ jobs:
 
       - name: Create CloudKit private key file
         run: |
-          echo "${{ secrets.CLOUDKIT_PRIVATE_KEY }}" > $CLOUDKIT_PRIVATE_KEY_PATH
+          cat <<'EOF' > $CLOUDKIT_PRIVATE_KEY_PATH
+          ${{ secrets.CLOUDKIT_PRIVATE_KEY }}
+          EOF
           chmod 600 $CLOUDKIT_PRIVATE_KEY_PATH
 
       - name: Update stale feeds
@@ -307,7 +313,9 @@ jobs:
 
       - name: Create CloudKit private key file
         run: |
-          echo "${{ secrets.CLOUDKIT_PRIVATE_KEY }}" > $CLOUDKIT_PRIVATE_KEY_PATH
+          cat <<'EOF' > $CLOUDKIT_PRIVATE_KEY_PATH
+          ${{ secrets.CLOUDKIT_PRIVATE_KEY }}
+          EOF
           chmod 600 $CLOUDKIT_PRIVATE_KEY_PATH
 
       - name: Run PR integration test

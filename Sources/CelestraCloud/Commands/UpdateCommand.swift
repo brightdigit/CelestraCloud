@@ -37,11 +37,15 @@ private struct UpdateSummary {
   var errorCount = 0
   var skippedCount = 0
   var notModifiedCount = 0
+  var articlesCreated = 0
+  var articlesUpdated = 0
 
   mutating func record(_ result: FeedUpdateResult) {
     switch result {
-    case .success:
+    case .success(let created, let updated):
       successCount += 1
+      articlesCreated += created
+      articlesUpdated += updated
     case .notModified:
       notModifiedCount += 1
     case .skipped:
@@ -175,5 +179,9 @@ internal enum UpdateCommand {
     print("   ❌ Errors: \(summary.errorCount)")
     print("   ⏭️  Skipped (robots.txt): \(summary.skippedCount)")
     print("   ℹ️  Not modified (304): \(summary.notModifiedCount)")
+    if summary.articlesCreated > 0 || summary.articlesUpdated > 0 {
+      print("   📝 Articles created: \(summary.articlesCreated)")
+      print("   📝 Articles updated: \(summary.articlesUpdated)")
+    }
   }
 }

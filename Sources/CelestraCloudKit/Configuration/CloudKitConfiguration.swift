@@ -69,19 +69,19 @@ public struct CloudKitConfiguration: Sendable {
   public func validated() throws -> ValidatedCloudKitConfiguration {
     guard let containerID = containerID, !containerID.isEmpty else {
       throw EnhancedConfigurationError(
-        "CloudKit container ID required",
+        "CloudKit container ID must be non-empty",
         key: "cloudkit.container_id"
       )
     }
     guard let keyID = keyID, !keyID.isEmpty else {
       throw EnhancedConfigurationError(
-        "CloudKit key ID required",
+        "CloudKit key ID must be non-empty",
         key: "cloudkit.key_id"
       )
     }
     guard let privateKeyPath = privateKeyPath, !privateKeyPath.isEmpty else {
       throw EnhancedConfigurationError(
-        "CloudKit private key path required",
+        "CloudKit private key path must be non-empty",
         key: "cloudkit.private_key_path"
       )
     }

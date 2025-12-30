@@ -261,6 +261,8 @@ All update command settings are **optional** and can be provided via environment
 
 ### Usage Examples
 
+**Note**: Examples below assume `celestra-cloud` is in your PATH. If running from source, prefix commands with `swift run` (e.g., `swift run celestra-cloud update`).
+
 **Via environment variables:**
 ```bash
 export CLOUDKIT_CONTAINER_ID="iCloud.com.brightdigit.Celestra"

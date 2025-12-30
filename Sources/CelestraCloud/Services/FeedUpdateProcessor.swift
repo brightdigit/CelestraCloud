@@ -81,7 +81,7 @@ internal struct FeedUpdateProcessor {
   internal func processFeed(_ feed: Feed, url: URL) async -> FeedUpdateResult {
     guard let recordName = feed.recordName else {
       print("   ❌ Feed missing recordName")
-      return .error
+      return .error(message: "Feed missing recordName")
     }
 
     if !skipRobotsCheck {
@@ -89,7 +89,7 @@ internal struct FeedUpdateProcessor {
         let isAllowed = try await robotsService.isAllowed(url)
         if !isAllowed {
           print("   ⏭️  Skipped: robots.txt disallows")
-          return .skipped
+          return .skipped(reason: "robots.txt disallows")
         }
       } catch {
         print("   ⚠️  Could not check robots.txt: \(error.localizedDescription)")
@@ -121,7 +121,15 @@ internal struct FeedUpdateProcessor {
           response: response,
           totalAttempts: totalAttempts
         )
-        return await updateFeedMetadata(feed: feed, recordName: recordName, metadata: metadata)
+        _ = await updateFeedMetadata(
+          feed: feed,
+          recordName: recordName,
+          metadata: metadata,
+          articlesCreated: 0,
+          articlesUpdated: 0
+        )
+        // For not modified, always return notModified regardless of metadata update result
+        return .notModified
       }
 
       print("   ✅ Fetched: \(feedData.items.count) articles")
@@ -147,22 +155,36 @@ internal struct FeedUpdateProcessor {
         feed: feed,
         totalAttempts: totalAttempts
       )
-      return await updateFeedMetadata(feed: feed, recordName: recordName, metadata: metadata)
+      return await updateFeedMetadata(
+        feed: feed,
+        recordName: recordName,
+        metadata: metadata,
+        articlesCreated: syncResult.created.successCount,
+        articlesUpdated: syncResult.updated.successCount
+      )
     } catch {
       print("   ❌ Error: \(error.localizedDescription)")
       let metadata = metadataBuilder.buildErrorMetadata(
         feed: feed,
         totalAttempts: totalAttempts
       )
-      _ = await updateFeedMetadata(feed: feed, recordName: recordName, metadata: metadata)
-      return .error
+      _ = await updateFeedMetadata(
+        feed: feed,
+        recordName: recordName,
+        metadata: metadata,
+        articlesCreated: 0,
+        articlesUpdated: 0
+      )
+      return .error(message: error.localizedDescription)
     }
   }
 
   private func updateFeedMetadata(
     feed: Feed,
     recordName: String,
-    metadata: FeedMetadataUpdate
+    metadata: FeedMetadataUpdate,
+    articlesCreated: Int,
+    articlesUpdated: Int
   ) async -> FeedUpdateResult {
     let updatedFeed = Feed(
       recordName: feed.recordName,
@@ -184,10 +206,12 @@ internal struct FeedUpdateProcessor {
     )
     do {
       _ = try await service.updateFeed(recordName: recordName, feed: updatedFeed)
-      return metadata.failureCount == 0 ? .success : .error
+      return metadata.failureCount == 0
+        ? .success(articlesCreated: articlesCreated, articlesUpdated: articlesUpdated)
+        : .error(message: "Feed update had failures")
     } catch {
       print("   ⚠️  Failed to update feed metadata: \(error.localizedDescription)")
-      return .error
+      return .error(message: "Failed to update feed metadata: \(error.localizedDescription)")
     }
   }
 }
