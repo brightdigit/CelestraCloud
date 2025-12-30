@@ -1,25 +1,17 @@
 name: Update RSS Feeds
 
 on:
-  # Multiple schedules for different tiers (disabled until workflow is stable)
-  # schedule:
-  #   # Tier 1: High-priority feeds (hourly)
-  #   - cron: '0 * * * *'
-  #
-  #   # Tier 2: Standard feeds (every 6 hours)
-  #   - cron: '0 */6 * * *'
-  #
-  #   # Tier 3: Stale feeds (daily at 2 AM UTC)
-  #   - cron: '0 2 * * *'
+  # Conservative schedule for testing
+  schedule:
+    # Standard feeds (daily at 2 AM UTC)
+    - cron: '0 2 * * *'
+
+    # Stale feeds (weekly on Sundays at 3 AM UTC)
+    - cron: '0 3 * * 0'
 
   # Pull request testing
   pull_request:
     branches: [main]
-
-  # Push to feature branch for testing
-  push:
-    branches:
-      - '19-scheduled-job'
 
   # Manual trigger for testing
   workflow_dispatch:
@@ -99,18 +91,18 @@ jobs:
             # Determine tier based on current time
             HOUR=$(date -u +%H)
 
-            # Check if this is the 6-hour mark (0, 6, 12, 18)
-            if [ $((HOUR % 6)) -eq 0 ] && [ "$HOUR" -ne 2 ]; then
+            # Check if this is 2 AM UTC (daily standard run)
+            if [ "$HOUR" -eq 2 ]; then
               TIER="standard"
-              echo "Scheduled run (6-hour): tier=$TIER"
-            # Check if this is 2 AM UTC (daily stale run)
-            elif [ "$HOUR" -eq 2 ]; then
-              TIER="stale"
               echo "Scheduled run (daily): tier=$TIER"
-            # Otherwise, hourly high-priority run
+            # Check if this is 3 AM UTC (weekly stale run on Sundays)
+            elif [ "$HOUR" -eq 3 ]; then
+              TIER="stale"
+              echo "Scheduled run (weekly): tier=$TIER"
+            # Default to high priority for any other scheduled times
             else
               TIER="high"
-              echo "Scheduled run (hourly): tier=$TIER"
+              echo "Scheduled run (unexpected time): tier=$TIER"
             fi
             IS_FORK_PR="false"
           fi
