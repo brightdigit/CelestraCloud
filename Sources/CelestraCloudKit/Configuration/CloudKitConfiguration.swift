@@ -32,6 +32,9 @@ public import MistKit
 
 /// CloudKit credentials and environment settings
 public struct CloudKitConfiguration: Sendable {
+  /// Default CloudKit container identifier for Celestra
+  public static let defaultContainerID = "iCloud.com.brightdigit.Celestra"
+
   /// CloudKit container identifier (e.g., iCloud.com.example.App)
   public var containerID: String?
 
@@ -66,19 +69,19 @@ public struct CloudKitConfiguration: Sendable {
   public func validated() throws -> ValidatedCloudKitConfiguration {
     guard let containerID = containerID, !containerID.isEmpty else {
       throw EnhancedConfigurationError(
-        "CloudKit container ID required",
+        "CloudKit container ID must be non-empty",
         key: "cloudkit.container_id"
       )
     }
     guard let keyID = keyID, !keyID.isEmpty else {
       throw EnhancedConfigurationError(
-        "CloudKit key ID required",
+        "CloudKit key ID must be non-empty",
         key: "cloudkit.key_id"
       )
     }
     guard let privateKeyPath = privateKeyPath, !privateKeyPath.isEmpty else {
       throw EnhancedConfigurationError(
-        "CloudKit private key path required",
+        "CloudKit private key path must be non-empty",
         key: "cloudkit.private_key_path"
       )
     }

@@ -46,6 +46,12 @@ public struct UpdateCommandConfiguration: Sendable {
   /// Only update feeds last attempted before this date
   public var lastAttemptedBefore: Date?
 
+  /// Maximum number of feeds to query and update
+  public var limit: Int?
+
+  /// Path to write JSON output report (optional)
+  public var jsonOutputPath: String?
+
   /// Initialize update command configuration
   /// - Parameters:
   ///   - delay: Delay between feed updates in seconds
@@ -53,17 +59,23 @@ public struct UpdateCommandConfiguration: Sendable {
   ///   - maxFailures: Maximum failure count threshold
   ///   - minPopularity: Minimum subscriber count
   ///   - lastAttemptedBefore: Only update feeds attempted before this date
+  ///   - limit: Maximum number of feeds to query and update
+  ///   - jsonOutputPath: Path to write JSON output report
   public init(
     delay: Double = 2.0,
     skipRobotsCheck: Bool = false,
     maxFailures: Int? = nil,
     minPopularity: Int? = nil,
-    lastAttemptedBefore: Date? = nil
+    lastAttemptedBefore: Date? = nil,
+    limit: Int? = nil,
+    jsonOutputPath: String? = nil
   ) {
     self.delay = delay
     self.skipRobotsCheck = skipRobotsCheck
     self.maxFailures = maxFailures
     self.minPopularity = minPopularity
     self.lastAttemptedBefore = lastAttemptedBefore
+    self.limit = limit
+    self.jsonOutputPath = jsonOutputPath
   }
 }
