@@ -244,6 +244,7 @@ All update command settings are **optional** and can be provided via environment
 | Min Popularity | `UPDATE_MIN_POPULARITY` | `--update-min-popularity <count>` | Int | None | Only update feeds with minimum subscribers |
 | Last Attempted Before | `UPDATE_LAST_ATTEMPTED_BEFORE` | `--update-last-attempted-before <iso8601>` | Date | None | Only update feeds attempted before this date |
 | Limit | `UPDATE_LIMIT` | `--update-limit <count>` | Int | None | Maximum number of feeds to query and update |
+| JSON Output Path | `UPDATE_JSON_OUTPUT_PATH` | `--update-json-output-path <path>` | String | None | Path to write JSON report with detailed results |
 
 **Date Format**: ISO8601 (e.g., `2025-01-01T00:00:00Z`)
 
@@ -290,6 +291,18 @@ UPDATE_DELAY=2.0 celestra-cloud update --update-delay 5.0
 ```bash
 # Only update feeds last attempted before January 1, 2025
 celestra-cloud update --update-last-attempted-before 2025-01-01T00:00:00Z
+```
+
+**With JSON output for detailed reporting:**
+```bash
+# Generate JSON report with per-feed results and summary statistics
+celestra-cloud update --update-json-output-path /tmp/feed-update-report.json
+
+# Combine with other options for CI/CD workflows
+celestra-cloud update \
+  --update-limit 10 \
+  --update-delay 1.0 \
+  --update-json-output-path ./build/feed-update-results.json
 ```
 
 ### Adding New Configuration Options

@@ -204,9 +204,18 @@ jobs:
         run: |
           echo "::group::${{ matrix.name }}"
           echo "Running: ./bin/celestra-cloud update ${{ matrix.args }}"
-          ./bin/celestra-cloud update ${{ matrix.args }}
+          ./bin/celestra-cloud update ${{ matrix.args }} --update-json-output-path ./feed-update-high-${{ strategy.job-index }}.json
           echo "::endgroup::"
         continue-on-error: true
+
+      - name: Upload JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: feed-update-high-${{ strategy.job-index }}
+          path: ./feed-update-high-${{ strategy.job-index }}.json
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Cleanup private key
         if: always()
@@ -244,9 +253,19 @@ jobs:
             --update-min-popularity 10 \
             --update-max-failures 5 \
             --update-delay 2.5 \
-            --update-limit 200
+            --update-limit 200 \
+            --update-json-output-path ./feed-update-standard.json
           echo "::endgroup::"
         continue-on-error: true
+
+      - name: Upload JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: feed-update-standard
+          path: ./feed-update-standard.json
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Cleanup private key
         if: always()
@@ -286,9 +305,19 @@ jobs:
             --update-last-attempted-before "$WEEK_AGO" \
             --update-max-failures 10 \
             --update-delay 3.0 \
-            --update-limit 300
+            --update-limit 300 \
+            --update-json-output-path ./feed-update-stale.json
           echo "::endgroup::"
         continue-on-error: true
+
+      - name: Upload JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: feed-update-stale
+          path: ./feed-update-stale.json
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Cleanup private key
         if: always()
@@ -327,9 +356,19 @@ jobs:
           ./bin/celestra-cloud update \
             --update-limit 5 \
             --update-max-failures 0 \
-            --update-delay 1.0
+            --update-delay 1.0 \
+            --update-json-output-path ./feed-update-pr-test.json
           echo "::endgroup::"
         continue-on-error: false
+
+      - name: Upload JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: feed-update-pr-test
+          path: ./feed-update-pr-test.json
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Cleanup private key
         if: always()
@@ -342,7 +381,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Generate summary
+      - name: Download JSON reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: feed-update-*
+          path: ./reports
+          merge-multiple: false
+        continue-on-error: true
+
+      - name: Generate enhanced summary
         run: |
           echo "## RSS Feed Update Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -364,9 +411,172 @@ jobs:
           echo "- Standard: ${{ needs.update-standard.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
           echo "- Stale: ${{ needs.update-stale.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
           echo "- PR Test: ${{ needs.update-pr-test.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+
+          # Parse JSON reports if available
+          if [ -d "./reports" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Update Statistics" >> $GITHUB_STEP_SUMMARY
+
+            # Aggregate stats from all JSON files
+            total_feeds=0
+            success_count=0
+            error_count=0
+            skipped_count=0
+            not_modified_count=0
+            articles_created=0
+            articles_updated=0
+
+            for report_dir in ./reports/feed-update-*; do
+              if [ -d "$report_dir" ]; then
+                for json_file in "$report_dir"/*.json; do
+                  if [ -f "$json_file" ]; then
+                    total_feeds=$((total_feeds + $(jq -r '.summary.totalFeeds // 0' "$json_file")))
+                    success_count=$((success_count + $(jq -r '.summary.successCount // 0' "$json_file")))
+                    error_count=$((error_count + $(jq -r '.summary.errorCount // 0' "$json_file")))
+                    skipped_count=$((skipped_count + $(jq -r '.summary.skippedCount // 0' "$json_file")))
+                    not_modified_count=$((not_modified_count + $(jq -r '.summary.notModifiedCount // 0' "$json_file")))
+                    articles_created=$((articles_created + $(jq -r '.summary.articlesCreated // 0' "$json_file")))
+                    articles_updated=$((articles_updated + $(jq -r '.summary.articlesUpdated // 0' "$json_file")))
+                  fi
+                done
+              fi
+            done
+
+            echo "- **Total Feeds Processed:** $total_feeds" >> $GITHUB_STEP_SUMMARY
+            echo "- **Successful:** ✅ $success_count" >> $GITHUB_STEP_SUMMARY
+            echo "- **Errors:** ❌ $error_count" >> $GITHUB_STEP_SUMMARY
+            echo "- **Skipped (robots.txt):** ⏭️ $skipped_count" >> $GITHUB_STEP_SUMMARY
+            echo "- **Not Modified (304):** ℹ️ $not_modified_count" >> $GITHUB_STEP_SUMMARY
+            echo "- **Articles Created:** 📝 $articles_created" >> $GITHUB_STEP_SUMMARY
+            echo "- **Articles Updated:** 📝 $articles_updated" >> $GITHUB_STEP_SUMMARY
+
+            # Calculate success rate if we have data
+            if [ $total_feeds -gt 0 ]; then
+              success_rate=$((success_count * 100 / total_feeds))
+              echo "- **Success Rate:** ${success_rate}%" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Smart Scheduling Strategy" >> $GITHUB_STEP_SUMMARY
           echo "- **High Priority (Hourly)**: Popular feeds (min 10-100 subscribers), max 5 failures" >> $GITHUB_STEP_SUMMARY
           echo "- **Standard (Every 6h)**: Medium popularity feeds (min 10 subscribers), max 5 failures" >> $GITHUB_STEP_SUMMARY
           echo "- **Stale (Daily)**: Feeds not updated in 7+ days, max 10 failures" >> $GITHUB_STEP_SUMMARY
           echo "- **PR Test**: Limited to 5 feeds, max 0 failures (smoke test)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Generate detailed markdown report
+        if: success() || failure()
+        run: |
+          REPORT_FILE="feed-update-detailed-report.md"
+
+          cat > "$REPORT_FILE" <<'REPORT_HEADER'
+          # RSS Feed Update - Detailed Report
+
+          ## Overview
+          REPORT_HEADER
+
+          echo "- **Tier:** ${{ needs.determine-tier.outputs.tier }}" >> "$REPORT_FILE"
+          echo "- **Environment:** ${{ env.CLOUDKIT_ENVIRONMENT }}" >> "$REPORT_FILE"
+          echo "- **Trigger:** ${{ github.event_name }}" >> "$REPORT_FILE"
+          echo "- **Workflow Run:** https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> "$REPORT_FILE"
+          echo "" >> "$REPORT_FILE"
+
+          # Add aggregate statistics if JSON reports are available
+          if [ -d "./reports" ]; then
+            echo "## Summary Statistics" >> "$REPORT_FILE"
+            echo "" >> "$REPORT_FILE"
+
+            # Aggregate stats (same as above)
+            total_feeds=0
+            success_count=0
+            error_count=0
+            skipped_count=0
+            not_modified_count=0
+            articles_created=0
+            articles_updated=0
+
+            for report_dir in ./reports/feed-update-*; do
+              if [ -d "$report_dir" ]; then
+                for json_file in "$report_dir"/*.json; do
+                  if [ -f "$json_file" ]; then
+                    total_feeds=$((total_feeds + $(jq -r '.summary.totalFeeds // 0' "$json_file")))
+                    success_count=$((success_count + $(jq -r '.summary.successCount // 0' "$json_file")))
+                    error_count=$((error_count + $(jq -r '.summary.errorCount // 0' "$json_file")))
+                    skipped_count=$((skipped_count + $(jq -r '.summary.skippedCount // 0' "$json_file")))
+                    not_modified_count=$((not_modified_count + $(jq -r '.summary.notModifiedCount // 0' "$json_file")))
+                    articles_created=$((articles_created + $(jq -r '.summary.articlesCreated // 0' "$json_file")))
+                    articles_updated=$((articles_updated + $(jq -r '.summary.articlesUpdated // 0' "$json_file")))
+                  fi
+                done
+              fi
+            done
+
+            echo "| Metric | Count |" >> "$REPORT_FILE"
+            echo "|--------|-------|" >> "$REPORT_FILE"
+            echo "| Total Feeds | $total_feeds |" >> "$REPORT_FILE"
+            echo "| Successful | $success_count |" >> "$REPORT_FILE"
+            echo "| Errors | $error_count |" >> "$REPORT_FILE"
+            echo "| Skipped (robots.txt) | $skipped_count |" >> "$REPORT_FILE"
+            echo "| Not Modified (304) | $not_modified_count |" >> "$REPORT_FILE"
+            echo "| Articles Created | $articles_created |" >> "$REPORT_FILE"
+            echo "| Articles Updated | $articles_updated |" >> "$REPORT_FILE"
+
+            if [ $total_feeds -gt 0 ]; then
+              success_rate=$((success_count * 100 / total_feeds))
+              echo "| Success Rate | ${success_rate}% |" >> "$REPORT_FILE"
+            fi
+
+            echo "" >> "$REPORT_FILE"
+
+            # Add per-tier breakdown with per-feed details
+            echo "## Detailed Feed Results" >> "$REPORT_FILE"
+            echo "" >> "$REPORT_FILE"
+
+            for report_dir in ./reports/feed-update-*; do
+              if [ -d "$report_dir" ]; then
+                tier_name=$(basename "$report_dir" | sed 's/feed-update-//')
+                echo "### Tier: $tier_name" >> "$REPORT_FILE"
+                echo "" >> "$REPORT_FILE"
+
+                for json_file in "$report_dir"/*.json; do
+                  if [ -f "$json_file" ]; then
+                    # Extract tier summary
+                    tier_total=$(jq -r '.summary.totalFeeds // 0' "$json_file")
+                    tier_success=$(jq -r '.summary.successCount // 0' "$json_file")
+                    tier_errors=$(jq -r '.summary.errorCount // 0' "$json_file")
+
+                    echo "**Summary:** $tier_total feeds processed ($tier_success successful, $tier_errors errors)" >> "$REPORT_FILE"
+                    echo "" >> "$REPORT_FILE"
+
+                    # List all feeds with their status
+                    echo "| Feed URL | Status | Articles Created | Articles Updated | Duration (s) | Error |" >> "$REPORT_FILE"
+                    echo "|----------|--------|------------------|------------------|--------------|-------|" >> "$REPORT_FILE"
+
+                    jq -r '.feeds[] | [.feedURL, .status, .articlesCreated, .articlesUpdated, (.duration | tostring), (.error // "N/A")] | @tsv' "$json_file" | \
+                    while IFS=$'\t' read -r url status created updated duration error; do
+                      # Truncate URL for readability
+                      short_url=$(echo "$url" | sed 's|https\?://||' | cut -c1-50)
+                      echo "| $short_url | $status | $created | $updated | $(printf "%.2f" $duration) | $error |" >> "$REPORT_FILE"
+                    done
+
+                    echo "" >> "$REPORT_FILE"
+                  fi
+                done
+              fi
+            done
+          else
+            echo "## No JSON Reports Available" >> "$REPORT_FILE"
+            echo "" >> "$REPORT_FILE"
+            echo "JSON reports were not generated or could not be downloaded." >> "$REPORT_FILE"
+          fi
+
+          echo "Report generated: $REPORT_FILE"
+
+      - name: Upload detailed markdown report
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: feed-update-detailed-report
+          path: feed-update-detailed-report.md
+          if-no-files-found: ignore
+          retention-days: 90

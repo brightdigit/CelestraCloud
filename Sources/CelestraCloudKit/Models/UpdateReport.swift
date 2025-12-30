@@ -65,6 +65,24 @@ public struct UpdateReport: Codable, Sendable {
       guard totalFeeds > 0 else { return 0 }
       return Double(successCount) / Double(totalFeeds) * 100
     }
+
+    public init(
+      totalFeeds: Int,
+      successCount: Int,
+      errorCount: Int,
+      skippedCount: Int,
+      notModifiedCount: Int,
+      articlesCreated: Int,
+      articlesUpdated: Int
+    ) {
+      self.totalFeeds = totalFeeds
+      self.successCount = successCount
+      self.errorCount = errorCount
+      self.skippedCount = skippedCount
+      self.notModifiedCount = notModifiedCount
+      self.articlesCreated = articlesCreated
+      self.articlesUpdated = articlesUpdated
+    }
   }
 
   /// Configuration snapshot
@@ -75,6 +93,22 @@ public struct UpdateReport: Codable, Sendable {
     public let minPopularity: Int?
     public let limit: Int?
     public let environment: String
+
+    public init(
+      delay: Double,
+      skipRobotsCheck: Bool,
+      maxFailures: Int?,
+      minPopularity: Int?,
+      limit: Int?,
+      environment: String
+    ) {
+      self.delay = delay
+      self.skipRobotsCheck = skipRobotsCheck
+      self.maxFailures = maxFailures
+      self.minPopularity = minPopularity
+      self.limit = limit
+      self.environment = environment
+    }
   }
 
   /// Result for a single feed update

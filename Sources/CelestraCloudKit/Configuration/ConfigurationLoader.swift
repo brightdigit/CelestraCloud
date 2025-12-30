@@ -96,6 +96,9 @@ public actor ConfigurationLoader {
     let limit =
       readInt(forKey: ConfigurationKeys.Update.limit)
       ?? readInt(forKey: ConfigurationKeys.Update.limitEnv)
+    let jsonOutputPath =
+      readString(forKey: ConfigurationKeys.Update.jsonOutputPath)
+      ?? readString(forKey: ConfigurationKeys.Update.jsonOutputPathEnv)
 
     let update = UpdateCommandConfiguration(
       delay: delay,
@@ -103,7 +106,8 @@ public actor ConfigurationLoader {
       maxFailures: maxFailures,
       minPopularity: minPopularity,
       lastAttemptedBefore: lastAttemptedBefore,
-      limit: limit
+      limit: limit,
+      jsonOutputPath: jsonOutputPath
     )
 
     return CelestraConfiguration(
