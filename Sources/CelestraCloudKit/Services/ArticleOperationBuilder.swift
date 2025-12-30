@@ -71,7 +71,7 @@ public struct ArticleOperationBuilder: Sendable {
         recordType: "Article",
         recordName: recordName,
         fields: article.toFieldsDict(),
-        recordChangeTag: nil
+        recordChangeTag: article.recordChangeTag
       )
     }
 

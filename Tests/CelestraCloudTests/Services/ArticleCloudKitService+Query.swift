@@ -114,13 +114,30 @@ extension ArticleCloudKitService {
       let mock = MockCloudKitRecordOperator()
       let service = CelestraCloudKit.ArticleCloudKitService(recordOperator: mock)
 
-      mock.queryRecordsResult = .success([])
+      // Mock returns 2 articles: one matching feed, one not
+      let matchingFields = createArticleRecordFields(guid: "guid-1")
+      let nonMatchingFields = createArticleRecordFields(guid: "guid-2")
+        .merging(["feedRecordName": .string("other-feed")]) { _, new in new }
 
-      _ = try await service.queryArticlesByGUIDs(["guid-1"], feedRecordName: "feed-123")
+      mock.queryRecordsResult = .success([
+        createMockRecordInfo(recordName: "article-1", fields: matchingFields),
+        createMockRecordInfo(recordName: "article-2", fields: nonMatchingFields)
+      ])
 
+      let result = try await service.queryArticlesByGUIDs(
+        ["guid-1", "guid-2"],
+        feedRecordName: "feed-123"
+      )
+
+      // Verify CloudKit query behavior
       #expect(mock.queryCalls.count == 1)
-      // Should have 2 filters: feedRecordName and GUID
-      #expect(mock.queryCalls[0].filters?.count == 2)
+      // Should have 1 filter (GUID only), feedRecordName filtered in-memory
+      #expect(mock.queryCalls[0].filters?.count == 1)
+
+      // Verify in-memory filtering works
+      #expect(result.count == 1)  // Only matching article returned
+      #expect(result[0].guid == "guid-1")
+      #expect(result[0].feedRecordName == "feed-123")
     }
 
     @Test("queryArticlesByGUIDs batches large GUID lists")

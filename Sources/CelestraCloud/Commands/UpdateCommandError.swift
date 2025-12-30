@@ -1,5 +1,5 @@
 //
-//  FeedUpdateResult.swift
+//  UpdateCommandError.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -7,7 +7,7 @@
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation
-//  files (the “Software”), to deal in the Software without
+//  files (the "Software"), to deal in the Software without
 //  restriction, including without limitation the rights to use,
 //  copy, modify, merge, publish, distribute, sublicense, and/or
 //  sell copies of the Software, and to permit persons to whom the
@@ -17,7 +17,7 @@
 //  The above copyright notice and this permission notice shall be
 //  included in all copies or substantial portions of the Software.
 //
-//  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 //  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 //  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
@@ -27,31 +27,18 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// Result of processing a single feed update
-internal enum FeedUpdateResult: Sendable, Equatable {
-  case success(articlesCreated: Int, articlesUpdated: Int)
-  case notModified
-  case skipped(reason: String)
-  case error(message: String)
+import Foundation
 
-  /// Simple status for backward compatibility
-  internal var simpleStatus: SimpleStatus {
-    switch self {
-    case .success:
-      return .success
-    case .notModified:
-      return .notModified
-    case .skipped:
-      return .skipped
-    case .error:
-      return .error
-    }
+/// Errors specific to feed update operations
+internal struct UpdateCommandError: LocalizedError {
+  /// Number of feeds that encountered errors during update
+  let errorCount: Int
+
+  var errorDescription: String? {
+    "\(errorCount) feed(s) encountered errors during update"
   }
 
-  internal enum SimpleStatus {
-    case success
-    case notModified
-    case skipped
-    case error
+  var recoverySuggestion: String? {
+    "Review error messages above for details and check CloudKit connectivity"
   }
 }

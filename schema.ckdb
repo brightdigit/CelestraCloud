@@ -40,12 +40,15 @@ RECORD TYPE Feed (
     "etag"                   STRING,                        // Last ETag from server for 304 Not Modified support
     "lastModified"           STRING,                        // Last-Modified header value
 
-    // Permissions: Public read access, server-only write access
+    // Permissions: Public read, users and server can add feeds, server maintains metadata
     // _world: All users can read feed catalog (public database)
-    // _icloud: Only server-to-server auth (CLI/backend) can create/modify feeds
-    // _creator removed: Prevents per-user ownership in shared catalog
+    // _creator: Authenticated users can create new feeds (iOS app)
+    // _icloud: Server-to-server auth can create and modify feeds (CLI/backend)
+    // Note: Users cannot modify feeds after creation - server manages all metadata updates
     GRANT READ TO "_world",
-    GRANT CREATE, WRITE TO "_icloud"
+    GRANT CREATE TO "_creator",
+    GRANT CREATE TO "_icloud",
+    GRANT WRITE TO "_icloud"
 );
 
 // Article - RSS article content shared across all users in public database
@@ -80,9 +83,34 @@ RECORD TYPE Article (
     "language"               STRING QUERYABLE,              // ISO language code (manually enriched or ML-detected)
     "tags"                   LIST<STRING>,                  // Content tags/keywords (manually enriched)
 
-    // Permissions: Same as Feed - public read, server-only write
+    // Permissions: Public read, users and server can create articles, server maintains
     // _world: All users can read article content (public database)
-    // _icloud: Only server-to-server auth (CLI/backend) can create/modify articles
+    // _creator: Authenticated users can create articles when adding new feeds (iOS app)
+    // _icloud: Server-to-server auth can create and modify articles (CLI/backend)
+    // Note: iOS app creates articles on first feed add for immediate display
+    //       Server handles all subsequent updates via scheduled jobs
     GRANT READ TO "_world",
-    GRANT CREATE, WRITE TO "_icloud"
+    GRANT CREATE TO "_creator",
+    GRANT CREATE TO "_icloud",
+    GRANT WRITE TO "_icloud"
+);
+
+// FeedSubscription - Anonymous subscription tracking for popularity metrics (public database)
+RECORD TYPE FeedSubscription (
+    // CloudKit system fields
+    // NOTE: recordName is SHA256("\(feedRecordName)-\(userRecordID)") for privacy
+    //       Same user + same feed = same record ID (deduplication across devices)
+    //       Hash includes feedRecordName so subscriptions can't be correlated across feeds
+    //       One-way hash prevents reversing to identify users
+    "___recordID"            REFERENCE QUERYABLE,
+
+    // Subscription relationship
+    "feedRecordName"         STRING QUERYABLE SORTABLE,     // References Feed recordName in public database
+
+    // Permissions: Public database with hashed record IDs for anonymity
+    // _world: All users can read subscription records (for count queries)
+    // _creator: Users can create/delete their own hashed subscription records
+    // Server periodically queries subscription counts to update Feed.subscriberCount
+    GRANT READ TO "_world",
+    GRANT CREATE, WRITE TO "_creator"
 );

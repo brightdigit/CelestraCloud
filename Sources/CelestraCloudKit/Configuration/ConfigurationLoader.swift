@@ -63,7 +63,8 @@ public actor ConfigurationLoader {
     // CloudKit configuration
     let cloudkit = CloudKitConfiguration(
       containerID: readString(forKey: ConfigurationKeys.CloudKit.containerID)
-        ?? readString(forKey: ConfigurationKeys.CloudKit.containerIDEnv),
+        ?? readString(forKey: ConfigurationKeys.CloudKit.containerIDEnv)
+        ?? CloudKitConfiguration.defaultContainerID,
       keyID: readString(forKey: ConfigurationKeys.CloudKit.keyID)
         ?? readString(forKey: ConfigurationKeys.CloudKit.keyIDEnv),
       privateKeyPath: readString(forKey: ConfigurationKeys.CloudKit.privateKeyPath)
@@ -92,13 +93,21 @@ public actor ConfigurationLoader {
     let lastAttemptedBefore =
       readDate(forKey: ConfigurationKeys.Update.lastAttemptedBefore)
       ?? readDate(forKey: ConfigurationKeys.Update.lastAttemptedBeforeEnv)
+    let limit =
+      readInt(forKey: ConfigurationKeys.Update.limit)
+      ?? readInt(forKey: ConfigurationKeys.Update.limitEnv)
+    let jsonOutputPath =
+      readString(forKey: ConfigurationKeys.Update.jsonOutputPath)
+      ?? readString(forKey: ConfigurationKeys.Update.jsonOutputPathEnv)
 
     let update = UpdateCommandConfiguration(
       delay: delay,
       skipRobotsCheck: skipRobotsCheck,
       maxFailures: maxFailures,
       minPopularity: minPopularity,
-      lastAttemptedBefore: lastAttemptedBefore
+      lastAttemptedBefore: lastAttemptedBefore,
+      limit: limit,
+      jsonOutputPath: jsonOutputPath
     )
 
     return CelestraConfiguration(
