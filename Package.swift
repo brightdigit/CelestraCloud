@@ -91,7 +91,7 @@ let package = Package(
   ],
   dependencies: [
     .package(url: "https://github.com/brightdigit/MistKit.git", from: "1.0.0-alpha.3"),
-    .package(url: "https://github.com/brightdigit/CelestraKit.git", from: "0.0.2"),
+    .package(path: "../CelestraKit"),
     .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     .package(
       url: "https://github.com/apple/swift-configuration.git",
