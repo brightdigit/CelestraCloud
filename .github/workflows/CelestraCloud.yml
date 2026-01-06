@@ -21,7 +21,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: brightdigit/swift-build@v1.4.0
+      - name: Replace CelestraKit dependency with remote URL
+        run: |
+          sed -i 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1-celestra-subrepo")|g' Package.swift
+      - uses: brightdigit/swift-build@v1.4.1
         with:
           skip-package-resolved: true
       - uses: sersoft-gmbh/swift-coverage-action@v4
@@ -49,7 +52,11 @@ jobs:
             build: 6.3-DEVELOPMENT-SNAPSHOT-2025-12-21-a
     steps:
       - uses: actions/checkout@v4
-      - uses: brightdigit/swift-build@v1.4.0
+      - name: Replace CelestraKit dependency with remote URL
+        run: |
+          (Get-Content Package.swift) -replace '\.package\(path: "\.\./CelestraKit"\)', '.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1-celestra-subrepo")' | Set-Content Package.swift
+        shell: pwsh
+      - uses: brightdigit/swift-build@v1.4.1
         with:
           windows-swift-version: ${{ matrix.swift.version }}
           windows-swift-build: ${{ matrix.swift.build }}
@@ -117,9 +124,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Replace CelestraKit dependency with remote URL
+        run: |
+          sed -i '' 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1-celestra-subrepo")|g' Package.swift
 
       - name: Build and Test
-        uses: brightdigit/swift-build@v1.4.0
+        uses: brightdigit/swift-build@v1.4.1
         with:
           scheme: ${{ env.PACKAGE_NAME }}-Package
           type: ${{ matrix.type }}

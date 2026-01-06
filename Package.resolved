@@ -1,15 +1,6 @@
 {
-  "originHash" : "88297ab2fcda003e134d62edffccd13e403eca6146ccf2432cd8c210aa590206",
+  "originHash" : "369409ed9a07eb0141b10280ed27fd4b964cfa09a7f23618744eea71a55be263",
   "pins" : [
-    {
-      "identity" : "celestrakit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/brightdigit/CelestraKit.git",
-      "state" : {
-        "branch" : "v0.0.1",
-        "revision" : "d50f9471e359f7aedd2d2259964a9c4e80698ae5"
-      }
-    },
     {
       "identity" : "mistkit",
       "kind" : "remoteSourceControl",
@@ -123,8 +114,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/brightdigit/SyndiKit.git",
       "state" : {
-        "revision" : "1b7991213a1562bb6d93ffedf58533c06fe626f5",
-        "version" : "0.6.1"
+        "revision" : "741d082708642a922241bfd75bf06f5264e8d8b9",
+        "version" : "0.7.0"
       }
     },
     {
