@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Replace CelestraKit dependency with remote URL
         run: |
-          sed -i 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1-celestra-subrepo")|g' Package.swift
+          sed -i 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "subrepo")|g' Package.swift
       - uses: brightdigit/swift-build@v1.4.2
         with:
           skip-package-resolved: true
