@@ -7,7 +7,7 @@ RECORD TYPE Feed (
 
     // Core feed metadata
     "feedURL"                STRING QUERYABLE SORTABLE,     // Unique RSS/Atom feed URL
-    "title"                  STRING SEARCHABLE,             // Feed title
+    "title"                  STRING SEARCHABLE SORTABLE,    // Feed title
     "description"            STRING,                        // Feed description/subtitle
     "category"               STRING QUERYABLE,              // Content category (e.g. "Technology", "News")
     "imageURL"               STRING,                        // Feed logo/icon URL

@@ -1,13 +1,13 @@
 {
-  "originHash" : "88297ab2fcda003e134d62edffccd13e403eca6146ccf2432cd8c210aa590206",
+  "originHash" : "b144045e630e7b1a92c4065a9bccd57a08ece5f6b373dd6177750f6efa03245d",
   "pins" : [
     {
       "identity" : "celestrakit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/brightdigit/CelestraKit.git",
       "state" : {
-        "branch" : "v0.0.1",
-        "revision" : "d50f9471e359f7aedd2d2259964a9c4e80698ae5"
+        "revision" : "2549700b90dbc3204eaabb781dc103287694853c",
+        "version" : "0.0.2"
       }
     },
     {
@@ -123,17 +123,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/brightdigit/SyndiKit.git",
       "state" : {
-        "revision" : "1b7991213a1562bb6d93ffedf58533c06fe626f5",
-        "version" : "0.6.1"
+        "revision" : "f6f9cc8d1c905e67e66ba2822dd30299ead26867",
+        "version" : "0.8.0"
       }
     },
     {
       "identity" : "xmlcoder",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/brightdigit/XMLCoder",
+      "location" : "https://github.com/CoreOffice/XMLCoder",
       "state" : {
-        "revision" : "8ba70f27664ea8c8b7f38fb4c6f2fd4c129eb9c5",
-        "version" : "1.0.0-alpha.1"
+        "revision" : "5e1ada828d2618ecb79c974e03f79c8f4df90b71",
+        "version" : "0.18.0"
       }
     }
   ],
