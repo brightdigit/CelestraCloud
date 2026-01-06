@@ -48,7 +48,10 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+    - name: Replace CelestraKit dependency with remote URL
+      run: |
+        sed -i '' 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1-celestra-subrepo")|g' Package.swift
+
     - name: Setup Xcode
       run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
 
