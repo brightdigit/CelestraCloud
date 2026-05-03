@@ -1,5 +1,5 @@
 //
-//  ConfigSource.swift
+//  ConfigurationError.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -29,10 +29,20 @@
 
 public import Foundation
 
-/// Configuration source type for error reporting
-public enum ConfigSource: String, Sendable {
-  case cli = "CLI argument"
-  case environment = "Environment variable"
-  case file = "Config file"
-  case defaults = "Default value"
+/// Custom error for configuration issues (library-compatible)
+public struct ConfigurationError: LocalizedError {
+  /// The error message describing what went wrong.
+  public let message: String
+
+  /// A localized description of the error.
+  public var errorDescription: String? {
+    message
+  }
+
+  /// Creates a new configuration error.
+  ///
+  /// - Parameter message: The error message describing what went wrong.
+  public init(_ message: String) {
+    self.message = message
+  }
 }

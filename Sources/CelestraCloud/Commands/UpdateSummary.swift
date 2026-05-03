@@ -1,5 +1,5 @@
 //
-//  ConfigSource.swift
+//  UpdateSummary.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -27,12 +27,29 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-public import Foundation
+import CelestraCloudKit
 
-/// Configuration source type for error reporting
-public enum ConfigSource: String, Sendable {
-  case cli = "CLI argument"
-  case environment = "Environment variable"
-  case file = "Config file"
-  case defaults = "Default value"
+/// Tracks update operation statistics
+internal struct UpdateSummary {
+  internal var successCount = 0
+  internal var errorCount = 0
+  internal var skippedCount = 0
+  internal var notModifiedCount = 0
+  internal var articlesCreated = 0
+  internal var articlesUpdated = 0
+
+  internal mutating func record(_ result: FeedUpdateResult) {
+    switch result {
+    case .success(let created, let updated):
+      successCount += 1
+      articlesCreated += created
+      articlesUpdated += updated
+    case .notModified:
+      notModifiedCount += 1
+    case .skipped:
+      skippedCount += 1
+    case .error:
+      errorCount += 1
+    }
+  }
 }
