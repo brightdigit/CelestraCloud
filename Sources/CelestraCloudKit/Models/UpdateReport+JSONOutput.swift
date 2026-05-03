@@ -1,5 +1,5 @@
 //
-//  ConfigSource.swift
+//  UpdateReport+JSONOutput.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -29,10 +29,16 @@
 
 public import Foundation
 
-/// Configuration source type for error reporting
-public enum ConfigSource: String, Sendable {
-  case cli = "CLI argument"
-  case environment = "Environment variable"
-  case file = "Config file"
-  case defaults = "Default value"
+// MARK: - JSON Output
+
+extension UpdateReport {
+  /// Write the report to a JSON file
+  public func writeJSON(to path: String) throws {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    encoder.dateEncodingStrategy = .iso8601
+
+    let data = try encoder.encode(self)
+    try data.write(to: URL(fileURLWithPath: path))
+  }
 }

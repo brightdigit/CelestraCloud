@@ -1,5 +1,5 @@
 //
-//  ConfigSource.swift
+//  ExitError.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -27,12 +27,5 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-public import Foundation
-
-/// Configuration source type for error reporting
-public enum ConfigSource: String, Sendable {
-  case cli = "CLI argument"
-  case environment = "Environment variable"
-  case file = "Config file"
-  case defaults = "Default value"
-}
+/// Error thrown when the command should exit immediately.
+internal struct ExitError: Error {}
