@@ -53,6 +53,25 @@ public protocol CloudKitRecordOperating: Sendable {
   /// - Returns: Array of modified record info
   /// - Throws: CloudKitError if the modification fails
   func modifyRecords(_ operations: [RecordOperation]) async throws(CloudKitError) -> [RecordInfo]
+
+  /// Query all records of a type, automatically paginating through continuation markers
+  /// - Parameters:
+  ///   - recordType: The type of record to query
+  ///   - filters: Optional query filters
+  ///   - sortBy: Optional sort descriptors
+  ///   - pageSize: Maximum number of records per page (optional)
+  ///   - desiredKeys: Optional list of field keys to fetch
+  ///   - maxPages: Maximum number of pages to fetch before throwing
+  /// - Returns: Array of all matching record info across all pages
+  /// - Throws: CloudKitError if the query fails
+  func queryAllRecords(
+    recordType: String,
+    filters: [QueryFilter]?,
+    sortBy: [QuerySort]?,
+    pageSize: Int?,
+    desiredKeys: [String]?,
+    maxPages: Int
+  ) async throws(CloudKitError) -> [RecordInfo]
 }
 
 // MARK: - CloudKitService Conformance
@@ -60,7 +79,53 @@ public protocol CloudKitRecordOperating: Sendable {
 @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 extension CloudKitService: CloudKitRecordOperating {
   /// Satisfy CloudKitRecordOperating protocol by forwarding to modifyRecords(_:atomic:)
-  public func modifyRecords(_ operations: [RecordOperation]) async throws(CloudKitError) -> [RecordInfo] {
-    try await modifyRecords(operations, atomic: false)
+  public func modifyRecords(_ operations: [RecordOperation]) async throws(CloudKitError)
+    -> [RecordInfo]
+  {
+    try await modifyRecords(
+      operations,
+      atomic: false,
+      database: .public(.prefers(.serverToServer))
+    )
+  }
+
+  /// Satisfy CloudKitRecordOperating's `queryRecords` (no database param) by forwarding to the public-database overload.
+  public func queryRecords(
+    recordType: String,
+    filters: [QueryFilter]?,
+    sortBy: [QuerySort]?,
+    limit: Int?,
+    desiredKeys: [String]?
+  ) async throws(CloudKitError) -> [RecordInfo] {
+    let result: QueryResult = try await queryRecords(
+      recordType: recordType,
+      filters: filters,
+      sortBy: sortBy,
+      limit: limit,
+      desiredKeys: desiredKeys,
+      continuationMarker: nil,
+      database: .public(.prefers(.serverToServer))
+    )
+    return result.records
+  }
+
+  /// Satisfy CloudKitRecordOperating's `queryAllRecords` (no database param) by forwarding to the public-database overload.
+  public func queryAllRecords(
+    recordType: String,
+    filters: [QueryFilter]?,
+    sortBy: [QuerySort]?,
+    pageSize: Int?,
+    desiredKeys: [String]?,
+    maxPages: Int
+  ) async throws(CloudKitError) -> [RecordInfo] {
+    try await queryAllRecords(
+      recordType: recordType,
+      filters: filters,
+      sortBy: sortBy,
+      pageSize: pageSize,
+      desiredKeys: desiredKeys,
+      maxPages: maxPages,
+      database: .public(.prefers(.serverToServer))
+    )
   }
 }
