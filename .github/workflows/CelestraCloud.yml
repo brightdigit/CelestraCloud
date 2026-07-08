@@ -84,7 +84,7 @@ jobs:
       - uses: actions/checkout@v6
       - name: Replace CelestraKit dependency with remote URL
         run: |
-          sed -i 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "subrepo")|g' Package.swift
+          sed -i 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.3")|g' Package.swift
       - uses: brightdigit/swift-build@v1
         id: build
         with:
@@ -128,7 +128,7 @@ jobs:
       - uses: actions/checkout@v6
       - name: Replace CelestraKit dependency with remote URL
         run: |
-          (Get-Content Package.swift) -replace '\.package\(path: "\.\./CelestraKit"\)', '.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1-celestra-subrepo")' | Set-Content Package.swift
+          (Get-Content Package.swift) -replace '\.package\(path: "\.\./CelestraKit"\)', '.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.3")' | Set-Content Package.swift
         shell: pwsh
       - uses: brightdigit/swift-build@v1
         id: build
@@ -168,7 +168,7 @@ jobs:
       - uses: actions/checkout@v6
       - name: Replace CelestraKit dependency with remote URL
         run: |
-          sed -i '' 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1-celestra-subrepo")|g' Package.swift
+          sed -i '' 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.3")|g' Package.swift
 
       - name: Build and Test
         id: build
@@ -228,7 +228,7 @@ jobs:
       - uses: actions/checkout@v6
       - name: Replace CelestraKit dependency with remote URL
         run: |
-          sed -i '' 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.1-celestra-subrepo")|g' Package.swift
+          sed -i '' 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.3")|g' Package.swift
 
       - name: Build and Test
         id: build

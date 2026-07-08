@@ -161,7 +161,7 @@ jobs:
       - name: Replace CelestraKit dependency with remote URL
         if: steps.cache-binary.outputs.cache-hit != 'true'
         run: |
-          sed -i 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "subrepo")|g' Package.swift
+          sed -i 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", branch: "v0.0.3")|g' Package.swift
 
       - name: Build CelestraCloud
         if: steps.cache-binary.outputs.cache-hit != 'true'
