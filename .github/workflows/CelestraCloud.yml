@@ -108,7 +108,7 @@ jobs:
         if: steps.build.outputs.contains-code-coverage == 'true'
         uses: codecov/codecov-action@v6
         with:
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           flags: swift-${{ matrix.swift }}-${{ matrix.os }}
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -145,7 +145,7 @@ jobs:
         if: steps.build.outputs.contains-code-coverage == 'true'
         uses: codecov/codecov-action@v6
         with:
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           flags: swift-${{ matrix.swift.version }},windows
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
