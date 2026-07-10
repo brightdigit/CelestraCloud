@@ -1,5 +1,5 @@
 //
-//  FeedCloudKitService.swift
+//  UpdateSummary.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -27,5 +27,29 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// Namespace for FeedCloudKitService tests
-internal enum FeedCloudKitService {}
+internal import CelestraCloudKit
+
+/// Tracks update operation statistics
+internal struct UpdateSummary {
+  internal var successCount = 0
+  internal var errorCount = 0
+  internal var skippedCount = 0
+  internal var notModifiedCount = 0
+  internal var articlesCreated = 0
+  internal var articlesUpdated = 0
+
+  internal mutating func record(_ result: FeedUpdateResult) {
+    switch result {
+    case .success(let created, let updated):
+      successCount += 1
+      articlesCreated += created
+      articlesUpdated += updated
+    case .notModified:
+      notModifiedCount += 1
+    case .skipped:
+      skippedCount += 1
+    case .error:
+      errorCount += 1
+    }
+  }
+}

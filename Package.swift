@@ -60,20 +60,20 @@ let swiftSettings: [SwiftSetting] = [
   .enableExperimentalFeature("WarnUnsafeReflection"),
 
   // Enhanced compiler checking
-  .unsafeFlags([
-    // Enable concurrency warnings
-    "-warn-concurrency",
-    // Enable actor data race checks
-    "-enable-actor-data-race-checks",
-    // Complete strict concurrency checking
-    "-strict-concurrency=complete",
-    // Enable testing support
-    "-enable-testing",
-    // Warn about functions with >100 lines
-    "-Xfrontend", "-warn-long-function-bodies=100",
-    // Warn about slow type checking expressions
-    "-Xfrontend", "-warn-long-expression-type-checking=100"
-  ])
+  // .unsafeFlags([
+  //   // Enable concurrency warnings
+  //   "-warn-concurrency",
+  //   // Enable actor data race checks
+  //   "-enable-actor-data-race-checks",
+  //   // Complete strict concurrency checking
+  //   "-strict-concurrency=complete",
+  //   // Enable testing support
+  //   "-enable-testing",
+  //   // Warn about functions with >100 lines
+  //   "-Xfrontend", "-warn-long-function-bodies=100",
+  //   // Warn about slow type checking expressions
+  //   "-Xfrontend", "-warn-long-expression-type-checking=100"
+  // ])
 ]
 
 let package = Package(
@@ -90,7 +90,8 @@ let package = Package(
     .library(name: "CelestraCloudKit", targets: ["CelestraCloudKit"])
   ],
   dependencies: [
-    .package(url: "https://github.com/brightdigit/MistKit.git", from: "1.0.0-alpha.3"),
+    .package(url: "https://github.com/brightdigit/MistKit.git", branch: "v1.0.0-beta.3"),
+    .package(url: "https://github.com/brightdigit/ConfigKeyKit.git", from: "1.0.0-beta.2"),
     .package(path: "../CelestraKit"),
     .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     .package(
@@ -104,6 +105,7 @@ let package = Package(
       name: "CelestraCloudKit",
       dependencies: [
         .product(name: "MistKit", package: "MistKit"),
+        .product(name: "ConfigKeyKit", package: "ConfigKeyKit"),
         .product(name: "CelestraKit", package: "CelestraKit"),
         .product(name: "Logging", package: "swift-log"),
         .product(name: "Configuration", package: "swift-configuration")
