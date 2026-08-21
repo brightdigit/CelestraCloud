@@ -2,21 +2,21 @@
   "originHash": "db7ccb8af3f28002014d2d7bcc61ef143ec2f25a0cd3e9873cb86b35a5353570",
   "pins": [
     {
-      "identity": "celestrakit",
-      "kind": "remoteSourceControl",
-      "location": "https://github.com/brightdigit/CelestraKit.git",
-      "state": {
-        "revision": "ca9dae2b20c12a4e73b48b2c245ed0cd1dbebcc4",
-        "version": "0.0.3"
-      }
-    },
-    {
       "identity": "configkeykit",
       "kind": "remoteSourceControl",
       "location": "https://github.com/brightdigit/ConfigKeyKit.git",
       "state": {
         "revision": "6949abb4b7f3e50f7f81d668e6c11aa4721e97fd",
         "version": "1.0.0-beta.2"
+      }
+    },
+    {
+      "identity": "mistkit",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/brightdigit/MistKit.git",
+      "state": {
+        "revision": "16b0d830ae4ecf4d7855fe171bb6e19aee21770e",
+        "version": "1.0.0-beta.3"
       }
     },
     {
