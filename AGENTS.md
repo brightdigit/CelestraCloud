@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding agents working with code in this repository. It follows the `AGENTS.md` convention, so any agent that looks for that filename reads it; `CLAUDE.md` is a symlink to this file, so Claude Code reads it too. Edit `AGENTS.md` — never the symlink.
 
 ## Memory & Corrections Convention
 
