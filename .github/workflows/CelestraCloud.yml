@@ -21,7 +21,6 @@ concurrency:
 
 env:
   PACKAGE_NAME: CelestraCloud
-  MISTKIT_BRANCH: 1.0.0-beta.2
 
 jobs:
   configure:
@@ -83,11 +82,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-
-      - name: Setup MistKit
-        uses: brightdigit/MistKit/.github/actions/setup-mistkit@main
-        with:
-          branch: ${{ env.MISTKIT_BRANCH }}
+      - name: Replace CelestraKit dependency with remote URL
+        run: |
+          sed -i 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", from: "0.0.3")|g' Package.swift
 
       - uses: brightdigit/swift-build@v1
         id: build
@@ -130,10 +127,10 @@ jobs:
             build: 6.3-RELEASE
     steps:
       - uses: actions/checkout@v6
-      - name: Setup MistKit
-        uses: brightdigit/MistKit/.github/actions/setup-mistkit@main
-        with:
-          branch: ${{ env.MISTKIT_BRANCH }}
+      - name: Replace CelestraKit dependency with remote URL
+        shell: pwsh
+        run: |
+          (Get-Content Package.swift) -replace '\.package\(path: "\.\./CelestraKit"\)', '.package(url: "https://github.com/brightdigit/CelestraKit.git", from: "0.0.3")' | Set-Content Package.swift
 
       - uses: brightdigit/swift-build@v1
         id: build
@@ -171,11 +168,9 @@ jobs:
             download-platform: true
     steps:
       - uses: actions/checkout@v6
-
-      - name: Setup MistKit
-        uses: brightdigit/MistKit/.github/actions/setup-mistkit@main
-        with:
-          branch: ${{ env.MISTKIT_BRANCH }}
+      - name: Replace CelestraKit dependency with remote URL
+        run: |
+          sed -i '' 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", from: "0.0.3")|g' Package.swift
 
       - name: Build and Test
         id: build
@@ -281,11 +276,9 @@ jobs:
             download-platform: true
     steps:
       - uses: actions/checkout@v6
-
-      - name: Setup MistKit
-        uses: brightdigit/MistKit/.github/actions/setup-mistkit@main
-        with:
-          branch: ${{ env.MISTKIT_BRANCH }}
+      - name: Replace CelestraKit dependency with remote URL
+        run: |
+          sed -i '' 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", from: "0.0.3")|g' Package.swift
 
       - name: Build and Test
         id: build
