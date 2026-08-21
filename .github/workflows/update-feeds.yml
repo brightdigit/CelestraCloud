@@ -132,7 +132,7 @@ jobs:
   # Build the binary (cached based on code changes)
   build:
     runs-on: ubuntu-latest
-    container: swift:6.2-noble
+    container: swift:6.3-noble
     outputs:
       cache-hit: ${{ steps.cache-binary.outputs.cache-hit }}
 

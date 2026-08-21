@@ -58,11 +58,11 @@ jobs:
       - id: matrix
         name: Build matrix values
         run: |
-          # CelestraCloud's Package.swift declares swift-tools-version: 6.2,
-          # so Swift 6.1 is not supported.
+          # CelestraCloud's Package.swift declares swift-tools-version: 6.3,
+          # so Swift 6.2 and earlier are not supported.
           if [[ "${{ steps.check.outputs.full }}" == "true" ]]; then
             echo 'ubuntu-os=["noble","jammy"]' >> "$GITHUB_OUTPUT"
-            echo 'ubuntu-swift=[{"version":"6.2"},{"version":"6.3"},{"version":"6.4","image":"swiftlang/swift:nightly-6.4.x"}]' >> "$GITHUB_OUTPUT"
+            echo 'ubuntu-swift=[{"version":"6.3"},{"version":"6.4","image":"swiftlang/swift:nightly-6.4.x"}]' >> "$GITHUB_OUTPUT"
           else
             echo 'ubuntu-os=["noble"]' >> "$GITHUB_OUTPUT"
             echo 'ubuntu-swift=[{"version":"6.3"}]' >> "$GITHUB_OUTPUT"
@@ -118,8 +118,6 @@ jobs:
       matrix:
         runs-on: [windows-2022, windows-2025]
         swift:
-          - version: swift-6.2-release
-            build: 6.2-RELEASE
           - version: swift-6.3-release
             build: 6.3-RELEASE
     steps:
