@@ -15,3 +15,4 @@ Format: `- YYYY-MM-DD — <directive> (<why, if not obvious>)`
 ---
 
 <!-- Append new directives below this line, newest at the bottom. -->
+- 2026-08-21 — Never add `.claude/` to `.gitignore` in my repos; the in-repo agent stores (`agent-notes.md`, `memory/`) must stay versioned and visible to teammates. Narrow local-only exceptions like `.claude/settings.local.json` are fine.
