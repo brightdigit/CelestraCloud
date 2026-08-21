@@ -132,7 +132,7 @@ jobs:
   # Build the binary (cached based on code changes)
   build:
     runs-on: ubuntu-latest
-    container: swift:6.2-noble
+    container: swift:6.3-noble
     outputs:
       cache-hit: ${{ steps.cache-binary.outputs.cache-hit }}
 
@@ -140,12 +140,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Resolve MistKit release tag for the binary cache key.
+      - name: Resolve MistKit tag SHA
+        id: mistkit-sha
+        run: |
+          SHA=$(git ls-remote https://github.com/brightdigit/MistKit.git "1.0.0-beta.3" | head -n1 | cut -f1)
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Resolved MistKit 1.0.0-beta.3 to ${SHA:-<unresolved>}"
+
       - name: Cache compiled binary
         id: cache-binary
         uses: actions/cache@v4
         with:
           path: .build/release/celestra-cloud
-          key: celestra-cloud-${{ runner.os }}-${{ hashFiles('Sources/**/*.swift', 'Package.swift', 'Package.resolved') }}-${{ github.event.inputs.force_rebuild || 'false' }}
+          key: celestra-cloud-${{ runner.os }}-${{ hashFiles('Sources/**/*.swift', 'Package.swift') }}-${{ steps.mistkit-sha.outputs.sha }}-${{ github.event.inputs.force_rebuild || 'false' }}
+
 
       - name: Build CelestraCloud
         if: steps.cache-binary.outputs.cache-hit != 'true'

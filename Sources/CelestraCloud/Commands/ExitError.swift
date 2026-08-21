@@ -1,5 +1,5 @@
 //
-//  FeedCloudKitService.swift
+//  ExitError.swift
 //  CelestraCloud
 //
 //  Created by Leo Dion.
@@ -27,5 +27,5 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// Namespace for FeedCloudKitService tests
-internal enum FeedCloudKitService {}
+/// Error thrown when the command should exit immediately.
+internal struct ExitError: Error {}

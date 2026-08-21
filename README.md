@@ -1,7 +1,7 @@
 # CelestraCloud - RSS Reader with CloudKit Sync
 
 [![CelestraCloud](https://github.com/brightdigit/CelestraCloud/actions/workflows/CelestraCloud.yml/badge.svg)](https://github.com/brightdigit/CelestraCloud/actions/workflows/CelestraCloud.yml)
-[![Swift 6.2](https://img.shields.io/badge/Swift-6.2-orange.svg)](https://swift.org)
+[![Swift 6.3](https://img.shields.io/badge/Swift-6.3-orange.svg)](https://swift.org)
 [![Platform](https://img.shields.io/badge/platform-macOS%20Linux-lightgrey.svg)](https://www.apple.com/macos/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -353,12 +353,14 @@ let tokenManager = try ServerToServerAuthManager(
     pemString: privateKeyPEM
 )
 
-let service = try CloudKitService(
+let service = CloudKitService(
     containerIdentifier: containerID,
     tokenManager: tokenManager,
-    environment: environment,
-    database: .public
+    environment: environment
 )
+
+// Database is selected per call:
+// `database: .public(.prefers(.serverToServer))`
 ```
 
 ## Architecture
@@ -582,12 +584,14 @@ let tokenManager = try ServerToServerAuthManager(
     pemString: privateKeyPEM
 )
 
-let service = try CloudKitService(
+let service = CloudKitService(
     containerIdentifier: containerID,
     tokenManager: tokenManager,
-    environment: environment,
-    database: .public
+    environment: environment
 )
+
+// Per-call database selection, e.g.:
+// `database: .public(.prefers(.serverToServer))`
 ```
 
 ### Error Handling Strategy
