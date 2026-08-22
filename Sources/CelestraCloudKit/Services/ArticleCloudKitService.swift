@@ -34,32 +34,32 @@ public import MistKit
 
 // swiftlint:disable file_length
 
-// MARK: - CloudKit Batch Size Constants
-
-/// Maximum number of GUIDs per CloudKit query operation.
-///
-/// CloudKit supports up to 200 records per batch, but GUID queries using the IN operator
-/// benefit from smaller batches to avoid query complexity limits. 150 GUIDs provides
-/// optimal balance between query efficiency and avoiding CloudKit rate limits.
-private let guidQueryBatchSize = 150
-
-/// Maximum number of articles per CloudKit create/update operation.
-///
-/// While CloudKit supports up to 200 records per batch, articles contain full HTML content
-/// which creates large payloads. Conservative batching at 10 articles prevents:
-/// - Payload size limits (CloudKit max request: ~10MB)
-/// - Timeout issues with slow network connections
-/// - All-or-nothing failure affecting too many records
-///
-/// Non-atomic operations allow partial success within each batch.
-private let articleMutationBatchSize = 10
-
 /// Service for Article-related CloudKit operations with dependency injection support
 public struct ArticleCloudKitService: Sendable {
   private enum BatchOperation {
     case create
     case update
   }
+
+  // MARK: - CloudKit Batch Size Constants
+
+  /// Maximum number of GUIDs per CloudKit query operation.
+  ///
+  /// CloudKit supports up to 200 records per batch, but GUID queries using the IN operator
+  /// benefit from smaller batches to avoid query complexity limits. 150 GUIDs provides
+  /// optimal balance between query efficiency and avoiding CloudKit rate limits.
+  private static let guidQueryBatchSize = 150
+
+  /// Maximum number of articles per CloudKit create/update operation.
+  ///
+  /// While CloudKit supports up to 200 records per batch, articles contain full HTML content
+  /// which creates large payloads. Conservative batching at 10 articles prevents:
+  /// - Payload size limits (CloudKit max request: ~10MB)
+  /// - Timeout issues with slow network connections
+  /// - All-or-nothing failure affecting too many records
+  ///
+  /// Non-atomic operations allow partial success within each batch.
+  private static let articleMutationBatchSize = 10
   private let recordOperator: any CloudKitRecordOperating
   private let operationBuilder: ArticleOperationBuilder
 
@@ -97,8 +97,8 @@ public struct ArticleCloudKitService: Sendable {
       return []
     }
     var allArticles: [Article] = []
-    let guidBatches = stride(from: 0, to: guids.count, by: guidQueryBatchSize).map {
-      Array(guids[$0..<Swift.min($0 + guidQueryBatchSize, guids.count)])
+    let guidBatches = stride(from: 0, to: guids.count, by: Self.guidQueryBatchSize).map {
+      Array(guids[$0..<Swift.min($0 + Self.guidQueryBatchSize, guids.count)])
     }
     for batch in guidBatches {
       let batchArticles = try await queryArticleBatch(batch, feedRecordName: feedRecordName)
@@ -156,8 +156,10 @@ public struct ArticleCloudKitService: Sendable {
       return BatchOperationResult()
     }
     CelestraLogger.cloudkit.info("Creating \(articles.count) article(s)...")
-    let articleBatches = stride(from: 0, to: articles.count, by: articleMutationBatchSize).map {
-      Array(articles[$0..<Swift.min($0 + articleMutationBatchSize, articles.count)])
+    let articleBatches = stride(
+      from: 0, to: articles.count, by: Self.articleMutationBatchSize
+    ).map {
+      Array(articles[$0..<Swift.min($0 + Self.articleMutationBatchSize, articles.count)])
     }
     var result = BatchOperationResult()
     for (index, batch) in articleBatches.enumerated() {
@@ -180,7 +182,8 @@ public struct ArticleCloudKitService: Sendable {
   /// Updates existing articles in CloudKit with batch processing.
   ///
   /// Articles without a recordName are automatically skipped with a warning.
-  /// Remaining articles are processed in conservative batches to manage payload size and prevent timeouts.
+  /// Remaining articles are processed in conservative batches to manage payload
+  /// size and prevent timeouts.
   /// See `articleMutationBatchSize` constant for batch sizing rationale.
   /// Non-atomic operations allow partial success - some updates may succeed while others fail.
   ///
@@ -203,8 +206,8 @@ public struct ArticleCloudKitService: Sendable {
     guard !validArticles.isEmpty else {
       return BatchOperationResult()
     }
-    let batches = stride(from: 0, to: validArticles.count, by: articleMutationBatchSize).map {
-      Array(validArticles[$0..<Swift.min($0 + articleMutationBatchSize, validArticles.count)])
+    let batches = stride(from: 0, to: validArticles.count, by: Self.articleMutationBatchSize).map {
+      Array(validArticles[$0..<Swift.min($0 + Self.articleMutationBatchSize, validArticles.count)])
     }
     var result = BatchOperationResult()
     for (index, batch) in batches.enumerated() {

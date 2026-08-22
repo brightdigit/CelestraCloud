@@ -33,8 +33,6 @@ internal import Testing
 
 @testable import CelestraCloudKit
 
-// swiftlint:disable file_length
-
 extension ArticleCategorizer {
   @Suite("Advanced Scenarios")
   internal struct Advanced {
