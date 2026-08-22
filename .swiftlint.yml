@@ -1,17 +1,36 @@
+# SwiftLint Configuration for CelestraCloud
+excluded:
+  - .build
+  - DerivedData
+  - Examples
+  - Mint
+
+# ─── Shared rule set ───────────────────────────────────────────────────────────
+# Kept in sync across Celestra, the CelestraKit subrepo and the CelestraCloud
+# subrepo. Only `included`/`excluded` and `reporter` differ between the three;
+# everything below must stay identical.
+
 opt_in_rules:
   - array_init
+  - attributes
   - closure_body_length
   - closure_end_indentation
   - closure_spacing
   - collection_alignment
+  - colon
+  - comma
   - conditional_returns_on_newline
   - contains_over_filter_count
   - contains_over_filter_is_empty
   - contains_over_first_not_nil
   - contains_over_range_nil_comparison
+  - control_statement
   - convenience_type
+  - cyclomatic_complexity
+  - deployment_target
   - discouraged_object_literal
   - discouraged_optional_boolean
+  - duplicate_imports
   - empty_collection_literal
   - empty_count
   - empty_string
@@ -21,26 +40,49 @@ opt_in_rules:
   - explicit_acl
   - explicit_init
   - explicit_top_level_acl
-  # - fallthrough
+  # extension_access_modifier is deliberately NOT opted into: it wants
+  # `public extension X { func f() }`, while .swift-format has
+  # NoAccessLevelOnExtensionDeclaration: true, which rewrites that back to
+  # `extension X { public func f() }`. The formatter runs last, so the two
+  # can never both be satisfied. The formatter wins.
+  - fallthrough
   - fatal_error_message
+  - file_length
   - file_name
   - file_name_no_space
   - file_types_order
   - first_where
   - flatmap_over_map_reduce
+  - for_where
+  - force_cast
+  - force_try
   - force_unwrapping
-#  - function_default_parameter_at_end
+  - function_body_length
+  - function_parameter_count
+  - generic_type_name
   - ibinspectable_in_extension
   - identical_operands
+  - identifier_name
+  - implicit_getter
   - implicit_return
   - implicitly_unwrapped_optional
   - indentation_width
+  - is_disjoint
   - joined_default_parameter
+  - large_tuple
   - last_where
+  - leading_whitespace
+  - legacy_cggeometry_functions
+  - legacy_constant
+  - legacy_constructor
+  - legacy_hashing
   - legacy_multiple
+  - legacy_nsgeometry_functions
   - legacy_random
+  - line_length
   - literal_expression_end_indentation
   - lower_acl_than_parent
+  - mark
   - missing_docs
   - modifier_order
   - multiline_arguments
@@ -48,96 +90,135 @@ opt_in_rules:
   - multiline_function_chains
   - multiline_literal_brackets
   - multiline_parameters
+  - multiline_parameters_brackets
+  - nesting
   - nimble_operator
+  - no_space_in_method_call
+  - notification_center_detachment
   - nslocalizedstring_key
   - nslocalizedstring_require_bundle
+  - nsobject_prefer_isequal
   - number_separator
   - object_literal
-  - one_declaration_per_file
   - operator_usage_whitespace
+  - operator_whitespace
   - optional_enum_case_matching
   - overridden_super_call
   - override_in_extension
-  - pattern_matching_keywords
   - prefer_self_type_over_type_of_self
   - prefer_zero_over_explicit_init
+  - prefixed_toplevel_constant
   - private_action
   - private_outlet
   - prohibited_interface_builder
   - prohibited_super_call
+  - protocol_property_accessors_order
   - quick_discouraged_call
   - quick_discouraged_focused_test
   - quick_discouraged_pending_test
+  - reduce_boolean
   - reduce_into
+  - redundant_discardable_let
   - redundant_nil_coalescing
+  - redundant_optional_initialization
+  - redundant_set_access_control
+  - redundant_string_enum_value
   - redundant_type_annotation
+  - redundant_void_return
   - required_enum_case
+  - return_arrow_whitespace
+  - shorthand_operator
   - single_test_class
   - sorted_first_last
   - sorted_imports
+  - statement_position
   - static_operator
   - strong_iboutlet
+  - superfluous_disable_command
+  - switch_case_alignment
+  - syntactic_sugar
   - toggle_bool
-#  - trailing_closure
+  - trailing_newline
+  - trailing_semicolon
+  - trailing_whitespace
+  - type_body_length
   - type_contents_order
+  - type_name
   - unavailable_function
+  - unneeded_break_in_switch
   - unneeded_parentheses_in_closure_argument
   - unowned_variable_capture
   - untyped_error_in_catch
+  - unused_closure_parameter
+  - unused_control_flow_label
+  - unused_enumerated
+  - unused_optional_binding
+  - valid_ibinspectable
+  - vertical_parameter_alignment
   - vertical_parameter_alignment_on_call
+  - vertical_whitespace
   - vertical_whitespace_closing_braces
   - vertical_whitespace_opening_braces
+  - void_return
+  - weak_delegate
   - xct_specific_matcher
+  - xctfail_message
   - yoda_condition
+disabled_rules:
+  - closure_parameter_position
+  # opening_brace and pattern_matching_keywords both contradict .swift-format,
+  # which runs last and therefore always wins:
+  #   - swift-format moves the brace to its own line whenever a signature or
+  #     condition wraps; opening_brace demands it stay on the same line.
+  #   - UseLetInEveryBoundCaseVariable: true rewrites `case let .x(a, b)` to
+  #     `case .x(let a, let b)`; pattern_matching_keywords demands the reverse.
+  # Enabling either produces violations no edit can clear.
+  - opening_brace
+  - pattern_matching_keywords
+  - function_default_parameter_at_end
+  - optional_data_string_conversion
+  - todo
+  - trailing_comma
 analyzer_rules:
-  - unused_import  
   - unused_declaration
-cyclomatic_complexity:
-  - 6
-  - 12
-file_length:
-  warning: 225
-  error: 300
-function_body_length:
-  - 50
-  - 76
-function_parameter_count: 8
-line_length:
-  - 108
-  - 200
-closure_body_length:
-  - 50
-  - 60
-type_name:
-  min_length: 3
-  max_length:
-    warning: 50
-    error: 60
-identifier_name:
-  excluded:
-    - id
-    - no
-excluded:
-  - DerivedData
-  - .build
-  - Mint
-  - Examples
-  - Sources/MistKit/Generated
+  - unused_import
+
+line_length: {warning: 100, error: 200}
+# 300/400 rather than CelestraKit's original 225/300. After splitting
+# FeedDiscoveryService (302 lines, genuinely two concerns) no file in either
+# package exceeds 275, but 15 cohesive files sat between 225 and 275. 225 came
+# from a small focused library — CelestraKit itself violated it 3 times — and
+# forcing repositories and services apart to hit it fragments code rather than
+# improving it. 300 still catches genuine bloat with headroom to grow.
+file_length: {warning: 300, error: 400}
+function_body_length: {warning: 50, error: 76}
+type_body_length: {warning: 200, error: 350}
+cyclomatic_complexity: {warning: 6, error: 12}
+# error raised 60 -> 100, warning kept at 50. All six offenders are SwiftUI
+# `body` closures spanning 62-89 lines; CelestraKit has zero, because it has no
+# SwiftUI. 60 is a sensible ceiling for a non-UI library and a poor one for view
+# bodies, where composition happens inside the closure. The warning still fires
+# at 50 so the signal survives; only the build-blocking threshold moves.
+closure_body_length: {warning: 50, error: 100}
+function_parameter_count: {warning: 8, error: 8}
 indentation_width:
   indentation_width: 2
+nesting:
+  type_level: {warning: 3, error: 6}
+  function_level: {warning: 5, error: 10}
+identifier_name:
+  min_length: {warning: 1, error: 1}
+  max_length: {warning: 40, error: 60}
+  excluded: [id, db, x, y, z, "no"]
+type_name:
+  min_length: {warning: 3, error: 3}
+  max_length: {warning: 40, error: 50}
+  excluded: [RSS, XML, URL, API, UI, ID]
 file_name:
-    severity: error
+  severity: error
 fatal_error_message:
-    severity: error
-disabled_rules:
-    - nesting
-    - implicit_getter
-    - switch_case_alignment
-    - closure_parameter_position
-    - trailing_comma
-    - opening_brace
-    - optional_data_string_conversion
-    - pattern_matching_keywords
+  severity: error
+
 custom_rules:
   no_unchecked_sendable:
     name: "No Unchecked Sendable"
