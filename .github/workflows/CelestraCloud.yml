@@ -83,6 +83,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Replace CelestraKit dependency with remote URL
+        run: |
+          sed -i 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", from: "0.0.3")|g' Package.swift
+
+
+
       - uses: brightdigit/swift-build@v1
         id: build
         with:
@@ -123,6 +129,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Replace CelestraKit dependency with remote URL
+        shell: pwsh
+        run: |
+          (Get-Content Package.swift) -replace '\.package\(path: "\.\./CelestraKit"\)', '.package(url: "https://github.com/brightdigit/CelestraKit.git", from: "0.0.3")' | Set-Content Package.swift
+
+
+
       - uses: brightdigit/swift-build@v1
         id: build
         with:
@@ -159,6 +172,13 @@ jobs:
             download-platform: true
     steps:
       - uses: actions/checkout@v6
+
+      - name: Replace CelestraKit dependency with remote URL
+        run: |
+          sed -i '' 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", from: "0.0.3")|g' Package.swift
+
+
+
 
       - name: Build and Test
         id: build
@@ -264,6 +284,13 @@ jobs:
             download-platform: true
     steps:
       - uses: actions/checkout@v6
+
+      - name: Replace CelestraKit dependency with remote URL
+        run: |
+          sed -i '' 's|\.package(path: "\.\./CelestraKit")|.package(url: "https://github.com/brightdigit/CelestraKit.git", from: "0.0.3")|g' Package.swift
+
+
+
 
       - name: Build and Test
         id: build
