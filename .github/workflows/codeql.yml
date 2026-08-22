@@ -48,7 +48,12 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
+    - name: Setup CelestraKit
+      uses: brightdigit/CelestraKit/.github/actions/setup-celestrakit@main
+      with:
+        branch: ${{ env.CELESTRAKIT_BRANCH }}
+
     - name: Setup Xcode
       run: sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
 

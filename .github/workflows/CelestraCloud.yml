@@ -21,6 +21,7 @@ concurrency:
 
 env:
   PACKAGE_NAME: CelestraCloud
+  CELESTRAKIT_BRANCH: celestra
 
 jobs:
   configure:
@@ -83,6 +84,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Setup CelestraKit
+        uses: brightdigit/CelestraKit/.github/actions/setup-celestrakit@main
+        with:
+          branch: ${{ env.CELESTRAKIT_BRANCH }}
+
       - uses: brightdigit/swift-build@v1
         id: build
         with:
@@ -123,6 +129,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Setup CelestraKit
+        uses: brightdigit/CelestraKit/.github/actions/setup-celestrakit@main
+        with:
+          branch: ${{ env.CELESTRAKIT_BRANCH }}
+
       - uses: brightdigit/swift-build@v1
         id: build
         with:
@@ -159,6 +170,11 @@ jobs:
             download-platform: true
     steps:
       - uses: actions/checkout@v6
+
+      - name: Setup CelestraKit
+        uses: brightdigit/CelestraKit/.github/actions/setup-celestrakit@main
+        with:
+          branch: ${{ env.CELESTRAKIT_BRANCH }}
 
       - name: Build and Test
         id: build
@@ -264,6 +280,11 @@ jobs:
             download-platform: true
     steps:
       - uses: actions/checkout@v6
+
+      - name: Setup CelestraKit
+        uses: brightdigit/CelestraKit/.github/actions/setup-celestrakit@main
+        with:
+          branch: ${{ env.CELESTRAKIT_BRANCH }}
 
       - name: Build and Test
         id: build

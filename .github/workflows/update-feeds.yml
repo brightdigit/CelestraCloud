@@ -49,6 +49,7 @@ env:
   CLOUDKIT_KEY_ID: ${{ secrets.CLOUDKIT_KEY_ID }}
   CLOUDKIT_ENVIRONMENT: ${{ (github.event_name == 'pull_request' || github.event_name == 'push') && 'development' || github.event.inputs.environment || 'production' }}
   CLOUDKIT_PRIVATE_KEY_PATH: /tmp/cloudkit_key.pem
+  CELESTRAKIT_BRANCH: celestra
 
 jobs:
   # Determine which tier to run based on schedule or manual input
@@ -140,21 +141,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Resolve MistKit release tag for the binary cache key.
-      - name: Resolve MistKit tag SHA
-        id: mistkit-sha
+      # Resolve CELESTRAKIT_BRANCH to its current HEAD commit so the cache key below
+      # changes whenever CelestraKit is updated. Without this the binary cache keys only
+      # on CelestraCloud's own sources, so a new CelestraKit commit on the same branch
+      # produces a stale cache hit and the fix under test is never rebuilt. MistKit needs
+      # no equivalent here: it is pinned to a tag on this branch, and a tag does not move.
+      - name: Resolve CelestraKit branch SHA
+        id: celestrakit-sha
         run: |
-          SHA=$(git ls-remote https://github.com/brightdigit/MistKit.git "1.0.0-beta.3" | head -n1 | cut -f1)
+          SHA=$(git ls-remote https://github.com/brightdigit/CelestraKit.git "$CELESTRAKIT_BRANCH" | head -n1 | cut -f1)
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
-          echo "Resolved MistKit 1.0.0-beta.3 to ${SHA:-<unresolved>}"
+          echo "Resolved CELESTRAKIT_BRANCH=$CELESTRAKIT_BRANCH to ${SHA:-<unresolved>}"
 
       - name: Cache compiled binary
         id: cache-binary
         uses: actions/cache@v4
         with:
           path: .build/release/celestra-cloud
-          key: celestra-cloud-${{ runner.os }}-${{ hashFiles('Sources/**/*.swift', 'Package.swift') }}-${{ steps.mistkit-sha.outputs.sha }}-${{ github.event.inputs.force_rebuild || 'false' }}
+          key: celestra-cloud-${{ runner.os }}-${{ hashFiles('Sources/**/*.swift', 'Package.swift') }}-${{ steps.celestrakit-sha.outputs.sha }}-${{ github.event.inputs.force_rebuild || 'false' }}
 
+
+
+      - name: Setup CelestraKit
+        if: steps.cache-binary.outputs.cache-hit != 'true'
+        uses: brightdigit/CelestraKit/.github/actions/setup-celestrakit@main
+        with:
+          branch: ${{ env.CELESTRAKIT_BRANCH }}
 
       - name: Build CelestraCloud
         if: steps.cache-binary.outputs.cache-hit != 'true'
