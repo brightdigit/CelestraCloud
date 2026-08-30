@@ -3,11 +3,11 @@
 //  CelestraCloud
 //
 //  Created by Leo Dion.
-//  Copyright © 2025 BrightDigit.
+//  Copyright © 2026 BrightDigit.
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation
-//  files (the “Software”), to deal in the Software without
+//  files (the "Software"), to deal in the Software without
 //  restriction, including without limitation the rights to use,
 //  copy, modify, merge, publish, distribute, sublicense, and/or
 //  sell copies of the Software, and to permit persons to whom the
@@ -17,7 +17,7 @@
 //  The above copyright notice and this permission notice shall be
 //  included in all copies or substantial portions of the Software.
 //
-//  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 //  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 //  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
@@ -27,31 +27,38 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
+internal import CelestraCloudKit
+internal import Foundation
+
 /// Result of processing a single feed update
 internal enum FeedUpdateResult: Sendable, Equatable {
+  // MARK: - Cases
+
   case success(articlesCreated: Int, articlesUpdated: Int)
   case notModified
   case skipped(reason: String)
   case error(message: String)
 
-  /// Simple status for backward compatibility
-  internal var simpleStatus: SimpleStatus {
-    switch self {
-    case .success:
-      return .success
-    case .notModified:
-      return .notModified
-    case .skipped:
-      return .skipped
-    case .error:
-      return .error
-    }
-  }
+  // MARK: - Resolving
 
-  internal enum SimpleStatus {
-    case success
-    case notModified
-    case skipped
-    case error
+  /// Combines article-sync outcomes with the feed-metadata write result.
+  ///
+  /// Feed-level metadata may still record an RSS fetch as successful
+  /// (`failureCount: 0`) even when some article creates/updates failed.
+  /// Any article-batch failure turns the overall feed update into `.error`
+  /// so callers (and CI with `--update-max-failures 0`) see the outage.
+  internal static func resolving(
+    syncResult: ArticleSyncResult,
+    metadataResult: FeedUpdateResult
+  ) -> FeedUpdateResult {
+    if syncResult.failureCount > 0 {
+      return .error(
+        message:
+          "Article sync had \(syncResult.failureCount) failures "
+          + "(created: \(syncResult.created.failureCount), "
+          + "updated: \(syncResult.updated.failureCount))"
+      )
+    }
+    return metadataResult
   }
 }

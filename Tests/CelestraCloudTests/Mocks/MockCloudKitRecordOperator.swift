@@ -3,7 +3,7 @@
 //  CelestraCloud
 //
 //  Created by Leo Dion.
-//  Copyright © 2025 BrightDigit.
+//  Copyright © 2026 BrightDigit.
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation
@@ -27,34 +27,59 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import Foundation
-import MistKit
+internal import Foundation
+internal import MistKit
+internal import Synchronization
 
 @testable import CelestraCloudKit
 
-/// Mock implementation of CloudKitRecordOperating for testing
-internal final class MockCloudKitRecordOperator: CloudKitRecordOperating, @unchecked Sendable {
-  // MARK: - Recorded Calls
+/// Mock implementation of CloudKitRecordOperating for testing.
+///
+/// Thread-safe under Swift Testing's default parallel test execution: all
+/// mutable state is guarded by an internal `Mutex` from the Synchronization
+/// module, so concurrent suites can drive the same mock or per-test mocks
+/// without data races. Test sites use the same property syntax as before.
+internal final class MockCloudKitRecordOperator: CloudKitRecordOperating, Sendable {
+  // MARK: - Subtypes
 
-  internal struct QueryCall {
+  internal struct QueryCall: Sendable {
     internal let recordType: String
     internal let filters: [QueryFilter]?
-    internal let sortBy: [QuerySort]?
     internal let limit: Int?
-    internal let desiredKeys: [String]?
   }
 
-  internal struct ModifyCall {
+  internal struct ModifyCall: Sendable {
     internal let operations: [RecordOperation]
   }
 
-  internal private(set) var queryCalls: [QueryCall] = []
-  internal private(set) var modifyCalls: [ModifyCall] = []
+  private struct State {
+    var queryCalls: [QueryCall] = []
+    var modifyCalls: [ModifyCall] = []
+    var queryRecordsResult: Result<[RecordInfo], CloudKitError> = .success([])
+    var modifyRecordsResult: Result<[RecordInfo], CloudKitError> = .success([])
+  }
 
-  // MARK: - Stubbed Results
+  // MARK: - Properties
 
-  internal var queryRecordsResult: Result<[RecordInfo], CloudKitError> = .success([])
-  internal var modifyRecordsResult: Result<[RecordInfo], CloudKitError> = .success([])
+  private let state = Mutex(State())
+
+  internal var queryCalls: [QueryCall] {
+    state.withLock { $0.queryCalls }
+  }
+
+  internal var modifyCalls: [ModifyCall] {
+    state.withLock { $0.modifyCalls }
+  }
+
+  internal var queryRecordsResult: Result<[RecordInfo], CloudKitError> {
+    get { state.withLock { $0.queryRecordsResult } }
+    set { state.withLock { $0.queryRecordsResult = newValue } }
+  }
+
+  internal var modifyRecordsResult: Result<[RecordInfo], CloudKitError> {
+    get { state.withLock { $0.modifyRecordsResult } }
+    set { state.withLock { $0.modifyRecordsResult = newValue } }
+  }
 
   // MARK: - CloudKitRecordOperating
 
@@ -65,22 +90,47 @@ internal final class MockCloudKitRecordOperator: CloudKitRecordOperating, @unche
     limit: Int?,
     desiredKeys: [String]?
   ) async throws(CloudKitError) -> [RecordInfo] {
-    queryCalls.append(
-      QueryCall(
-        recordType: recordType,
-        filters: filters,
-        sortBy: sortBy,
-        limit: limit,
-        desiredKeys: desiredKeys
+    let result = state.withLock { state -> Result<[RecordInfo], CloudKitError> in
+      state.queryCalls.append(
+        QueryCall(
+          recordType: recordType,
+          filters: filters,
+          limit: limit
+        )
       )
-    )
-    return try queryRecordsResult.get()
+      return state.queryRecordsResult
+    }
+    return try result.get()
   }
 
   internal func modifyRecords(_ operations: [RecordOperation]) async throws(CloudKitError)
     -> [RecordInfo]
   {
-    modifyCalls.append(ModifyCall(operations: operations))
-    return try modifyRecordsResult.get()
+    let result = state.withLock { state -> Result<[RecordInfo], CloudKitError> in
+      state.modifyCalls.append(ModifyCall(operations: operations))
+      return state.modifyRecordsResult
+    }
+    return try result.get()
+  }
+
+  internal func queryAllRecords(
+    recordType: String,
+    filters: [QueryFilter]?,
+    sortBy: [QuerySort]?,
+    pageSize: Int?,
+    desiredKeys: [String]?,
+    maxPages: Int
+  ) async throws(CloudKitError) -> [RecordInfo] {
+    let result = state.withLock { state -> Result<[RecordInfo], CloudKitError> in
+      state.queryCalls.append(
+        QueryCall(
+          recordType: recordType,
+          filters: filters,
+          limit: pageSize
+        )
+      )
+      return state.queryRecordsResult
+    }
+    return try result.get()
   }
 }
