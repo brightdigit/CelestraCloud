@@ -90,7 +90,7 @@ let package = Package(
     .library(name: "CelestraCloudKit", targets: ["CelestraCloudKit"])
   ],
   dependencies: [
-    .package(name: "MistKit", path: "../.."),
+    .package(url: "https://github.com/brightdigit/MistKit.git", from: "1.0.0-beta.4"),
     .package(url: "https://github.com/brightdigit/ConfigKeyKit.git", from: "1.0.0-beta.2"),
     .package(url: "https://github.com/brightdigit/CelestraKit.git", from: "0.0.3"),
     .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
