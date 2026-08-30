@@ -3,11 +3,11 @@
 //  CelestraCloud
 //
 //  Created by Leo Dion.
-//  Copyright © 2025 BrightDigit.
+//  Copyright © 2026 BrightDigit.
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation
-//  files (the “Software”), to deal in the Software without
+//  files (the "Software"), to deal in the Software without
 //  restriction, including without limitation the rights to use,
 //  copy, modify, merge, publish, distribute, sublicense, and/or
 //  sell copies of the Software, and to permit persons to whom the
@@ -17,7 +17,7 @@
 //  The above copyright notice and this permission notice shall be
 //  included in all copies or substantial portions of the Software.
 //
-//  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 //  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 //  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
@@ -62,88 +62,128 @@ public enum CelestraError: LocalizedError {
   /// Invalid record name
   case invalidRecordName(String)
 
+  // MARK: - Lookup Tables
+
+  // The tables below are keyed by `caseID` (see the discriminator at the bottom
+  // of this file) so that cases with associated values — which can't be written
+  // as case-literal keys — participate alongside the payload-free cases.
+
+  /// Cases that are retriable on their own. `cloudKitError` is decided
+  /// separately, delegating to the wrapped `CloudKitError`.
+  private static let retriableCaseIDs: Set<CaseID> = [
+    .rssFetchFailed,
+    .networkUnavailable,
+  ]
+
+  /// Error descriptions for cases whose text doesn't depend on associated values.
+  private static let staticDescriptions: [CaseID: String] = [
+    .quotaExceeded: "CloudKit quota exceeded. Please try again later.",
+    .networkUnavailable: "Network unavailable. Check your connection.",
+    .permissionDenied: "Permission denied for CloudKit operation.",
+  ]
+
+  /// Recovery suggestions. Cases absent here have no suggestion (`nil`).
+  private static let recoverySuggestions: [CaseID: String] = [
+    .rssFetchFailed: "Verify the feed URL is accessible and try again.",
+    .invalidFeedData: "Verify the feed URL returns valid RSS/Atom data.",
+    .quotaExceeded: "Wait a few minutes for CloudKit quota to reset, then try again.",
+    .networkUnavailable: "Check your internet connection and try again.",
+    .permissionDenied: "Check your CloudKit permissions and API token configuration.",
+  ]
+
   // MARK: - Retriability
 
   /// Determines if this error can be retried
   public var isRetriable: Bool {
-    switch self {
-    case .cloudKitError(let ckError):
+    if case .cloudKitError(let ckError) = self {
       return isCloudKitErrorRetriable(ckError)
-    case .rssFetchFailed, .networkUnavailable:
-      return true
-    case .quotaExceeded, .invalidFeedData, .batchOperationFailed,
-      .permissionDenied, .recordNotFound, .cloudKitOperationFailed, .invalidRecordName:
-      return false
     }
+    return Self.retriableCaseIDs.contains(caseID)
   }
 
   // MARK: - LocalizedError Conformance
 
   /// Localized error description
   public var errorDescription: String? {
-    switch self {
-    case .cloudKitError(let error):
-      return "CloudKit operation failed: \(error.localizedDescription)"
-    case .rssFetchFailed(let url, let error):
-      return "Failed to fetch RSS feed from \(url.absoluteString): \(error.localizedDescription)"
-    case .invalidFeedData(let reason):
-      return "Invalid feed data: \(reason)"
-    case .batchOperationFailed(let errors):
-      return "Batch operation failed with \(errors.count) error(s)"
-    case .quotaExceeded:
-      return "CloudKit quota exceeded. Please try again later."
-    case .networkUnavailable:
-      return "Network unavailable. Check your connection."
-    case .permissionDenied:
-      return "Permission denied for CloudKit operation."
-    case .recordNotFound(let recordName):
-      return "Record not found: \(recordName)"
-    case .cloudKitOperationFailed(let message):
-      return "CloudKit operation failed: \(message)"
-    case .invalidRecordName(let message):
-      return "Invalid record name: \(message)"
+    // Cases without associated values get their text from the lookup table;
+    // the rest interpolate their payloads.
+    guard let staticDescription = Self.staticDescriptions[caseID] else {
+      switch self {
+      case .cloudKitError(let error):
+        return "CloudKit operation failed: \(error.localizedDescription)"
+      case .rssFetchFailed(let url, let error):
+        return "Failed to fetch RSS feed from \(url.absoluteString): \(error.localizedDescription)"
+      case .invalidFeedData(let reason):
+        return "Invalid feed data: \(reason)"
+      case .batchOperationFailed(let errors):
+        return "Batch operation failed with \(errors.count) error(s)"
+      case .recordNotFound(let recordName):
+        return "Record not found: \(recordName)"
+      case .cloudKitOperationFailed(let message):
+        return "CloudKit operation failed: \(message)"
+      case .invalidRecordName(let message):
+        return "Invalid record name: \(message)"
+      default:
+        assertionFailure("Missing `errorDescription` for case: \(self).")
+        return nil
+      }
     }
+    return staticDescription
   }
 
   /// Suggested recovery action for the error
-  public var recoverySuggestion: String? {
-    switch self {
-    case .quotaExceeded:
-      return "Wait a few minutes for CloudKit quota to reset, then try again."
-    case .networkUnavailable:
-      return "Check your internet connection and try again."
-    case .rssFetchFailed:
-      return "Verify the feed URL is accessible and try again."
-    case .permissionDenied:
-      return "Check your CloudKit permissions and API token configuration."
-    case .invalidFeedData:
-      return "Verify the feed URL returns valid RSS/Atom data."
-    case .cloudKitError, .batchOperationFailed, .recordNotFound,
-      .cloudKitOperationFailed, .invalidRecordName:
-      return nil
-    }
-  }
+  public var recoverySuggestion: String? { Self.recoverySuggestions[caseID] }
 
   // MARK: - CloudKit Error Classification
 
   /// Determines if a CloudKit error is retriable based on error type
   private func isCloudKitErrorRetriable(_ error: CloudKitError) -> Bool {
-    switch error {
-    case .httpError(let statusCode),
-      .httpErrorWithDetails(let statusCode, _, _),
-      .httpErrorWithRawResponse(let statusCode, _):
+    // `httpStatusCode` covers the raw HTTP cases *and* every case that models a
+    // CloudKit `serverErrorCode` (`.throttled`, `.tryAgainLater`,
+    // `.internalServerError`, …), each reporting its documented status.
+    if let statusCode = error.httpStatusCode {
       // Retry on server errors (5xx) and rate limiting (429)
       // Don't retry on client errors (4xx) except 429
       return statusCode >= 500 || statusCode == 429
-    case .invalidResponse, .underlyingError:
-      // Network-related errors are retriable
+    }
+
+    switch error {
+    // Network-related/transient errors are retriable
+    case .invalidResponse, .underlyingError, .networkError:
       return true
-    case .networkError:
-      // Network errors are retriable
-      return true
-    case .decodingError:
-      // Decoding errors are not retriable (data format issue)
+
+    // Everything else (decoding, configuration, and credential errors) is not
+    // retriable.
+    default:
       return false
+    }
+  }
+}
+
+// MARK: - Case Identity
+
+extension CelestraError {
+  /// Payload-free mirror of `CelestraError`'s cases. Used as the key into the
+  /// lookup tables above so that cases with associated values can be classified
+  /// without being written as case literals.
+  private enum CaseID {
+    case cloudKitError, rssFetchFailed, invalidFeedData, batchOperationFailed,
+      quotaExceeded, networkUnavailable, permissionDenied, recordNotFound,
+      cloudKitOperationFailed, invalidRecordName
+  }
+
+  private var caseID: CaseID {
+    switch self {
+    case .cloudKitError: .cloudKitError
+    case .rssFetchFailed: .rssFetchFailed
+    case .invalidFeedData: .invalidFeedData
+    case .batchOperationFailed: .batchOperationFailed
+    case .quotaExceeded: .quotaExceeded
+    case .networkUnavailable: .networkUnavailable
+    case .permissionDenied: .permissionDenied
+    case .recordNotFound: .recordNotFound
+    case .cloudKitOperationFailed: .cloudKitOperationFailed
+    case .invalidRecordName: .invalidRecordName
     }
   }
 }

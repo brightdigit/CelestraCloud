@@ -3,7 +3,7 @@
 //  CelestraCloud
 //
 //  Created by Leo Dion.
-//  Copyright © 2025 BrightDigit.
+//  Copyright © 2026 BrightDigit.
 //
 //  Permission is hereby granted, free of charge, to any person
 //  obtaining a copy of this software and associated documentation
@@ -27,8 +27,8 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import Foundation
-import Testing
+internal import Foundation
+internal import Testing
 
 @testable import CelestraCloudKit
 
@@ -104,7 +104,7 @@ internal struct UpdateCommandConfigurationTests {
 
   @Test("Last attempted before date")
   internal func testLastAttemptedBefore() {
-    let testDate = Date(timeIntervalSince1970: 1_704_067_200) // 2024-01-01T00:00:00Z
+    let testDate = Date(timeIntervalSince1970: 1_704_067_200)  // 2024-01-01T00:00:00Z
     let config = UpdateCommandConfiguration(
       delay: 2.0,
       skipRobotsCheck: false,

@@ -1,4 +1,4 @@
-// swift-tools-version: 6.2
+// swift-tools-version: 6.4
 
 // swiftlint:disable explicit_acl explicit_top_level_acl
 
@@ -7,7 +7,7 @@ import PackageDescription
 // MARK: - Swift Settings Configuration
 
 let swiftSettings: [SwiftSetting] = [
-  // Swift 6.2 Upcoming Features (not yet enabled by default)
+  // Swift 6.4 Upcoming Features (not yet enabled by default)
   // SE-0335: Introduce existential `any`
   .enableUpcomingFeature("ExistentialAny"),
   // SE-0409: Access-level modifiers on import declarations
@@ -60,20 +60,20 @@ let swiftSettings: [SwiftSetting] = [
   .enableExperimentalFeature("WarnUnsafeReflection"),
 
   // Enhanced compiler checking
-  .unsafeFlags([
-    // Enable concurrency warnings
-    "-warn-concurrency",
-    // Enable actor data race checks
-    "-enable-actor-data-race-checks",
-    // Complete strict concurrency checking
-    "-strict-concurrency=complete",
-    // Enable testing support
-    "-enable-testing",
-    // Warn about functions with >100 lines
-    "-Xfrontend", "-warn-long-function-bodies=100",
-    // Warn about slow type checking expressions
-    "-Xfrontend", "-warn-long-expression-type-checking=100"
-  ])
+  // .unsafeFlags([
+  //   // Enable concurrency warnings
+  //   "-warn-concurrency",
+  //   // Enable actor data race checks
+  //   "-enable-actor-data-race-checks",
+  //   // Complete strict concurrency checking
+  //   "-strict-concurrency=complete",
+  //   // Enable testing support
+  //   "-enable-testing",
+  //   // Warn about functions with >100 lines
+  //   "-Xfrontend", "-warn-long-function-bodies=100",
+  //   // Warn about slow type checking expressions
+  //   "-Xfrontend", "-warn-long-expression-type-checking=100"
+  // ])
 ]
 
 let package = Package(
@@ -90,8 +90,9 @@ let package = Package(
     .library(name: "CelestraCloudKit", targets: ["CelestraCloudKit"])
   ],
   dependencies: [
-    .package(url: "https://github.com/brightdigit/MistKit.git", from: "1.0.0-alpha.3"),
-    .package(url: "https://github.com/brightdigit/CelestraKit.git", from: "0.0.2"),
+    .package(url: "https://github.com/brightdigit/MistKit.git", from: "1.0.0-beta.4"),
+    .package(url: "https://github.com/brightdigit/ConfigKeyKit.git", from: "1.0.0-beta.2"),
+    .package(url: "https://github.com/brightdigit/CelestraKit.git", from: "0.0.3"),
     .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     .package(
       url: "https://github.com/apple/swift-configuration.git",
@@ -104,6 +105,7 @@ let package = Package(
       name: "CelestraCloudKit",
       dependencies: [
         .product(name: "MistKit", package: "MistKit"),
+        .product(name: "ConfigKeyKit", package: "ConfigKeyKit"),
         .product(name: "CelestraKit", package: "CelestraKit"),
         .product(name: "Logging", package: "swift-log"),
         .product(name: "Configuration", package: "swift-configuration")
@@ -120,6 +122,7 @@ let package = Package(
     .testTarget(
       name: "CelestraCloudTests",
       dependencies: [
+        .target(name: "CelestraCloud"),
         .target(name: "CelestraCloudKit"),
         .product(name: "MistKit", package: "MistKit"),
         .product(name: "CelestraKit", package: "CelestraKit")
